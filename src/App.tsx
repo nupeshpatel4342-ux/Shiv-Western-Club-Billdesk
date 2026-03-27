@@ -348,8 +348,8 @@ const App = () => {
 
   if (!user) {
     return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
-        <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
+        <div className="fade glass-card" style={{ width: "100%", maxWidth: 380, borderRadius: 30, padding: 30, textAlign: "center" }}>
           {settings?.logo ? (
             <img src={settings.logo} alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", margin: "0 auto 24px" }} />
           ) : (
@@ -357,32 +357,26 @@ const App = () => {
               <Shirt color={C.accent} size={32} strokeWidth={2.5} />
             </div>
           )}
-          <h1 className="pf" style={{ fontSize: 22, fontWeight: 700, color: C.dark, marginBottom: 8 }}>{settings?.shopName || "Shiv Western Club"}</h1>
-          <p style={{ fontSize: 14, color: C.muted, marginBottom: 32 }}>Staff & Admin Login required to continue.</p>
+          <h1 className="pf" style={{ fontSize: 25, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.02em" }}>{settings?.shopName || "Shiv Western Club"}</h1>
+          <p style={{ fontSize: 14, color: C.muted, marginBottom: 28, lineHeight: 1.6 }}>Welcome back 👋 Please authenticate to continue billing operations.</p>
           
           {loginMode === "direct" ? (
             <>
               <button 
                 onClick={handleDirectLogin} 
                 disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "18px", 
-                  borderRadius: 20, 
-                  fontSize: 16, 
-                  fontWeight: 800, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  gap: 12, 
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
-                  opacity: isLoggingIn ? 0.7 : 1,
-                  cursor: isLoggingIn ? "not-allowed" : "pointer",
-                  border: `2px solid ${C.accent}`,
+                className="brand-btn"
+                style={{
+                  padding: "17px",
+                  borderRadius: 18,
+                  fontSize: 15.5,
+                  fontWeight: 800,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12,
                   textTransform: "uppercase",
-                  letterSpacing: "1px"
+                  letterSpacing: "0.08em"
                 }}
               >
                 {isLoggingIn ? (
@@ -401,22 +395,13 @@ const App = () => {
               <button 
                 onClick={handleLogin} 
                 disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: isLoggingIn ? C.muted : C.dark, 
-                  color: isLoggingIn ? "#fff" : C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  gap: 12, 
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                  opacity: isLoggingIn ? 0.7 : 1,
-                  cursor: isLoggingIn ? "not-allowed" : "pointer",
-                  border: `2px solid ${C.accent}`
+                className="brand-btn"
+                style={{
+                  color: isLoggingIn ? "#fff" : C.accent,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 12
                 }}
               >
                 {isLoggingIn ? (
@@ -454,30 +439,20 @@ const App = () => {
                 placeholder="Email Address" 
                 value={email} 
                 onChange={e => setEmail(e.target.value)}
-                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                className="input-premium"
               />
               <input 
                 type="password" 
                 placeholder="Password" 
                 value={password} 
                 onChange={e => setPassword(e.target.value)}
-                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                className="input-premium"
               />
               <button 
                 type="submit"
                 disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  marginTop: 8,
-                  border: `2px solid ${C.accent}`,
-                  opacity: isLoggingIn ? 0.7 : 1
-                }}
+                className="brand-btn"
+                style={{ marginTop: 8 }}
               >
                 {isLoggingIn ? "Processing..." : (isRegistering ? "Create Account" : "Login")}
               </button>
@@ -507,7 +482,7 @@ const App = () => {
                     placeholder="Mobile Number (e.g. 9876543210)" 
                     value={phone} 
                     onChange={e => setPhone(e.target.value)}
-                    style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                    className="input-premium"
                   />
                   <p style={{ fontSize: 10, color: C.muted, marginTop: -8, marginLeft: 4 }}>* Include +91 if outside India</p>
                 </>
@@ -517,25 +492,15 @@ const App = () => {
                   placeholder="Enter 6-digit OTP" 
                   value={otp} 
                   onChange={e => setOtp(e.target.value)}
-                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14, textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
+                  className="input-premium" style={{ textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
                 />
               )}
               <div id="recaptcha-container"></div>
               <button 
                 type="submit"
                 disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  marginTop: 8,
-                  border: `2px solid ${C.accent}`,
-                  opacity: isLoggingIn ? 0.7 : 1
-                }}
+                className="brand-btn"
+                style={{ marginTop: 8 }}
               >
                 {isLoggingIn ? "Processing..." : (confirmationResult ? "Verify OTP" : "Send OTP")}
               </button>
@@ -567,11 +532,11 @@ const App = () => {
   };
 
   return (
-    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(0,0,0,0.05)" }}>
+    <div className="app-shell">
       <Header onMenu={() => setDrawer(true)} settings={settings} />
       <Drawer open={drawer} onClose={() => setDrawer(false)} settings={settings} onNav={handleNav} user={profile} onLogout={logout} />
       
-      <main style={{ flex: 1, overflowY: "auto" }}>
+      <main style={{ flex: 1, overflowY: "auto", paddingBottom: 4 }}>
         {renderScreen()}
       </main>
 

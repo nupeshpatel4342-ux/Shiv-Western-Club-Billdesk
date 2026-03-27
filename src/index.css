@@ -1,50 +1,133 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800;900&family=Roboto:wght@300;400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
 @import "tailwindcss";
 
 :root {
-  --bg: #F8F9FB;
-  --card: #FFFFFF;
-  --dark: #0A1F44;
-  --accent: #D4AF37;
-  --green: #2D6A4F;
-  --greenLight: #E8F5EE;
-  --orange: #D4AF37;
-  --red: #9B2226;
-  --muted: #6B7280;
-  --border: #E5E7EB;
-  --invoiceBg: #F8F9FB;
+  --bg: #f3f6fc;
+  --card: #ffffff;
+  --dark: #0f172a;
+  --accent: #d4af37;
+  --green: #2f7d5b;
+  --greenLight: #e7f6ee;
+  --orange: #f0b429;
+  --red: #c2414e;
+  --muted: #64748b;
+  --border: #dbe4f0;
+  --invoiceBg: #f8fbff;
 }
 
 .dark {
-  --bg: #050B14;
-  --card: #0A1F44;
-  --dark: #F8F9FB;
-  --accent: #D4AF37;
-  --green: #4ADE80;
-  --greenLight: rgba(74, 222, 128, 0.15);
-  --orange: #D4AF37;
-  --red: #F87171;
-  --muted: #9CA3AF;
-  --border: #1E3A8A;
-  --invoiceBg: #0A1F44;
+  --bg: #020617;
+  --card: #0f172a;
+  --dark: #f8fafc;
+  --accent: #e6c35c;
+  --green: #4ade80;
+  --greenLight: rgba(74, 222, 128, 0.18);
+  --orange: #f2c14e;
+  --red: #fb7185;
+  --muted: #a5b4c9;
+  --border: #1e293b;
+  --invoiceBg: #0b1220;
 }
 
 @theme {
-  --font-sans: "Roboto", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Poppins", sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", "Inter", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
 }
 
 body {
+  margin: 0;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg);
+  background:
+    radial-gradient(circle at 20% -10%, rgba(212, 175, 55, 0.12), transparent 30%),
+    radial-gradient(circle at 80% 0%, rgba(37, 99, 235, 0.12), transparent 34%),
+    var(--bg);
   color: var(--dark);
+  letter-spacing: 0.01em;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
 }
 
 .pf {
   font-family: var(--font-display);
+}
+
+.app-shell {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--card) 92%, transparent), var(--bg));
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  border-inline: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.glass-card {
+  background: color-mix(in srgb, var(--card) 90%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 85%, transparent);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.14);
+  backdrop-filter: blur(14px);
+}
+
+.brand-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--dark), color-mix(in srgb, var(--dark) 85%, #1e293b));
+  color: var(--accent);
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.brand-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.24);
+}
+
+.brand-btn:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.input-premium {
+  width: 100%;
+  padding: 13px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 95%, var(--bg) 5%);
+  color: var(--dark);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-premium:focus {
+  border-color: color-mix(in srgb, var(--accent) 52%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .fade {
@@ -63,4 +146,9 @@ body {
 @keyframes slideInLeft {
   from { transform: translateX(-100%); }
   to { transform: translateX(0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
