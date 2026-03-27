@@ -509,6 +509,7 @@ export const doExcelExport = (bills: Bill[]) => {
   ]);
 
   // Calculate totals
+  const overallTotal = bills.reduce((acc, b) => acc + b.total, 0);
   const cashTotal = bills.reduce((acc, b) => b.paymentMethod === "CASH" ? acc + b.total : acc, 0);
   const upiTotal = bills.reduce((acc, b) => b.paymentMethod === "UPI" ? acc + b.total : acc, 0);
 
@@ -544,9 +545,21 @@ export const doExcelExport = (bills: Bill[]) => {
     fill: { fgColor: { rgb: "F9FAFB" } } // Very light gray for alternating rows
   };
 
-  const totalStyle = {
+  const totalStyleBase = {
     font: { bold: true, sz: 16, color: { rgb: "000000" } },
     fill: { fgColor: { rgb: "FFFF00" } }, // Yellow highlight
+    alignment: { horizontal: "center", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } }
+    }
+  };
+
+  const grandTotalStyle = {
+    font: { bold: true, sz: 13, color: { rgb: "000000" } },
+    fill: { fgColor: { rgb: "FFE699" } },
     alignment: { horizontal: "right", vertical: "center" },
     border: {
       top: { style: "medium", color: { rgb: "000000" } },
@@ -583,20 +596,42 @@ export const doExcelExport = (bills: Bill[]) => {
     }
   }
 
-  // Add 5 empty rows after data
-  const totalStartRow = range.e.r + 5;
+  // Add grand total directly below all bill rows
+  const grandTotalRow = range.e.r + 1;
+  const grandTotalLabelAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 5 });
+  const grandTotalValueAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 6 });
+  ws[grandTotalLabelAddr] = { v: "GRAND TOTAL (ALL BILLS)", t: "s", s: grandTotalStyle };
+  ws[grandTotalValueAddr] = { v: overallTotal, t: "n", s: grandTotalStyle };
 
-  // Add Cash Total (Skip 5 columns, so start at column index 5 which is 'F')
-  const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 5 });
-  const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 6 });
-  ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: 's', s: totalStyle };
-  ws[cashValueAddr] = { v: cashTotal, t: 'n', s: totalStyle };
+  // Keep 4-5 empty lines after grand total and then add highlighted payment summaries
+  const totalStartRow = grandTotalRow + 5;
+
+  // Create a proper 2-row summary box for CASH and UPI totals
+  const summaryStartCol = 5; // F
+  const summaryEndCol = 6;   // G
+  const summaryLastRow = totalStartRow + 1;
+
+  const getSummaryBoxStyle = (row: number, col: number) => ({
+    ...totalStyleBase,
+    border: {
+      top: { style: row === totalStartRow ? "medium" : "thin", color: { rgb: "000000" } },
+      bottom: { style: row === summaryLastRow ? "medium" : "thin", color: { rgb: "000000" } },
+      left: { style: col === summaryStartCol ? "medium" : "thin", color: { rgb: "000000" } },
+      right: { style: col === summaryEndCol ? "medium" : "thin", color: { rgb: "000000" } }
+    }
+  });
+
+  // Add Cash Total
+  const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryStartCol });
+  const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryEndCol });
+  ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow, summaryStartCol) };
+  ws[cashValueAddr] = { v: cashTotal, t: "n", s: getSummaryBoxStyle(totalStartRow, summaryEndCol) };
 
   // Add UPI Total
-  const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 5 });
-  const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 6 });
-  ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: 's', s: totalStyle };
-  ws[upiValueAddr] = { v: upiTotal, t: 'n', s: totalStyle };
+  const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryStartCol });
+  const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryEndCol });
+  ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow + 1, summaryStartCol) };
+  ws[upiValueAddr] = { v: upiTotal, t: "n", s: getSummaryBoxStyle(totalStartRow + 1, summaryEndCol) };
 
   // Update range to include new rows
   ws['!ref'] = XLSX.utils.encode_range({
