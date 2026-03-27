@@ -509,6 +509,7 @@ export const doExcelExport = (bills: Bill[]) => {
   ]);
 
   // Calculate totals
+  const overallTotal = bills.reduce((acc, b) => acc + b.total, 0);
   const cashTotal = bills.reduce((acc, b) => b.paymentMethod === "CASH" ? acc + b.total : acc, 0);
   const upiTotal = bills.reduce((acc, b) => b.paymentMethod === "UPI" ? acc + b.total : acc, 0);
 
@@ -556,6 +557,18 @@ export const doExcelExport = (bills: Bill[]) => {
     }
   };
 
+  const grandTotalStyle = {
+    font: { bold: true, sz: 13, color: { rgb: "000000" } },
+    fill: { fgColor: { rgb: "FFE699" } },
+    alignment: { horizontal: "right", vertical: "center" },
+    border: {
+      top: { style: "medium", color: { rgb: "000000" } },
+      bottom: { style: "medium", color: { rgb: "000000" } },
+      left: { style: "medium", color: { rgb: "000000" } },
+      right: { style: "medium", color: { rgb: "000000" } }
+    }
+  };
+
   // Apply styles to data range
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
   
@@ -583,10 +596,17 @@ export const doExcelExport = (bills: Bill[]) => {
     }
   }
 
-  // Add 5 empty rows after data
-  const totalStartRow = range.e.r + 5;
+  // Add grand total directly below all bill rows
+  const grandTotalRow = range.e.r + 1;
+  const grandTotalLabelAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 5 });
+  const grandTotalValueAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 6 });
+  ws[grandTotalLabelAddr] = { v: "GRAND TOTAL (ALL BILLS)", t: "s", s: grandTotalStyle };
+  ws[grandTotalValueAddr] = { v: overallTotal, t: "n", s: grandTotalStyle };
 
-  // Add Cash Total (Skip 5 columns, so start at column index 5 which is 'F')
+  // Keep 4-5 empty lines after grand total and then add highlighted payment summaries
+  const totalStartRow = grandTotalRow + 5;
+
+  // Add Cash Total
   const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 5 });
   const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 6 });
   ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: 's', s: totalStyle };
