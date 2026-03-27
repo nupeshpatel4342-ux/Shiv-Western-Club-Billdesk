@@ -4,6 +4,7 @@ import { Settings, UserProfile } from "../types";
 import { Divider, Pill } from "../components/Layout";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageUtils";
+import { ZoomIn, RotateCw, X, Check } from "lucide-react";
 
 export const SettingsScreen = ({ 
   settings, 
@@ -30,6 +31,7 @@ export const SettingsScreen = ({
   const [cropType, setCropType] = useState<"logo" | "profile" | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
   const [isCropping, setIsCropping] = useState(false);
 
@@ -41,7 +43,7 @@ export const SettingsScreen = ({
     if (!imageToCrop || !croppedAreaPixels) return;
     setIsCropping(true);
     try {
-      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels, rotation);
       if (cropType === "logo") {
         setS({ ...s, logo: croppedImage });
       } else if (cropType === "profile" && p) {
@@ -337,46 +339,127 @@ export const SettingsScreen = ({
 
       {/* Cropper Modal */}
       {imageToCrop && (
-        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.9)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
-          <div style={{ position: "relative", flex: 1 }}>
+        <div style={{ 
+          position: "fixed", 
+          inset: 0, 
+          background: "#000", 
+          zIndex: 2000, 
+          display: "flex", 
+          flexDirection: "column",
+          animation: "fadeIn 0.3s ease"
+        }}>
+          {/* Header */}
+          <div style={{ 
+            padding: "12px 20px", 
+            background: "rgba(0,0,0,0.85)", 
+            backdropFilter: "blur(12px)",
+            display: "flex", 
+            justifyContent: "space-between", 
+            alignItems: "center",
+            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            zIndex: 10
+          }}>
+            <h3 className="pf" style={{ color: "#fff", fontSize: 16, fontWeight: 800, margin: 0 }}>
+              Adjust {cropType === "logo" ? "Logo" : "Photo"}
+            </h3>
+            <button 
+              onClick={() => { setImageToCrop(null); setCropType(null); setRotation(0); }}
+              style={{ background: "rgba(255,255,255,0.15)", color: "#fff", border: "none", width: 32, height: 32, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center" }}
+            >
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Cropper Area */}
+          <div style={{ position: "relative", flex: 1, background: "#000" }}>
             <Cropper
               image={imageToCrop}
               crop={crop}
               zoom={zoom}
+              rotation={rotation}
               aspect={cropType === "logo" ? 1 : 1}
               onCropChange={setCrop}
               onCropComplete={onCropComplete}
               onZoomChange={setZoom}
+              onRotationChange={setRotation}
               cropShape={cropType === "profile" ? "round" : "rect"}
-              showGrid={true}
+              showGrid={false}
+              style={{
+                containerStyle: { background: "#000" },
+                cropAreaStyle: { border: `2px solid ${C.accent}`, boxShadow: "0 0 0 9999px rgba(0,0,0,0.6)" }
+              }}
             />
           </div>
-          <div style={{ padding: 24, background: C.card, borderTop: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <span style={{ fontSize: 12, color: C.muted, fontWeight: 700 }}>ZOOM</span>
-              <input 
-                type="range" 
-                min={1} 
-                max={3} 
-                step={0.1} 
-                value={zoom} 
-                onChange={(e) => setZoom(Number(e.target.value))} 
-                style={{ flex: 1, accentColor: C.accent }}
-              />
+
+          {/* Compact Controls Overlay */}
+          <div style={{ 
+            padding: "20px 20px calc(20px + env(safe-area-inset-bottom))", 
+            background: C.card, 
+            borderTop: `1px solid ${C.border}`,
+            boxShadow: "0 -10px 40px rgba(0,0,0,0.4)",
+            zIndex: 10
+          }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16, marginBottom: 20 }}>
+              {/* Zoom Control */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <ZoomIn size={18} color={C.muted} />
+                <input 
+                  type="range" 
+                  min={1} 
+                  max={3} 
+                  step={0.1} 
+                  value={zoom} 
+                  onChange={(e) => setZoom(Number(e.target.value))} 
+                  style={{ flex: 1, accentColor: C.accent, height: 4, borderRadius: 2 }}
+                />
+                <span style={{ fontSize: 11, color: C.dark, fontWeight: 800, width: 25 }}>{zoom.toFixed(1)}</span>
+              </div>
+
+              {/* Rotation Control */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <RotateCw size={18} color={C.muted} />
+                <input 
+                  type="range" 
+                  min={0} 
+                  max={360} 
+                  step={1} 
+                  value={rotation} 
+                  onChange={(e) => setRotation(Number(e.target.value))} 
+                  style={{ flex: 1, accentColor: C.accent, height: 4, borderRadius: 2 }}
+                />
+                <span style={{ fontSize: 11, color: C.dark, fontWeight: 800, width: 25 }}>{rotation}°</span>
+              </div>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+
+            {/* Action Buttons */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: 12 }}>
               <button 
-                onClick={() => { setImageToCrop(null); setCropType(null); }}
-                style={{ padding: "16px", borderRadius: 14, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}
+                onClick={() => { setImageToCrop(null); setCropType(null); setRotation(0); }}
+                style={{ padding: "14px", borderRadius: 14, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 13, fontWeight: 800, background: "none" }}
               >
                 Cancel
               </button>
               <button 
                 onClick={handleCropSave}
                 disabled={isCropping}
-                style={{ background: C.dark, color: C.accent, padding: "16px", borderRadius: 14, fontSize: 14, fontWeight: 900, border: `1.5px solid ${C.accent}`, opacity: isCropping ? 0.7 : 1 }}
+                style={{ 
+                  background: C.dark, 
+                  color: C.accent, 
+                  padding: "14px", 
+                  borderRadius: 14, 
+                  fontSize: 14, 
+                  fontWeight: 900, 
+                  border: `1.5px solid ${C.accent}`, 
+                  opacity: isCropping ? 0.7 : 1,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
               >
-                {isCropping ? "Processing..." : "Apply Crop"}
+                {isCropping ? "..." : <><Check size={18} /> Save Photo</>}
               </button>
             </div>
           </div>
