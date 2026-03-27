@@ -83,7 +83,7 @@ export const BottomNav = ({ active, onChange, isAdmin }: { active: string, onCha
   <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
     {[
       { id: "bill", icon: <Plus size={24} />, label: "Bill", show: true },
-      { id: "dashboard", icon: <LayoutDashboard size={24} />, label: "Stats", show: isAdmin },
+      { id: "dashboard", icon: <LayoutDashboard size={24} />, label: "Stats", show: true },
       { id: "history", icon: <History size={24} />, label: "History", show: true },
       { id: "settings", icon: <SettingsIcon size={24} />, label: "Settings", show: true }
     ].filter(t => t.show).map(t => (

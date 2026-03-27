@@ -152,10 +152,6 @@ const App = () => {
   };
 
   const handleDeleteAllBills = async () => {
-    if (!isAdmin) {
-      alert("Only admin can delete all bills.");
-      return;
-    }
     try {
       const promises = bills.map(b => deleteDoc(doc(db, "bills", b.id)));
       await Promise.all(promises);
@@ -165,10 +161,6 @@ const App = () => {
   };
 
   const handleResetAllData = async () => {
-    if (!isAdmin) {
-      alert("Only admin can reset all data.");
-      return;
-    }
     try {
       // Delete all bills
       const billPromises = bills.map(b => deleteDoc(doc(db, "bills", b.id)));
@@ -192,10 +184,6 @@ const App = () => {
   };
 
   const handleSaveSettings = async (s: Settings) => {
-    if (!isAdmin) {
-      alert("You do not have permission to save settings.");
-      return;
-    }
     try {
       await setDoc(doc(db, "settings", "global"), s);
     } catch (err) {

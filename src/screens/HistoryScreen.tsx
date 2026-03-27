@@ -36,10 +36,6 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
 
   const handleMarkAsPaid = (e: React.MouseEvent, bill: Bill) => {
     e.stopPropagation();
-    if (!isAdmin) {
-      alert("Only Admin can settle Udhar payments.");
-      return;
-    }
     if (window.confirm(`Kya aap is bill (#${bill.id}) ko PAID mark karna chahte hain?`)) {
       onUpdateBill({
         ...bill,
@@ -52,10 +48,6 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
 
   const handleDelete = (e: React.MouseEvent, bill: Bill) => {
     e.stopPropagation();
-    if (!isAdmin) {
-      alert("Only Admin can delete bills.");
-      return;
-    }
     if (window.confirm(`⚠️ WARNING: Kya aap is bill (#${bill.id}) ko PERMANENTLY DELETE karna chahte hain? Ye action wapas nahi liya ja sakta.`)) {
       onDeleteBill(bill.id);
     }
@@ -86,7 +78,7 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
           >
             📥 Export
           </button>
-          {bills.length > 0 && isAdmin && (
+          {bills.length > 0 && (
             <button 
               onClick={() => {
                 if (window.confirm("⚠️ KYA AAP SARE BILLS DELETE KARNA CHAHTE HAIN? Ye action wapas nahi liya ja sakta.")) {
@@ -155,15 +147,13 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
                     >
                       ✏️ Edit
                     </button>
-                    {isAdmin && (
-                      <button 
-                        onClick={(e) => handleDelete(e, b)}
-                        style={{ background: "transparent", color: C.red, border: "none", padding: 6, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.6 }}
-                        title="Delete Bill"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    )}
+                    <button 
+                      onClick={(e) => handleDelete(e, b)}
+                      style={{ background: "transparent", color: C.red, border: "none", padding: 6, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.6 }}
+                      title="Delete Bill"
+                    >
+                      <Trash2 size={18} />
+                    </button>
                   </div>
                   <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark }}>₹{fmt(b.total)}</p>
                   {b.paymentStatus === "UNPAID" && (
@@ -186,11 +176,9 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
                     <button onClick={(e) => handleReminder(e, b)} style={{ flex: 1, background: C.accent, color: "#fff", padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)" }}>
                       🔔 Remind
                     </button>
-                    {isAdmin && (
-                      <button onClick={(e) => handleMarkAsPaid(e, b)} style={{ flex: 1, background: C.dark, color: C.accent, padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(10, 31, 68, 0.2)" }}>
-                        ✅ Settle
-                      </button>
-                    )}
+                    <button onClick={(e) => handleMarkAsPaid(e, b)} style={{ flex: 1, background: C.dark, color: C.accent, padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(10, 31, 68, 0.2)" }}>
+                      ✅ Settle
+                    </button>
                   </>
                 ) : (
                   <div style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, borderRadius: 12, fontSize: 11, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>
