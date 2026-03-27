@@ -1,0 +1,5 @@
+{
+  "name": "Nupesh-billing",
+  "description": "A professional shop billing application with invoice generation, PDF export, and WhatsApp sharing.",
+  "requestFramePermissions": []
+}

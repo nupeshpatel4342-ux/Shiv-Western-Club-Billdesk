@@ -1,0 +1,69 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User profile and role information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Unique user ID from Firebase Auth" },
+        "email": { "type": "string", "format": "email", "description": "User's email address" },
+        "displayName": { "type": "string", "description": "User's display name" },
+        "photoURL": { "type": "string", "description": "User's profile picture URL" },
+        "role": { "type": "string", "enum": ["admin", "staff"], "description": "User's role in the system" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user was created" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Bill": {
+      "title": "Bill",
+      "description": "Invoice or bill record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique bill ID" },
+        "date": { "type": "string", "description": "Formatted date string" },
+        "time": { "type": "string", "description": "Formatted time string" },
+        "timestamp": { "type": "number", "description": "Unix timestamp" },
+        "customer": { "type": "string", "description": "Customer name" },
+        "mobile": { "type": "string", "description": "Customer mobile number" },
+        "items": { "type": "array", "description": "List of items in the bill" },
+        "subtotal": { "type": "number", "description": "Subtotal amount" },
+        "discount": { "type": "number", "description": "Discount amount" },
+        "total": { "type": "number", "description": "Total bill amount" },
+        "paidAmount": { "type": "number", "description": "Amount paid by customer" },
+        "balance": { "type": "number", "description": "Remaining balance (Udhar)" },
+        "paymentStatus": { "type": "string", "enum": ["PAID", "UNPAID"], "description": "Payment status" },
+        "createdBy": { "type": "string", "description": "UID of the user who created the bill" }
+      },
+      "required": ["id", "timestamp", "total", "paymentStatus"]
+    },
+    "Settings": {
+      "title": "Shop Settings",
+      "description": "Global shop configuration",
+      "type": "object",
+      "properties": {
+        "shopName": { "type": "string" },
+        "ownerName": { "type": "string" },
+        "address": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "currency": { "type": "string" },
+        "upiQrCode": { "type": "string", "description": "Base64 string of the UPI QR code image" },
+        "logo": { "type": "string", "description": "Base64 string of the shop logo" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "User profiles and roles"
+    },
+    "/bills/{billId}": {
+      "schema": "Bill",
+      "description": "All bills generated in the system"
+    },
+    "/settings/global": {
+      "schema": "Settings",
+      "description": "Global shop settings"
+    }
+  }
+}
