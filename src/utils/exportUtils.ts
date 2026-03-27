@@ -623,6 +623,9 @@ export const doExcelExport = (bills: Bill[]) => {
   const summaryEndCol = 6;   // G
   const summaryLastRow = totalStartRow + 1;
 
+  const getSummaryBoxStyle = (row: number, col: number, isValue = false) => ({
+    ...totalStyleBase,
+    alignment: { horizontal: isValue ? "right" : "left", vertical: "center" },
   const getSummaryBoxStyle = (row: number, col: number) => ({
     ...totalStyleBase,
     border: {
@@ -637,12 +640,14 @@ export const doExcelExport = (bills: Bill[]) => {
   const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryStartCol });
   const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryEndCol });
   ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow, summaryStartCol) };
+  ws[cashValueAddr] = { v: cashTotal, t: "n", z: "#,##0.00", s: getSummaryBoxStyle(totalStartRow, summaryEndCol, true) };
   ws[cashValueAddr] = { v: cashTotal, t: "n", s: getSummaryBoxStyle(totalStartRow, summaryEndCol) };
 
   // Add UPI Total
   const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryStartCol });
   const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryEndCol });
   ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow + 1, summaryStartCol) };
+  ws[upiValueAddr] = { v: upiTotal, t: "n", z: "#,##0.00", s: getSummaryBoxStyle(totalStartRow + 1, summaryEndCol, true) };
   ws[upiValueAddr] = { v: upiTotal, t: "n", s: getSummaryBoxStyle(totalStartRow + 1, summaryEndCol) };
 
   // Update range to include new rows
