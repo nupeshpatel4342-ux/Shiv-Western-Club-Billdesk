@@ -569,6 +569,18 @@ export const doExcelExport = (bills: Bill[]) => {
     }
   };
 
+  const grandTotalStyle = {
+    font: { bold: true, sz: 13, color: { rgb: "000000" } },
+    fill: { fgColor: { rgb: "FFE699" } },
+    alignment: { horizontal: "right", vertical: "center" },
+    border: {
+      top: { style: "medium", color: { rgb: "000000" } },
+      bottom: { style: "medium", color: { rgb: "000000" } },
+      left: { style: "medium", color: { rgb: "000000" } },
+      right: { style: "medium", color: { rgb: "000000" } }
+    }
+  };
+
   // Apply styles to data range
   const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
   
