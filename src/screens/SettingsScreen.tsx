@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
 import { Divider, Pill } from "../components/Layout";
+import Cropper from "react-easy-crop";
+import { getCroppedImg } from "../utils/imageUtils";
 
 export const SettingsScreen = ({ 
   settings, 
@@ -22,6 +24,48 @@ export const SettingsScreen = ({
   const [p, setP] = useState<UserProfile | null>(profile);
   const [saved, setSaved] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
+
+  // Cropper State
+  const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [cropType, setCropType] = useState<"logo" | "profile" | null>(null);
+  const [crop, setCrop] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<any>(null);
+  const [isCropping, setIsCropping] = useState(false);
+
+  const onCropComplete = useCallback((_croppedArea: any, croppedAreaPixels: any) => {
+    setCroppedAreaPixels(croppedAreaPixels);
+  }, []);
+
+  const handleCropSave = async () => {
+    if (!imageToCrop || !croppedAreaPixels) return;
+    setIsCropping(true);
+    try {
+      const croppedImage = await getCroppedImg(imageToCrop, croppedAreaPixels);
+      if (cropType === "logo") {
+        setS({ ...s, logo: croppedImage });
+      } else if (cropType === "profile" && p) {
+        setP({ ...p, photoURL: croppedImage });
+      }
+      setImageToCrop(null);
+      setCropType(null);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsCropping(false);
+    }
+  };
+
+  const onFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: "logo" | "profile") => {
+    if (e.target.files && e.target.files.length > 0) {
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        setImageToCrop(reader.result as string);
+        setCropType(type);
+      });
+      reader.readAsDataURL(e.target.files[0]);
+    }
+  };
 
   const saveSettings = () => {
     onSave(s);
@@ -110,16 +154,7 @@ export const SettingsScreen = ({
               type="file" 
               accept="image/*" 
               style={{ display: "none" }} 
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    setP({ ...p, photoURL: reader.result as string });
-                  };
-                  reader.readAsDataURL(file);
-                }
-              }} 
+              onChange={(e) => onFileChange(e, "profile")} 
             />
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6 }}>Display Name</label>
@@ -170,16 +205,7 @@ export const SettingsScreen = ({
             type="file" 
             accept="image/*" 
             style={{ display: "none" }} 
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                const reader = new FileReader();
-                reader.onloadend = () => {
-                  setS({ ...s, logo: reader.result as string });
-                };
-                reader.readAsDataURL(file);
-              }
-            }} 
+            onChange={(e) => onFileChange(e, "logo")} 
           />
           <div>
             <p className="pf" style={{ fontSize: 16, fontWeight: 800, color: C.dark }}>Shop Logo</p>
@@ -314,6 +340,54 @@ export const SettingsScreen = ({
         <p style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Shiv Western Club v1.0</p>
         <p style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Made with ❤️ for Shop Owners</p>
       </div>
+
+      {/* Cropper Modal */}
+      {imageToCrop && (
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.9)", zIndex: 1000, display: "flex", flexDirection: "column" }}>
+          <div style={{ position: "relative", flex: 1 }}>
+            <Cropper
+              image={imageToCrop}
+              crop={crop}
+              zoom={zoom}
+              aspect={cropType === "logo" ? 1 : 1}
+              onCropChange={setCrop}
+              onCropComplete={onCropComplete}
+              onZoomChange={setZoom}
+              cropShape={cropType === "profile" ? "round" : "rect"}
+              showGrid={true}
+            />
+          </div>
+          <div style={{ padding: 24, background: C.card, borderTop: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 12, color: C.muted, fontWeight: 700 }}>ZOOM</span>
+              <input 
+                type="range" 
+                min={1} 
+                max={3} 
+                step={0.1} 
+                value={zoom} 
+                onChange={(e) => setZoom(Number(e.target.value))} 
+                style={{ flex: 1, accentColor: C.accent }}
+              />
+            </div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+              <button 
+                onClick={() => { setImageToCrop(null); setCropType(null); }}
+                style={{ padding: "16px", borderRadius: 14, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCropSave}
+                disabled={isCropping}
+                style={{ background: C.dark, color: C.accent, padding: "16px", borderRadius: 14, fontSize: 14, fontWeight: 900, border: `1.5px solid ${C.accent}`, opacity: isCropping ? 0.7 : 1 }}
+              >
+                {isCropping ? "Processing..." : "Apply Crop"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

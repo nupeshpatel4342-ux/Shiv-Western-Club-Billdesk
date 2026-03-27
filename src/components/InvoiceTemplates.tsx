@@ -5,107 +5,105 @@ import { Bill, Settings } from "../types";
 import { Divider, Pill } from "./Layout";
 
 export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, settings: Settings, invRef: React.RefObject<HTMLDivElement | null> }) => (
-  <div ref={invRef} className="bg-card rounded-3xl p-6 md:p-8 shadow-sm mb-8 relative overflow-hidden border border-border" style={{ background: C.card, borderColor: C.border }}>
-    <div className="absolute -top-5 -right-5 w-32 h-32 rounded-full opacity-5" style={{ background: C.accent }} />
+  <div ref={invRef} style={{ minWidth: 600, background: C.card, borderRadius: 24, padding: 32, marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
+    <div style={{ position: "absolute", top: -20, right: -20, width: 128, height: 128, borderRadius: "50%", opacity: 0.05, background: C.accent }} />
     
-    <div className="flex flex-col md:flex-row justify-between items-start mb-8 gap-6 md:gap-0">
-      <div className="flex gap-4 items-start">
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
+      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
         {settings.logo && (
-          <div className="w-14 h-14 rounded-xl overflow-hidden border bg-white flex-shrink-0" style={{ borderColor: C.border }}>
-            <img src={settings.logo} alt="Logo" className="w-full h-full object-contain" />
+          <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+            <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
         )}
         <div>
-          <h1 className="pf text-xl md:text-2xl font-black mb-1 tracking-tight" style={{ color: C.dark }}>{settings.shopName}</h1>
-          <p className="text-xs font-medium max-w-[200px] leading-relaxed" style={{ color: C.muted }}>{settings.address}</p>
-          <p className="text-xs font-semibold mt-1" style={{ color: C.muted }}>📞 {settings.phone}</p>
+          <h1 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
+          <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, maxWidth: 250, lineHeight: 1.4 }}>{settings.address}</p>
+          <p style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginTop: 4 }}>📞 {settings.phone}</p>
         </div>
       </div>
-      <div className="text-left md:text-right">
+      <div style={{ textAlign: "right" }}>
         <Pill bg={C.dark} color={C.accent}>INVOICE</Pill>
-        <p className="pf text-base md:text-lg font-black mt-2" style={{ color: C.dark }}>#{bill.id}</p>
-        <p className="text-xs font-medium mt-1" style={{ color: C.muted }}>{bill.date} &middot; {bill.time}</p>
+        <p className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, marginTop: 8 }}>#{bill.id}</p>
+        <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginTop: 4 }}>{bill.date} &middot; {bill.time}</p>
       </div>
     </div>
 
     <Divider my={24} />
 
-    <div className="mb-8">
-      <p className="pf text-[10px] font-extrabold uppercase tracking-widest mb-2" style={{ color: C.muted }}>Billed To</p>
-      <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
+    <div style={{ marginBottom: 32 }}>
+      <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 8 }}>Billed To</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <p className="pf text-base md:text-lg font-extrabold" style={{ color: C.dark }}>{bill.customerObj.name}</p>
-          <p className="text-xs md:text-sm font-medium mt-1" style={{ color: C.muted }}>📞 {bill.customerObj.phone}</p>
+          <p className="pf" style={{ fontSize: 18, fontWeight: 800, color: C.dark }}>{bill.customerObj.name}</p>
+          <p style={{ fontSize: 13, fontWeight: 500, color: C.muted, marginTop: 4 }}>📞 {bill.customerObj.phone}</p>
         </div>
-        <div className="text-left md:text-right">
-          <p className="pf text-[10px] font-extrabold uppercase tracking-widest mb-1.5" style={{ color: C.muted }}>Payment</p>
+        <div style={{ textAlign: "right" }}>
+          <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 6 }}>Payment</p>
           <Pill bg={C.bg} color={C.dark} small>{bill.paymentMethod}</Pill>
         </div>
       </div>
-      {bill.customerObj.address && <p className="text-xs font-medium mt-2" style={{ color: C.muted }}>📍 {bill.customerObj.address}</p>}
+      {bill.customerObj.address && <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginTop: 8 }}>📍 {bill.customerObj.address}</p>}
     </div>
 
-    <div className="mb-8 overflow-x-auto">
-      <div className="min-w-[500px]">
-        <div className="grid grid-cols-[1.5fr_0.5fr_0.8fr_0.8fr_1fr] py-2.5 border-b-2 mb-3" style={{ borderColor: C.dark }}>
-          <span className="pf text-[10px] font-extrabold uppercase tracking-widest" style={{ color: C.dark }}>Item Description</span>
-          <span className="pf text-[10px] font-extrabold uppercase tracking-widest text-center" style={{ color: C.dark }}>Qty</span>
-          <span className="pf text-[10px] font-extrabold uppercase tracking-widest text-right" style={{ color: C.dark }}>MRP</span>
-          <span className="pf text-[10px] font-extrabold uppercase tracking-widest text-right" style={{ color: C.dark }}>Discount</span>
-          <span className="pf text-[10px] font-extrabold uppercase tracking-widest text-right" style={{ color: C.dark }}>Amount</span>
-        </div>
-        {bill.items.map(it => (
-          <div key={it.id} className="grid grid-cols-[1.5fr_0.5fr_0.8fr_0.8fr_1fr] py-4 border-b" style={{ borderColor: C.bg }}>
-            <div>
-              <p className="text-sm font-bold" style={{ color: C.dark }}>{it.name}</p>
-              {it.sku && <p className="text-[11px] font-medium" style={{ color: C.muted }}>#{it.sku}</p>}
-            </div>
-            <span className="text-sm font-semibold text-center" style={{ color: C.dark }}>{it.qty}</span>
-            <span className="text-sm font-semibold text-right" style={{ color: C.muted }}>₹{fmt(it.price)}</span>
-            <span className="text-sm font-semibold text-right" style={{ color: C.accent }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
-            <span className="pf text-sm font-extrabold text-right" style={{ color: C.dark }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
-          </div>
-        ))}
+    <div style={{ marginBottom: 32 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "10px 0", borderBottom: `2px solid ${C.dark}`, marginBottom: 12 }}>
+        <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", letterSpacing: "1px" }}>Item Description</span>
+        <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "center", letterSpacing: "1px" }}>Qty</span>
+        <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>MRP</span>
+        <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Discount</span>
+        <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Amount</span>
       </div>
+      {bill.items.map(it => (
+        <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "16px 0", borderBottom: `1px solid ${C.bg}` }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.dark }}>{it.name}</p>
+            {it.sku && <p style={{ fontSize: 11, fontWeight: 500, color: C.muted }}>#{it.sku}</p>}
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.dark, textAlign: "center" }}>{it.qty}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: C.accent, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
+          <span className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
+        </div>
+      ))}
     </div>
 
-    <div className="rounded-2xl p-5 md:p-6" style={{ background: C.bg }}>
-      <div className="flex justify-between mb-2.5">
-        <span className="text-xs md:text-sm font-semibold" style={{ color: C.muted }}>Subtotal</span>
-        <span className="pf text-sm md:text-base font-extrabold" style={{ color: C.dark }}>₹{fmt(bill.subtotal)}</span>
+    <div style={{ borderRadius: 16, padding: 24, background: C.bg }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>Subtotal</span>
+        <span className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark }}>₹{fmt(bill.subtotal)}</span>
       </div>
       {bill.discount > 0 && (
-        <div className="flex justify-between mb-2.5">
-          <span className="text-xs md:text-sm font-semibold" style={{ color: C.muted }}>Discount</span>
-          <span className="pf text-sm md:text-base font-extrabold" style={{ color: C.accent }}>−₹{fmt(bill.discount)}</span>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.muted }}>Discount</span>
+          <span className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.accent }}>−₹{fmt(bill.discount)}</span>
         </div>
       )}
       <Divider my={16} />
-      <div className="flex justify-between items-center">
-        <span className="pf text-sm md:text-base font-black uppercase tracking-wide" style={{ color: C.dark }}>Grand Total</span>
-        <span className="pf text-2xl md:text-3xl font-black" style={{ color: C.dark }}>₹{fmt(bill.total)}</span>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span className="pf" style={{ fontSize: 14, fontWeight: 900, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Grand Total</span>
+        <span className="pf" style={{ fontSize: 28, fontWeight: 900, color: C.dark }}>₹{fmt(bill.total)}</span>
       </div>
-      <p className="text-[10px] font-semibold italic mt-3 text-right capitalize" style={{ color: C.muted }}>
+      <p style={{ fontSize: 10, fontWeight: 600, fontStyle: "italic", marginTop: 12, textAlign: "right", color: C.muted, textTransform: "capitalize" }}>
         {numToWords(bill.total)} Rupees Only
       </p>
     </div>
 
     {settings.upiQrCode && (
-      <div className="mt-6 text-center flex flex-col items-center">
-        <p className="pf text-[10px] font-extrabold uppercase tracking-widest mb-3" style={{ color: C.muted }}>Scan to Pay via UPI</p>
-        <div className="bg-white p-3 rounded-2xl border shadow-sm" style={{ borderColor: C.border }}>
-          <img src={settings.upiQrCode} alt="UPI QR" className="w-24 h-24 md:w-28 md:h-28 block" />
+      <div style={{ marginTop: 24, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 12 }}>Scan to Pay via UPI</p>
+        <div style={{ background: "#fff", padding: 12, borderRadius: 16, border: `1px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
+          <img src={settings.upiQrCode} alt="UPI QR" style={{ width: 112, height: 112, display: "block" }} />
         </div>
       </div>
     )}
 
-    <div className="mt-8 pt-6 border-t border-dashed text-center" style={{ borderColor: C.border }}>
-      <p className="pf text-sm font-extrabold uppercase tracking-wide mb-2" style={{ color: C.dark }}>Thank You For Shopping!</p>
-      <p className="text-[11px] font-semibold mb-1" style={{ color: C.muted }}>{settings.shopName}</p>
-      <p className="text-[10px] font-medium mb-0.5" style={{ color: C.muted }}>{settings.address}</p>
-      <p className="text-[10px] font-medium mb-0.5" style={{ color: C.muted }}>📞 {settings.phone} {settings.email ? `| ✉️ ${settings.email}` : ""}</p>
-      {settings.gstId && <p className="text-[10px] font-medium mb-2" style={{ color: C.muted }}>GSTIN: {settings.gstId}</p>}
-      <p className="text-[9px] font-medium mt-3 opacity-70" style={{ color: C.muted }}>Computer Generated Invoice</p>
+    <div style={{ marginTop: 32, paddingTop: 24, borderTop: `1px dashed ${C.border}`, textAlign: "center" }}>
+      <p className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 }}>Thank You For Shopping!</p>
+      <p style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginBottom: 4 }}>{settings.shopName}</p>
+      <p style={{ fontSize: 10, fontWeight: 500, color: C.muted, marginBottom: 2 }}>{settings.address}</p>
+      <p style={{ fontSize: 10, fontWeight: 500, color: C.muted, marginBottom: 2 }}>📞 {settings.phone} {settings.email ? `| ✉️ ${settings.email}` : ""}</p>
+      {settings.gstId && <p style={{ fontSize: 10, fontWeight: 500, color: C.muted, marginBottom: 8 }}>GSTIN: {settings.gstId}</p>}
+      <p style={{ fontSize: 9, fontWeight: 500, color: C.muted, marginTop: 12, opacity: 0.7 }}>Computer Generated Invoice</p>
     </div>
   </div>
 );
