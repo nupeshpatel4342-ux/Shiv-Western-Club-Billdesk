@@ -3,6 +3,8 @@ import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
 import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard } from "lucide-react";
 
+const colorMix = (color: string) => `color-mix(in srgb, ${color} 88%, transparent)`;
+
 export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { children: React.ReactNode, color?: string, bg?: string, small?: boolean }) => (
   <span className="pf" style={{ background: bg, color, fontSize: small ? 10 : 11, fontWeight: 700, padding: small ? "2px 8px" : "4px 12px", borderRadius: 100, letterSpacing: "0.8px", display: "inline-block", textTransform: "uppercase" }}>{children}</span>
 );
@@ -14,8 +16,8 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex" }} onClick={onClose}>
       <div className="sinl" onClick={e => e.stopPropagation()}
-        style={{ width: 275, background: C.card, height: "100%", display: "flex", flexDirection: "column", boxShadow: "6px 0 28px rgba(0,0,0,0.18)" }}>
-        <div style={{ background: C.dark, padding: "32px 24px 26px" }}>
+        style={{ width: 290, background: C.card, height: "100%", display: "flex", flexDirection: "column", boxShadow: "10px 0 36px rgba(2,6,23,0.24)", borderRight: `1px solid ${C.border}` }}>
+        <div style={{ background: `linear-gradient(155deg, ${C.dark}, color-mix(in srgb, ${C.dark} 86%, #334155))`, padding: "32px 24px 24px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
             {user?.photoURL ? (
               <img src={user.photoURL} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
@@ -61,8 +63,8 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
 };
 
 export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Settings }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 12px", background: C.card, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100 }}>
-    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s" }}>
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 12px", background: colorMix(C.card), borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(10px)" }}>
+    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s", boxShadow: "0 6px 14px rgba(15,23,42,0.08)" }}>
       <Menu size={22} />
     </button>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -80,7 +82,7 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
 );
 
 export const BottomNav = ({ active, onChange, isAdmin }: { active: string, onChange: (id: string) => void, isAdmin?: boolean }) => (
-  <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
+  <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: colorMix(C.card), position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -10px 28px rgba(15,23,42,0.08)", backdropFilter: "blur(10px)" }}>
     {[
       { id: "bill", icon: <Plus size={24} />, label: "Bill", show: true },
       { id: "dashboard", icon: <LayoutDashboard size={24} />, label: "Stats", show: true },
