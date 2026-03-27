@@ -13,7 +13,7 @@ import {
   isWithinInterval, subDays, format, eachDayOfInterval, subMonths, startOfToday
 } from "date-fns";
 
-export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill }: { bills: Bill[], settings: Settings, onResetAllData: () => void, onCreateBill: () => void }) => {
+export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill, isAdmin }: { bills: Bill[], settings: Settings, onResetAllData: () => void, onCreateBill: () => void, isAdmin: boolean }) => {
   const now = new Date();
   
   const stats = useMemo(() => {
@@ -105,16 +105,18 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill 
             <p style={{ fontSize: 12, color: C.muted, fontWeight: 500 }}>{format(now, "EEEE, dd MMMM")}</p>
           </div>
         </div>
-        <button 
-          onClick={() => {
-            if (window.confirm("⚠️ KYA AAP SARE BILLS AUR SETTINGS RESET KARNA CHAHTE HAIN? Ye action wapas nahi liya ja sakta.")) {
-              onResetAllData();
-            }
-          }}
-          style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF0F0", border: `1px solid ${C.red}22`, display: "flex", alignItems: "center", justifyContent: "center", color: C.red }}
-        >
-          🔄
-        </button>
+        {isAdmin && (
+          <button 
+            onClick={() => {
+              if (window.confirm("⚠️ KYA AAP SARE BILLS AUR SETTINGS RESET KARNA CHAHTE HAIN? Ye action wapas nahi liya ja sakta.")) {
+                onResetAllData();
+              }
+            }}
+            style={{ width: 36, height: 36, borderRadius: 10, background: "#FFF0F0", border: `1px solid ${C.red}22`, display: "flex", alignItems: "center", justifyContent: "center", color: C.red }}
+          >
+            🔄
+          </button>
+        )}
       </div>
 
       {/* Quick Action */}

@@ -4,7 +4,7 @@ import { fmt } from "../utils/formatters";
 import { Bill, Settings } from "../types";
 import { Pill } from "../components/Layout";
 import { Trash2, Shirt } from "lucide-react";
-import { doWhatsApp, doReminderWhatsApp, doCSVExport } from "../utils/exportUtils";
+import { doWhatsApp, doReminderWhatsApp, doExcelExport } from "../utils/exportUtils";
 
 export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBill, onDeleteAllBills, settings, isAdmin }: { bills: Bill[], onView: (bill: Bill) => void, onEdit: (bill: Bill) => void, onUpdateBill: (bill: Bill) => void, onDeleteBill: (id: string) => void, onDeleteAllBills: () => void, settings: Settings, isAdmin?: boolean }) => {
   const [search, setSearch] = useState("");
@@ -81,7 +81,7 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
         </div>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
           <button 
-            onClick={() => doCSVExport(bills)}
+            onClick={() => doExcelExport(bills)}
             style={{ padding: "8px 14px", borderRadius: 12, background: C.bg, border: `1px solid ${C.border}`, fontSize: 11, fontWeight: 800, color: C.dark, display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s" }}
           >
             📥 Export

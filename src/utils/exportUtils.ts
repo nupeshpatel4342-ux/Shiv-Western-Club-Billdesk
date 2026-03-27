@@ -1,5 +1,6 @@
 import React from "react";
 import { Bill, Settings } from "../types";
+import XLSX from "xlsx-js-style";
 
 declare global {
   interface Window {
@@ -253,14 +254,16 @@ export const doPDF = async (bill: Bill, settings: Settings, setLoading?: (loadin
   }
 };
 
-export const doCSVExport = (bills: Bill[]) => {
+
+export const doExcelExport = (bills: Bill[]) => {
   if (bills.length === 0) {
     alert("No bills to export!");
     return;
   }
 
   const headers = ["Bill ID", "Date", "Customer Name", "Customer Phone", "Items Count", "Subtotal", "Discount", "Total", "Paid Amount", "Balance", "Payment Method", "Status", "Created By"];
-  const rows = bills.map(b => [
+  
+  const data = bills.map(b => [
     b.id,
     b.date,
     b.customerObj.name,
@@ -276,18 +279,105 @@ export const doCSVExport = (bills: Bill[]) => {
     b.createdBy || "Unknown"
   ]);
 
-  const csvContent = [
-    headers.join(","),
-    ...rows.map(r => r.map(v => `"${v}"`).join(","))
-  ].join("\n");
+  // Calculate totals
+  const cashTotal = bills.reduce((acc, b) => b.paymentMethod === "CASH" ? acc + b.total : acc, 0);
+  const upiTotal = bills.reduce((acc, b) => b.paymentMethod === "UPI" ? acc + b.total : acc, 0);
 
-  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.setAttribute("href", url);
-  link.setAttribute("download", `Shiv_Western_Club_Backup_${new Date().toISOString().split('T')[0]}.csv`);
-  link.style.visibility = "hidden";
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Create worksheet
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...data]);
+
+  // Styles
+  const headerStyle = {
+    font: { bold: true, color: { rgb: "FFFFFF" }, sz: 12 },
+    fill: { fgColor: { rgb: "0A1F44" } },
+    alignment: { horizontal: "center", vertical: "center" },
+    border: {
+      top: { style: "thin", color: { rgb: "000000" } },
+      bottom: { style: "thin", color: { rgb: "000000" } },
+      left: { style: "thin", color: { rgb: "000000" } },
+      right: { style: "thin", color: { rgb: "000000" } }
+    }
+  };
+
+  const dataStyle = {
+    font: { sz: 11 },
+    alignment: { horizontal: "left", vertical: "center", wrapText: true },
+    border: {
+      top: { style: "thin", color: { rgb: "CCCCCC" } },
+      bottom: { style: "thin", color: { rgb: "CCCCCC" } },
+      left: { style: "thin", color: { rgb: "CCCCCC" } },
+      right: { style: "thin", color: { rgb: "CCCCCC" } }
+    }
+  };
+
+  const zebraStyle = {
+    ...dataStyle,
+    fill: { fgColor: { rgb: "F9FAFB" } } // Very light gray for alternating rows
+  };
+
+  const totalStyle = {
+    font: { bold: true, sz: 16, color: { rgb: "000000" } },
+    fill: { fgColor: { rgb: "FFFF00" } }, // Yellow highlight
+    alignment: { horizontal: "right", vertical: "center" },
+    border: {
+      top: { style: "medium", color: { rgb: "000000" } },
+      bottom: { style: "medium", color: { rgb: "000000" } },
+      left: { style: "medium", color: { rgb: "000000" } },
+      right: { style: "medium", color: { rgb: "000000" } }
+    }
+  };
+
+  // Apply styles to data range
+  const range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  
+  // Auto-calculate column widths
+  const colWidths = headers.map((h, i) => {
+    let maxLen = h.length;
+    data.forEach(row => {
+      const val = String(row[i] || "");
+      if (val.length > maxLen) maxLen = val.length;
+    });
+    return { wch: Math.min(maxLen + 4, 40) }; // Cap width at 40
+  });
+  ws['!cols'] = colWidths;
+
+  for (let R = range.s.r; R <= range.e.r; ++R) {
+    for (let C = range.s.c; C <= range.e.c; ++C) {
+      const address = XLSX.utils.encode_cell({ r: R, c: C });
+      if (!ws[address]) continue;
+
+      if (R === 0) {
+        ws[address].s = headerStyle;
+      } else {
+        ws[address].s = R % 2 === 0 ? zebraStyle : dataStyle;
+      }
+    }
+  }
+
+  // Add 5 empty rows after data
+  const totalStartRow = range.e.r + 5;
+
+  // Add Cash Total (Skip 5 columns, so start at column index 5 which is 'F')
+  const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 5 });
+  const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 6 });
+  ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: 's', s: totalStyle };
+  ws[cashValueAddr] = { v: cashTotal, t: 'n', s: totalStyle };
+
+  // Add UPI Total
+  const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 5 });
+  const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 6 });
+  ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: 's', s: totalStyle };
+  ws[upiValueAddr] = { v: upiTotal, t: 'n', s: totalStyle };
+
+  // Update range to include new rows
+  ws['!ref'] = XLSX.utils.encode_range({
+    s: { r: 0, c: 0 },
+    e: { r: totalStartRow + 1, c: range.e.c }
+  });
+
+  // Create workbook and save
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Bills History");
+  
+  XLSX.writeFile(wb, `Shiv_Western_Club_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
 };

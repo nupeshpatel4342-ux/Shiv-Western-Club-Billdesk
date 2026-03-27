@@ -296,13 +296,19 @@ export const SettingsScreen = ({
       </div>
 
       {/* Save Shop Settings Button */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
-        <button onClick={() => setS(settings)} style={{ padding: "18px", borderRadius: 18, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}>Discard</button>
-        <button onClick={saveSettings}
-          style={{ background: saved ? C.green : C.dark, color: saved ? "#fff" : C.accent, padding: "18px", borderRadius: 18, fontSize: 14, fontWeight: 900, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.15)", transition: "all 0.2s", border: `1.5px solid ${C.accent}`, textTransform: "uppercase", letterSpacing: "0.5px" }}>
-          {saved ? "Saved! ✓" : "Save Settings"}
-        </button>
-      </div>
+      {profile?.role === "admin" ? (
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
+          <button onClick={() => setS(settings)} style={{ padding: "18px", borderRadius: 18, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}>Discard</button>
+          <button onClick={saveSettings}
+            style={{ background: saved ? C.green : C.dark, color: saved ? "#fff" : C.accent, padding: "18px", borderRadius: 18, fontSize: 14, fontWeight: 900, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.15)", transition: "all 0.2s", border: `1.5px solid ${C.accent}`, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+            {saved ? "Saved! ✓" : "Save Settings"}
+          </button>
+        </div>
+      ) : (
+        <div style={{ padding: "20px", borderRadius: 18, background: "#FFF0F0", border: `1px solid ${C.red}22`, color: C.red, fontSize: 13, fontWeight: 700, textAlign: "center", marginBottom: 40 }}>
+          ⚠️ Only Admin can change Shop Identity & Settings.
+        </div>
+      )}
 
       <div style={{ marginTop: 40, textAlign: "center" }}>
         <p style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Shiv Western Club v1.0</p>

@@ -43,6 +43,8 @@ const App = () => {
     return saved === "true";
   });
 
+  const isAdmin = profile?.role === "admin";
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -150,6 +152,10 @@ const App = () => {
   };
 
   const handleDeleteAllBills = async () => {
+    if (!isAdmin) {
+      alert("Only admin can delete all bills.");
+      return;
+    }
     try {
       const promises = bills.map(b => deleteDoc(doc(db, "bills", b.id)));
       await Promise.all(promises);
@@ -159,6 +165,10 @@ const App = () => {
   };
 
   const handleResetAllData = async () => {
+    if (!isAdmin) {
+      alert("Only admin can reset all data.");
+      return;
+    }
     try {
       // Delete all bills
       const billPromises = bills.map(b => deleteDoc(doc(db, "bills", b.id)));
@@ -182,6 +192,10 @@ const App = () => {
   };
 
   const handleSaveSettings = async (s: Settings) => {
+    if (!isAdmin) {
+      alert("You do not have permission to save settings.");
+      return;
+    }
     try {
       await setDoc(doc(db, "settings", "global"), s);
     } catch (err) {
@@ -557,8 +571,8 @@ const App = () => {
     switch (tab) {
       case "bill": return <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />;
       case "invoice": return currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />;
-      case "history": return <HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={true} />;
-      case "dashboard": return <DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} />;
+      case "history": return <HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} />;
+      case "dashboard": return <DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />;
       case "settings": return <SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />;
       default: return <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />;
     }
@@ -573,7 +587,7 @@ const App = () => {
         {renderScreen()}
       </main>
 
-      {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} isAdmin={true} />}
+      {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} isAdmin={isAdmin} />}
     </div>
   );
 };
