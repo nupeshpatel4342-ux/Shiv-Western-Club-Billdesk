@@ -27,6 +27,193 @@ const loadJsPDF = () => new Promise<any>((resolve, reject) => {
   document.head.appendChild(s);
 });
 
+const escapeHtml = (value: string = "") =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+
+const buildInvoiceHtmlDocument = (bill: Bill, settings: Settings) => {
+  const itemsHtml = bill.items.map((it, idx) => {
+    const lineTotal = it.qty * Math.max(0, it.price - (it.discount || 0));
+    return `
+      <tr>
+        <td>${idx + 1}</td>
+        <td>${escapeHtml(it.name)}</td>
+        <td>${it.qty}</td>
+        <td>₹${it.price}</td>
+        <td>${it.discount ? `₹${it.discount}` : "-"}</td>
+        <td>₹${lineTotal}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    @page { size: A4; margin: 12mm; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      color: #1f2937;
+      background: #ffffff;
+    }
+    .invoice {
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #0a1f44 0%, #183b7a 100%);
+      color: #fff;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.3px; }
+    .sub { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+    .content { padding: 20px; }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+    }
+    .label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #64748b;
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+    .value {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+    th {
+      text-align: left;
+      background: #eef2ff;
+      border-bottom: 1px solid #dbeafe;
+      color: #1e3a8a;
+      padding: 10px 8px;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    td {
+      border-bottom: 1px solid #f1f5f9;
+      padding: 9px 8px;
+      color: #334155;
+    }
+    .totals {
+      margin-top: 16px;
+      margin-left: auto;
+      width: 280px;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      background: #f8fafc;
+    }
+    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+    .row.total {
+      margin-top: 6px;
+      padding-top: 10px;
+      border-top: 1px dashed #cbd5e1;
+      font-size: 18px;
+      font-weight: 800;
+      color: #0a1f44;
+    }
+    .footer {
+      margin-top: 22px;
+      padding-top: 14px;
+      border-top: 1px dashed #cbd5e1;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+  </style>
+</head>
+<body>
+  <section class="invoice">
+    <div class="header">
+      <div>
+        <h1 class="title">${escapeHtml(settings.shopName || "Invoice")}</h1>
+        <p class="sub">${escapeHtml(settings.address || "-")}</p>
+        <p class="sub">📞 ${escapeHtml(settings.phone || "-")} ${settings.email ? `| ✉️ ${escapeHtml(settings.email)}` : ""}</p>
+      </div>
+      <div style="text-align:right;">
+        <p class="label" style="color:#bfdbfe;margin:0 0 2px;">Invoice No</p>
+        <p class="value" style="color:#fff;margin:0;">#${escapeHtml(bill.id)}</p>
+        <p class="sub">${escapeHtml(bill.date)} ${escapeHtml(bill.time)}</p>
+      </div>
+    </div>
+    <div class="content">
+      <div class="meta-grid">
+        <div class="card">
+          <div class="label">Billed To</div>
+          <div class="value">${escapeHtml(bill.customerObj.name)}</div>
+          <div style="margin-top:4px;font-size:12px;color:#475569;">${escapeHtml(bill.customerObj.phone || "-")}</div>
+        </div>
+        <div class="card">
+          <div class="label">Payment</div>
+          <div class="value">${escapeHtml(bill.paymentMethod)}</div>
+          <div style="margin-top:4px;font-size:12px;color:#475569;">Status: ${escapeHtml(bill.paymentStatus)}</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 34px;">#</th>
+            <th>Item</th>
+            <th style="width: 56px;">Qty</th>
+            <th style="width: 74px;">Price</th>
+            <th style="width: 84px;">Discount</th>
+            <th style="width: 84px;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHtml}</tbody>
+      </table>
+
+      <div class="totals">
+        <div class="row"><span>Subtotal</span><strong>₹${bill.subtotal}</strong></div>
+        ${bill.discount > 0 ? `<div class="row"><span>Discount</span><strong>-₹${bill.discount}</strong></div>` : ""}
+        <div class="row total"><span>Total</span><span>₹${bill.total}</span></div>
+      </div>
+
+      <div class="footer">
+        <div>Thank you for shopping with us.</div>
+        ${settings.gstId ? `<div style="margin-top:4px;">GSTIN: ${escapeHtml(settings.gstId)}</div>` : ""}
+      </div>
+    </div>
+  </section>
+</body>
+</html>
+  `;
+};
+
 const buildTempInvoice = (bill: Bill, settings: Settings) => {
   const el = document.createElement("div");
   el.style.cssText = "width:400px;background:#fff;padding:24px;font-family:sans-serif;position:fixed;left:-9999px;top:0;z-index:-1;";
@@ -212,6 +399,34 @@ export const doPDF = async (bill: Bill, settings: Settings, setLoading?: (loadin
   if (setLoading) setLoading(true);
   let tempEl: HTMLElement | null = null;
   try {
+    try {
+      const pdfServiceBaseUrl = ((import.meta as any).env?.VITE_PDF_SERVICE_URL || "http://localhost:4173").replace(/\/$/, "");
+      const puppeteerResponse = await fetch(`${pdfServiceBaseUrl}/api/render-invoice-pdf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          html: buildInvoiceHtmlDocument(bill, settings),
+          fileName: `Invoice_${bill.id}.pdf`,
+        }),
+      });
+
+      if (puppeteerResponse.ok) {
+        const blob = await puppeteerResponse.blob();
+        const fileUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = fileUrl;
+        a.download = `Invoice_${bill.id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(fileUrl), 3000);
+        if (setLoading) setLoading(false);
+        return;
+      }
+    } catch (serviceErr) {
+      console.warn("Puppeteer PDF service unavailable. Falling back to jsPDF.", serviceErr);
+    }
+
     const h2c = await loadHtml2Canvas();
     const JsPDF = await loadJsPDF();
     let el = (invoiceRef && invoiceRef.current) ? invoiceRef.current : null;
