@@ -68,7 +68,7 @@ const buildInvoiceHtmlDocument = (bill: Bill, settings: Settings) => {
     .invoice {
       border: 1px solid #e5e7eb;
       border-radius: 14px;
-      overflow: hidden;
+      overflow: visible;
     }
     .header {
       background: linear-gradient(135deg, #0a1f44 0%, #183b7a 100%);
@@ -122,6 +122,8 @@ const buildInvoiceHtmlDocument = (bill: Bill, settings: Settings) => {
       text-transform: uppercase;
       letter-spacing: 0.6px;
     }
+    thead { display: table-header-group; }
+    tr, td, th { page-break-inside: avoid; }
     td {
       border-bottom: 1px solid #f1f5f9;
       padding: 9px 8px;
@@ -453,12 +455,24 @@ export const doPDF = async (bill: Bill, settings: Settings, setLoading?: (loadin
 
     // Use JPEG with max quality for better performance and smaller file size at high resolution
     const imgData = canvas.toDataURL("image/jpeg", 1.0);
-    
+
     const doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
     const pdfWidth = doc.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    
-    doc.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    doc.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      doc.addPage();
+      doc.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
     doc.save(`Invoice_${bill.id}.pdf`);
     if (setLoading) setLoading(false);
   } catch (err: any) {
