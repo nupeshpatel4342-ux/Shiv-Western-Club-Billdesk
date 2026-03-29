@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { C } from "./constants";
 import { Bill, Settings, UserProfile } from "./types";
 import { Header, Drawer, BottomNav } from "./components/Layout";
-import { Shirt, Sparkles } from "lucide-react";
+import { Shirt } from "lucide-react";
 import { NewBillScreen } from "./screens/NewBillScreen";
 import { InvoiceScreen } from "./screens/InvoiceScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
@@ -11,6 +11,7 @@ import { DashboardScreen } from "./screens/DashboardScreen";
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { AnimatePresence, motion } from "motion/react";
 
 const App = () => {
   const [tab, setTab] = useState("bill");
@@ -348,54 +349,41 @@ const App = () => {
 
   if (!user) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20, position: "relative", overflow: "hidden" }}>
-        <div className="fashion-animated-bg" aria-hidden="true">
-          {Array.from({ length: 10 }).map((_, index) => (
-            <span
-              key={index}
-              className="fashion-float"
-              style={{
-                left: `${8 + index * 9}%`,
-                animationDelay: `${index * 0.4}s`,
-                animationDuration: `${6 + (index % 4)}s`
-              }}
-            >
-              <Shirt size={index % 2 === 0 ? 20 : 16} strokeWidth={1.8} />
-            </span>
-          ))}
-        </div>
-        <div className="fade glass-card cloth-login-card" style={{ width: "100%", maxWidth: 380, borderRadius: 30, padding: 30, textAlign: "center", position: "relative", zIndex: 1 }}>
-          <div className="cloth-glow" aria-hidden="true" />
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
+        <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)" }}>
           {settings?.logo ? (
             <img src={settings.logo} alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", margin: "0 auto 24px" }} />
           ) : (
-            <div className="cloth-logo-wrap" style={{ width: 64, height: 64, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
+            <div style={{ width: 64, height: 64, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
               <Shirt color={C.accent} size={32} strokeWidth={2.5} />
             </div>
           )}
-          <h1 className="pf" style={{ fontSize: 25, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.02em" }}>{settings?.shopName || "Shiv Western Club"}</h1>
-          <p style={{ fontSize: 14, color: C.muted, marginBottom: 28, lineHeight: 1.6, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-            <Sparkles size={14} />
-            Welcome back 👋 Please authenticate to continue billing operations.
-          </p>
+          <h1 className="pf" style={{ fontSize: 22, fontWeight: 700, color: C.dark, marginBottom: 8 }}>{settings?.shopName || "Shiv Western Club"}</h1>
+          <p style={{ fontSize: 14, color: C.muted, marginBottom: 32 }}>Staff & Admin Login required to continue.</p>
           
           {loginMode === "direct" ? (
             <>
               <button 
                 onClick={handleDirectLogin} 
                 disabled={isLoggingIn}
-                className="brand-btn"
-                style={{
-                  padding: "17px",
-                  borderRadius: 18,
-                  fontSize: 15.5,
-                  fontWeight: 800,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 12,
+                style={{ 
+                  width: "100%", 
+                  background: C.dark, 
+                  color: C.accent, 
+                  padding: "18px", 
+                  borderRadius: 20, 
+                  fontSize: 16, 
+                  fontWeight: 800, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  gap: 12, 
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
+                  opacity: isLoggingIn ? 0.7 : 1,
+                  cursor: isLoggingIn ? "not-allowed" : "pointer",
+                  border: `2px solid ${C.accent}`,
                   textTransform: "uppercase",
-                  letterSpacing: "0.08em"
+                  letterSpacing: "1px"
                 }}
               >
                 {isLoggingIn ? (
@@ -414,13 +402,22 @@ const App = () => {
               <button 
                 onClick={handleLogin} 
                 disabled={isLoggingIn}
-                className="brand-btn"
-                style={{
-                  color: isLoggingIn ? "#fff" : C.accent,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 12
+                style={{ 
+                  width: "100%", 
+                  background: isLoggingIn ? C.muted : C.dark, 
+                  color: isLoggingIn ? "#fff" : C.accent, 
+                  padding: "16px", 
+                  borderRadius: 16, 
+                  fontSize: 15, 
+                  fontWeight: 700, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center", 
+                  gap: 12, 
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                  opacity: isLoggingIn ? 0.7 : 1,
+                  cursor: isLoggingIn ? "not-allowed" : "pointer",
+                  border: `2px solid ${C.accent}`
                 }}
               >
                 {isLoggingIn ? (
@@ -458,20 +455,30 @@ const App = () => {
                 placeholder="Email Address" 
                 value={email} 
                 onChange={e => setEmail(e.target.value)}
-                className="input-premium"
+                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
               />
               <input 
                 type="password" 
                 placeholder="Password" 
                 value={password} 
                 onChange={e => setPassword(e.target.value)}
-                className="input-premium"
+                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
               />
               <button 
                 type="submit"
                 disabled={isLoggingIn}
-                className="brand-btn"
-                style={{ marginTop: 8 }}
+                style={{ 
+                  width: "100%", 
+                  background: C.dark, 
+                  color: C.accent, 
+                  padding: "16px", 
+                  borderRadius: 16, 
+                  fontSize: 15, 
+                  fontWeight: 700, 
+                  marginTop: 8,
+                  border: `2px solid ${C.accent}`,
+                  opacity: isLoggingIn ? 0.7 : 1
+                }}
               >
                 {isLoggingIn ? "Processing..." : (isRegistering ? "Create Account" : "Login")}
               </button>
@@ -501,7 +508,7 @@ const App = () => {
                     placeholder="Mobile Number (e.g. 9876543210)" 
                     value={phone} 
                     onChange={e => setPhone(e.target.value)}
-                    className="input-premium"
+                    style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
                   />
                   <p style={{ fontSize: 10, color: C.muted, marginTop: -8, marginLeft: 4 }}>* Include +91 if outside India</p>
                 </>
@@ -511,15 +518,25 @@ const App = () => {
                   placeholder="Enter 6-digit OTP" 
                   value={otp} 
                   onChange={e => setOtp(e.target.value)}
-                  className="input-premium" style={{ textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14, textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
                 />
               )}
               <div id="recaptcha-container"></div>
               <button 
                 type="submit"
                 disabled={isLoggingIn}
-                className="brand-btn"
-                style={{ marginTop: 8 }}
+                style={{ 
+                  width: "100%", 
+                  background: C.dark, 
+                  color: C.accent, 
+                  padding: "16px", 
+                  borderRadius: 16, 
+                  fontSize: 15, 
+                  fontWeight: 700, 
+                  marginTop: 8,
+                  border: `2px solid ${C.accent}`,
+                  opacity: isLoggingIn ? 0.7 : 1
+                }}
               >
                 {isLoggingIn ? "Processing..." : (confirmationResult ? "Verify OTP" : "Send OTP")}
               </button>
@@ -540,23 +557,44 @@ const App = () => {
   }
 
   const renderScreen = () => {
+    const pageVariants = {
+      initial: { opacity: 0, y: 10, scale: 0.98 },
+      animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] } },
+      exit: { opacity: 0, y: -10, scale: 0.98, transition: { duration: 0.3, ease: [0.22, 1, 0.36, 1] } }
+    };
+
+    const wrapScreen = (content: React.ReactNode, key: string) => (
+      <motion.div
+        key={key}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        variants={pageVariants}
+        style={{ height: "100%" }}
+      >
+        {content}
+      </motion.div>
+    );
+
     switch (tab) {
-      case "bill": return <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />;
-      case "invoice": return currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />;
-      case "history": return <HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} />;
-      case "dashboard": return <DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />;
-      case "settings": return <SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />;
-      default: return <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />;
+      case "bill": return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />, "bill");
+      case "invoice": return wrapScreen(currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />, "invoice");
+      case "history": return wrapScreen(<HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} />, "history");
+      case "dashboard": return wrapScreen(<DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />, "dashboard");
+      case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />, "settings");
+      default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />, "default");
     }
   };
 
   return (
-    <div className="app-shell">
+    <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(0,0,0,0.05)" }}>
       <Header onMenu={() => setDrawer(true)} settings={settings} />
       <Drawer open={drawer} onClose={() => setDrawer(false)} settings={settings} onNav={handleNav} user={profile} onLogout={logout} />
       
-      <main style={{ flex: 1, overflowY: "auto", paddingBottom: 4 }}>
-        {renderScreen()}
+      <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
+        <AnimatePresence mode="wait">
+          {renderScreen()}
+        </AnimatePresence>
       </main>
 
       {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} isAdmin={isAdmin} />}

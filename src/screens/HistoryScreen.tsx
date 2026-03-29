@@ -4,6 +4,7 @@ import { fmt } from "../utils/formatters";
 import { Bill, Settings } from "../types";
 import { Pill } from "../components/Layout";
 import { Trash2, Shirt } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { doWhatsApp, doReminderWhatsApp, doExcelExport } from "../utils/exportUtils";
 
 export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBill, onDeleteAllBills, settings, isAdmin }: { bills: Bill[], onView: (bill: Bill) => void, onEdit: (bill: Bill) => void, onUpdateBill: (bill: Bill) => void, onDeleteBill: (id: string) => void, onDeleteAllBills: () => void, settings: Settings, isAdmin?: boolean }) => {
@@ -56,6 +57,22 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
   const handleEditClick = (e: React.MouseEvent, bill: Bill) => {
     e.stopPropagation();
     onEdit(bill);
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } },
+    exit: { opacity: 0, scale: 0.9, transition: { duration: 0.2 } }
   };
 
   return (
@@ -112,20 +129,39 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
       </div>
 
       {filtered.length === 0 ? (
-        <div style={{ textAlign: "center", padding: "80px 0" }}>
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          style={{ textAlign: "center", padding: "80px 0" }}
+        >
           <div style={{ width: 80, height: 80, borderRadius: "50%", background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
             <span style={{ fontSize: 40 }}>📜</span>
           </div>
           <p className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark }}>No bills found</p>
           <p style={{ fontSize: 14, color: C.muted, marginTop: 6, fontWeight: 500 }}>Try searching with a different keyword.</p>
-        </div>
+        </motion.div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {filtered.map(b => (
-            <div key={b.id} onClick={() => onView(b)} className="sli"
-              style={{ background: C.card, borderRadius: 22, padding: 20, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", display: "flex", flexDirection: "column", gap: 14, border: `1px solid ${b.paymentStatus === "UNPAID" ? C.accent + "44" : "transparent"}`, transition: "all 0.25s", cursor: "pointer", position: "relative", overflow: "hidden" }}>
-              
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <motion.div 
+          variants={containerVariants}
+          initial="hidden"
+          animate="show"
+          style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        >
+          <AnimatePresence>
+            {filtered.map(b => (
+              <motion.div 
+                variants={itemVariants}
+                initial="hidden"
+                animate="show"
+                exit="exit"
+                layout
+                key={b.id} 
+                onClick={() => onView(b)} 
+                className="sli"
+                style={{ background: C.card, borderRadius: 22, padding: 20, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", display: "flex", flexDirection: "column", gap: 14, border: `1px solid ${b.paymentStatus === "UNPAID" ? C.accent + "44" : "transparent"}`, cursor: "pointer", position: "relative", overflow: "hidden" }}
+              >
+                
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                     <span className="pf" style={{ fontSize: 15, fontWeight: 900, color: C.dark }}>#{b.id}</span>
@@ -141,19 +177,23 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
                 </div>
                 <div style={{ textAlign: "right" }}>
                   <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginBottom: 8 }}>
-                    <button 
+                    <motion.button 
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                       onClick={(e) => handleEditClick(e, b)}
                       style={{ background: C.bg, color: C.dark, border: "none", padding: "6px 10px", borderRadius: 8, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", gap: 4 }}
                     >
                       ✏️ Edit
-                    </button>
-                    <button 
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.1, color: C.red }}
+                      whileTap={{ scale: 0.9 }}
                       onClick={(e) => handleDelete(e, b)}
                       style={{ background: "transparent", color: C.red, border: "none", padding: 6, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", opacity: 0.6 }}
                       title="Delete Bill"
                     >
                       <Trash2 size={18} />
-                    </button>
+                    </motion.button>
                   </div>
                   <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark }}>₹{fmt(b.total)}</p>
                   {b.paymentStatus === "UNPAID" && (
@@ -163,22 +203,34 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
               </div>
 
               <div style={{ display: "flex", gap: 10, borderTop: `1px solid ${C.bg}`, paddingTop: 14 }}>
-                <button 
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={(e) => handleShare(e, b)}
                   disabled={loadingId === b.id}
                   style={{ flex: 1, background: "#25D366", color: "#fff", padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, opacity: loadingId === b.id ? 0.6 : 1, border: "none", boxShadow: "0 4px 12px rgba(37,211,102,0.2)" }}
                 >
                   {loadingId === b.id ? "⏳" : "💬"} Share
-                </button>
+                </motion.button>
                 
                 {b.paymentStatus === "UNPAID" ? (
                   <>
-                    <button onClick={(e) => handleReminder(e, b)} style={{ flex: 1, background: C.accent, color: "#fff", padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)" }}>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={(e) => handleReminder(e, b)} 
+                      style={{ flex: 1, background: C.accent, color: "#fff", padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.2)" }}
+                    >
                       🔔 Remind
-                    </button>
-                    <button onClick={(e) => handleMarkAsPaid(e, b)} style={{ flex: 1, background: C.dark, color: C.accent, padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(10, 31, 68, 0.2)" }}>
+                    </motion.button>
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={(e) => handleMarkAsPaid(e, b)} 
+                      style={{ flex: 1, background: C.dark, color: C.accent, padding: "10px", borderRadius: 12, fontSize: 12, fontWeight: 900, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, border: "none", boxShadow: "0 4px 12px rgba(10, 31, 68, 0.2)" }}
+                    >
                       ✅ Settle
-                    </button>
+                    </motion.button>
                   </>
                 ) : (
                   <div style={{ flex: 2, display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, borderRadius: 12, fontSize: 11, color: C.muted, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>
@@ -186,9 +238,10 @@ export const HistoryScreen = ({ bills, onView, onEdit, onUpdateBill, onDeleteBil
                   </div>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+          </AnimatePresence>
+        </motion.div>
       )}
 
       {bills.length > 10 && (

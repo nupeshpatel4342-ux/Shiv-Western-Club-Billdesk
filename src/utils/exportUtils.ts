@@ -27,195 +27,6 @@ const loadJsPDF = () => new Promise<any>((resolve, reject) => {
   document.head.appendChild(s);
 });
 
-const escapeHtml = (value: string = "") =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
-const buildInvoiceHtmlDocument = (bill: Bill, settings: Settings) => {
-  const itemsHtml = bill.items.map((it, idx) => {
-    const lineTotal = it.qty * Math.max(0, it.price - (it.discount || 0));
-    return `
-      <tr>
-        <td>${idx + 1}</td>
-        <td>${escapeHtml(it.name)}</td>
-        <td>${it.qty}</td>
-        <td>₹${it.price}</td>
-        <td>${it.discount ? `₹${it.discount}` : "-"}</td>
-        <td>₹${lineTotal}</td>
-      </tr>
-    `;
-  }).join("");
-
-  return `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    @page { size: A4; margin: 12mm; }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: "Inter", "Segoe UI", Arial, sans-serif;
-      color: #1f2937;
-      background: #ffffff;
-    }
-    .invoice {
-      border: 1px solid #e5e7eb;
-      border-radius: 14px;
-      overflow: visible;
-    }
-    .header {
-      background: linear-gradient(135deg, #0a1f44 0%, #183b7a 100%);
-      color: #fff;
-      padding: 18px 20px;
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-    }
-    .title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0.3px; }
-    .sub { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
-    .content { padding: 20px; }
-    .meta-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-    .card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px;
-    }
-    .label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: #64748b;
-      margin-bottom: 4px;
-      font-weight: 700;
-    }
-    .value {
-      font-size: 14px;
-      font-weight: 700;
-      color: #0f172a;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 6px;
-      font-size: 12px;
-    }
-    th {
-      text-align: left;
-      background: #eef2ff;
-      border-bottom: 1px solid #dbeafe;
-      color: #1e3a8a;
-      padding: 10px 8px;
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-    thead { display: table-header-group; }
-    tr, td, th { page-break-inside: avoid; }
-    td {
-      border-bottom: 1px solid #f1f5f9;
-      padding: 9px 8px;
-      color: #334155;
-    }
-    .totals {
-      margin-top: 16px;
-      margin-left: auto;
-      width: 280px;
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 12px;
-      background: #f8fafc;
-    }
-    .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-    .row.total {
-      margin-top: 6px;
-      padding-top: 10px;
-      border-top: 1px dashed #cbd5e1;
-      font-size: 18px;
-      font-weight: 800;
-      color: #0a1f44;
-    }
-    .footer {
-      margin-top: 22px;
-      padding-top: 14px;
-      border-top: 1px dashed #cbd5e1;
-      text-align: center;
-      font-size: 11px;
-      color: #64748b;
-    }
-  </style>
-</head>
-<body>
-  <section class="invoice">
-    <div class="header">
-      <div>
-        <h1 class="title">${escapeHtml(settings.shopName || "Invoice")}</h1>
-        <p class="sub">${escapeHtml(settings.address || "-")}</p>
-        <p class="sub">📞 ${escapeHtml(settings.phone || "-")} ${settings.email ? `| ✉️ ${escapeHtml(settings.email)}` : ""}</p>
-      </div>
-      <div style="text-align:right;">
-        <p class="label" style="color:#bfdbfe;margin:0 0 2px;">Invoice No</p>
-        <p class="value" style="color:#fff;margin:0;">#${escapeHtml(bill.id)}</p>
-        <p class="sub">${escapeHtml(bill.date)} ${escapeHtml(bill.time)}</p>
-      </div>
-    </div>
-    <div class="content">
-      <div class="meta-grid">
-        <div class="card">
-          <div class="label">Billed To</div>
-          <div class="value">${escapeHtml(bill.customerObj.name)}</div>
-          <div style="margin-top:4px;font-size:12px;color:#475569;">${escapeHtml(bill.customerObj.phone || "-")}</div>
-        </div>
-        <div class="card">
-          <div class="label">Payment</div>
-          <div class="value">${escapeHtml(bill.paymentMethod)}</div>
-          <div style="margin-top:4px;font-size:12px;color:#475569;">Status: ${escapeHtml(bill.paymentStatus)}</div>
-        </div>
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 34px;">#</th>
-            <th>Item</th>
-            <th style="width: 56px;">Qty</th>
-            <th style="width: 74px;">Price</th>
-            <th style="width: 84px;">Discount</th>
-            <th style="width: 84px;">Amount</th>
-          </tr>
-        </thead>
-        <tbody>${itemsHtml}</tbody>
-      </table>
-
-      <div class="totals">
-        <div class="row"><span>Subtotal</span><strong>₹${bill.subtotal}</strong></div>
-        ${bill.discount > 0 ? `<div class="row"><span>Discount</span><strong>-₹${bill.discount}</strong></div>` : ""}
-        <div class="row total"><span>Total</span><span>₹${bill.total}</span></div>
-      </div>
-
-      <div class="footer">
-        <div>Thank you for shopping with us.</div>
-        ${settings.gstId ? `<div style="margin-top:4px;">GSTIN: ${escapeHtml(settings.gstId)}</div>` : ""}
-      </div>
-    </div>
-  </section>
-</body>
-</html>
-  `;
-};
-
 const buildTempInvoice = (bill: Bill, settings: Settings) => {
   const el = document.createElement("div");
   el.style.cssText = "width:400px;background:#fff;padding:24px;font-family:sans-serif;position:fixed;left:-9999px;top:0;z-index:-1;";
@@ -399,84 +210,70 @@ export const doReminderWhatsApp = (bill: Bill, settings: Settings) => {
 
 export const doPDF = async (bill: Bill, settings: Settings, setLoading?: (loading: boolean) => void, invoiceRef?: React.RefObject<HTMLDivElement | null>) => {
   if (setLoading) setLoading(true);
-  let tempEl: HTMLElement | null = null;
   try {
-    try {
-      const pdfServiceBaseUrl = ((import.meta as any).env?.VITE_PDF_SERVICE_URL || "http://localhost:4173").replace(/\/$/, "");
-      const puppeteerResponse = await fetch(`${pdfServiceBaseUrl}/api/render-invoice-pdf`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          html: buildInvoiceHtmlDocument(bill, settings),
-          fileName: `Invoice_${bill.id}.pdf`,
-        }),
-      });
-
-      if (puppeteerResponse.ok) {
-        const blob = await puppeteerResponse.blob();
-        const fileUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = fileUrl;
-        a.download = `Invoice_${bill.id}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        setTimeout(() => URL.revokeObjectURL(fileUrl), 3000);
-        if (setLoading) setLoading(false);
-        return;
-      }
-    } catch (serviceErr) {
-      console.warn("Puppeteer PDF service unavailable. Falling back to jsPDF.", serviceErr);
-    }
-
-    const h2c = await loadHtml2Canvas();
-    const JsPDF = await loadJsPDF();
     let el = (invoiceRef && invoiceRef.current) ? invoiceRef.current : null;
     
     if (!el) {
-      tempEl = buildTempInvoice(bill, settings);
+      const tempEl = buildTempInvoice(bill, settings);
       el = tempEl;
       await new Promise(r => setTimeout(r, 100));
     }
     
-    const canvas = await h2c(el, { 
-      scale: 4, // High quality scale
-      useCORS: true,
-      backgroundColor: "#FFFFFF",
-      windowWidth: 1024,
-      logging: false,
-      onclone: (clonedDoc) => {
-        clonedDoc.documentElement.classList.remove('dark');
-        clonedDoc.body.classList.remove('dark');
-      }
-    });
+    // Get the HTML content of the invoice
+    const invoiceHtml = el.outerHTML;
     
-    if (tempEl) document.body.removeChild(tempEl);
+    // Get all styles from the document to ensure the PDF looks correct
+    const styles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map(style => style.outerHTML)
+      .join('\n');
 
-    // Use JPEG with max quality for better performance and smaller file size at high resolution
-    const imgData = canvas.toDataURL("image/jpeg", 1.0);
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Invoice ${bill.id}</title>
+          <base href="${window.location.origin}/">
+          ${styles}
+          <style>
+            body { margin: 0; padding: 0; background: white; }
+            /* Ensure the invoice takes full width in the PDF */
+            div[ref] { width: 100% !important; min-width: 0 !important; box-shadow: none !important; border: none !important; }
+          </style>
+        </head>
+        <body>
+          ${invoiceHtml}
+        </body>
+      </html>
+    `;
 
-    const doc = new JsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
-    const pdfWidth = doc.internal.pageSize.getWidth();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
-    let heightLeft = imgHeight;
-    let position = 0;
+    const response = await fetch("/api/generate-pdf", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        html: fullHtml,
+        billId: bill.id,
+      }),
+    });
 
-    doc.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeight);
-    heightLeft -= pageHeight;
-
-    while (heightLeft > 0) {
-      position = heightLeft - imgHeight;
-      doc.addPage();
-      doc.addImage(imgData, "JPEG", 0, position, pdfWidth, imgHeight);
-      heightLeft -= pageHeight;
+    if (!response.ok) {
+      throw new Error("Failed to generate PDF on server");
     }
 
-    doc.save(`Invoice_${bill.id}.pdf`);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Invoice_${bill.id}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
     if (setLoading) setLoading(false);
   } catch (err: any) {
-    if (tempEl && tempEl.parentNode) document.body.removeChild(tempEl);
     if (setLoading) setLoading(false);
     console.error(err);
     alert("PDF error: " + err.message);
@@ -509,7 +306,6 @@ export const doExcelExport = (bills: Bill[]) => {
   ]);
 
   // Calculate totals
-  const overallTotal = bills.reduce((acc, b) => acc + b.total, 0);
   const cashTotal = bills.reduce((acc, b) => b.paymentMethod === "CASH" ? acc + b.total : acc, 0);
   const upiTotal = bills.reduce((acc, b) => b.paymentMethod === "UPI" ? acc + b.total : acc, 0);
 
@@ -545,21 +341,9 @@ export const doExcelExport = (bills: Bill[]) => {
     fill: { fgColor: { rgb: "F9FAFB" } } // Very light gray for alternating rows
   };
 
-  const totalStyleBase = {
+  const totalStyle = {
     font: { bold: true, sz: 16, color: { rgb: "000000" } },
     fill: { fgColor: { rgb: "FFFF00" } }, // Yellow highlight
-    alignment: { horizontal: "center", vertical: "center" },
-    border: {
-      top: { style: "thin", color: { rgb: "000000" } },
-      bottom: { style: "thin", color: { rgb: "000000" } },
-      left: { style: "thin", color: { rgb: "000000" } },
-      right: { style: "thin", color: { rgb: "000000" } }
-    }
-  };
-
-  const grandTotalStyle = {
-    font: { bold: true, sz: 13, color: { rgb: "000000" } },
-    fill: { fgColor: { rgb: "FFE699" } },
     alignment: { horizontal: "right", vertical: "center" },
     border: {
       top: { style: "medium", color: { rgb: "000000" } },
@@ -596,43 +380,20 @@ export const doExcelExport = (bills: Bill[]) => {
     }
   }
 
-  // Add grand total directly below all bill rows
-  const grandTotalRow = range.e.r + 1;
-  const grandTotalLabelAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 5 });
-  const grandTotalValueAddr = XLSX.utils.encode_cell({ r: grandTotalRow, c: 6 });
-  ws[grandTotalLabelAddr] = { v: "GRAND TOTAL (ALL BILLS)", t: "s", s: grandTotalStyle };
-  ws[grandTotalValueAddr] = { v: overallTotal, t: "n", s: grandTotalStyle };
+  // Add 5 empty rows after data
+  const totalStartRow = range.e.r + 5;
 
-  // Keep 4-5 empty lines after grand total and then add highlighted payment summaries
-  const totalStartRow = grandTotalRow + 5;
-
-  // Create a proper 2-row summary box for CASH and UPI totals
-  const summaryStartCol = 5; // F
-  const summaryEndCol = 6;   // G
-  const summaryLastRow = totalStartRow + 1;
-
-  const getSummaryBoxStyle = (row: number, col: number, isValue = false) => ({
-    ...totalStyleBase,
-    alignment: { horizontal: isValue ? "right" : "left", vertical: "center" },
-    border: {
-      top: { style: row === totalStartRow ? "medium" : "thin", color: { rgb: "000000" } },
-      bottom: { style: row === summaryLastRow ? "medium" : "thin", color: { rgb: "000000" } },
-      left: { style: col === summaryStartCol ? "medium" : "thin", color: { rgb: "000000" } },
-      right: { style: col === summaryEndCol ? "medium" : "thin", color: { rgb: "000000" } }
-    }
-  });
-
-  // Add Cash Total
-  const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryStartCol });
-  const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: summaryEndCol });
-  ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow, summaryStartCol) };
-  ws[cashValueAddr] = { v: cashTotal, t: "n", z: "#,##0.00", s: getSummaryBoxStyle(totalStartRow, summaryEndCol, true) };
+  // Add Cash Total (Skip 5 columns, so start at column index 5 which is 'F')
+  const cashLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 5 });
+  const cashValueAddr = XLSX.utils.encode_cell({ r: totalStartRow, c: 6 });
+  ws[cashLabelAddr] = { v: "1) CASH TOTAL", t: 's', s: totalStyle };
+  ws[cashValueAddr] = { v: cashTotal, t: 'n', s: totalStyle };
 
   // Add UPI Total
-  const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryStartCol });
-  const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: summaryEndCol });
-  ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: "s", s: getSummaryBoxStyle(totalStartRow + 1, summaryStartCol) };
-  ws[upiValueAddr] = { v: upiTotal, t: "n", z: "#,##0.00", s: getSummaryBoxStyle(totalStartRow + 1, summaryEndCol, true) };
+  const upiLabelAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 5 });
+  const upiValueAddr = XLSX.utils.encode_cell({ r: totalStartRow + 1, c: 6 });
+  ws[upiLabelAddr] = { v: "2) UPI TOTAL", t: 's', s: totalStyle };
+  ws[upiValueAddr] = { v: upiTotal, t: 'n', s: totalStyle };
 
   // Update range to include new rows
   ws['!ref'] = XLSX.utils.encode_range({

@@ -2,8 +2,7 @@ import React from "react";
 import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
 import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard } from "lucide-react";
-
-const colorMix = (color: string) => `color-mix(in srgb, ${color} 88%, transparent)`;
+import { motion, AnimatePresence } from "framer-motion";
 
 export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { children: React.ReactNode, color?: string, bg?: string, small?: boolean }) => (
   <span className="pf" style={{ background: bg, color, fontSize: small ? 10 : 11, fontWeight: 700, padding: small ? "2px 8px" : "4px 12px", borderRadius: 100, letterSpacing: "0.8px", display: "inline-block", textTransform: "uppercase" }}>{children}</span>
@@ -12,12 +11,26 @@ export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { child
 export const Divider = ({ my = 12 }: { my?: number }) => <div style={{ height: 1, background: C.border, margin: `${my}px 0` }} />;
 
 export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { open: boolean, onClose: () => void, settings: Settings, onNav: (tab: string) => void, user: UserProfile | null, onLogout: () => void }) => {
-  if (!open) return null;
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex" }} onClick={onClose}>
-      <div className="sinl" onClick={e => e.stopPropagation()}
-        style={{ width: 290, background: C.card, height: "100%", display: "flex", flexDirection: "column", boxShadow: "10px 0 36px rgba(2,6,23,0.24)", borderRight: `1px solid ${C.border}` }}>
-        <div style={{ background: `linear-gradient(155deg, ${C.dark}, color-mix(in srgb, ${C.dark} 86%, #334155))`, padding: "32px 24px 24px" }}>
+    <AnimatePresence>
+      {open && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", background: "rgba(0,0,0,0.4)" }} 
+          onClick={onClose}
+        >
+          <motion.div 
+            initial={{ x: "-100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            className="sinl" 
+            onClick={e => e.stopPropagation()}
+            style={{ width: 275, background: C.card, height: "100%", display: "flex", flexDirection: "column", boxShadow: "6px 0 28px rgba(0,0,0,0.18)" }}
+          >
+            <div style={{ background: C.dark, padding: "32px 24px 26px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
             {user?.photoURL ? (
               <img src={user.photoURL} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
@@ -54,17 +67,19 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
             🚪 Logout
           </button>
         </div>
-        <div style={{ padding: "12px 20px 22px", borderTop: `1px solid ${C.border}` }}>
-          <p style={{ fontSize: 11, color: C.muted }}>{settings.shopName} · v1.2 Cloud</p>
-        </div>
-      </div>
-    </div>
+            <div style={{ padding: "12px 20px 22px", borderTop: `1px solid ${C.border}` }}>
+              <p style={{ fontSize: 11, color: C.muted }}>{settings.shopName} · v1.2 Cloud</p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
 export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Settings }) => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 12px", background: colorMix(C.card), borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100, backdropFilter: "blur(10px)" }}>
-    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s", boxShadow: "0 6px 14px rgba(15,23,42,0.08)" }}>
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 12px", background: C.card, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100 }}>
+    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s" }}>
       <Menu size={22} />
     </button>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -82,19 +97,28 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
 );
 
 export const BottomNav = ({ active, onChange, isAdmin }: { active: string, onChange: (id: string) => void, isAdmin?: boolean }) => (
-  <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: colorMix(C.card), position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -10px 28px rgba(15,23,42,0.08)", backdropFilter: "blur(10px)" }}>
+  <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
     {[
       { id: "bill", icon: <Plus size={24} />, label: "Bill", show: true },
       { id: "dashboard", icon: <LayoutDashboard size={24} />, label: "Stats", show: true },
       { id: "history", icon: <History size={24} />, label: "History", show: true },
       { id: "settings", icon: <SettingsIcon size={24} />, label: "Settings", show: true }
     ].filter(t => t.show).map(t => (
-      <button key={t.id} onClick={() => onChange(t.id)}
+      <motion.button 
+        key={t.id} 
+        onClick={() => onChange(t.id)}
+        whileTap={{ scale: 0.9 }}
         style={{ flex: 1, padding: "14px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
-          color: active === t.id ? C.dark : C.muted, borderTop: active === t.id ? `3px solid ${C.accent}` : "3px solid transparent", transition: "all 0.2s" }}>
-        {t.icon}
+          color: active === t.id ? C.dark : C.muted, borderTop: active === t.id ? `3px solid ${C.accent}` : "3px solid transparent", transition: "color 0.2s, border-top 0.2s", background: "none", borderLeft: "none", borderRight: "none", borderBottom: "none" }}
+      >
+        <motion.div
+          animate={{ y: active === t.id ? -2 : 0, color: active === t.id ? C.accent : C.muted }}
+          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        >
+          {t.icon}
+        </motion.div>
         <span className="pf" style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>{t.label}</span>
-      </button>
+      </motion.button>
     ))}
   </div>
 );

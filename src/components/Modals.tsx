@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { C } from "../constants";
 import { fmt } from "../utils/formatters";
 import { Item } from "../types";
+import { motion } from "motion/react";
+import { Shirt, Tag, AlertCircle } from "lucide-react";
 
 export const AddItemModal = ({ onAdd, onClose }: { onAdd: (item: Item) => void, onClose: () => void }) => {
   const [name, setName] = useState("");
@@ -22,11 +24,29 @@ export const AddItemModal = ({ onAdd, onClose }: { onAdd: (item: Item) => void, 
   };
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(10, 31, 68, 0.6)", zIndex: 300, display: "flex", alignItems: "flex-end", backdropFilter: "blur(4px)" }} onClick={onClose}>
-      <div className="sup" onClick={e => e.stopPropagation()}
-        style={{ background: C.card, borderRadius: "32px 32px 0 0", padding: "32px 24px 48px", width: "100%", maxWidth: 500, margin: "0 auto", boxShadow: "0 -10px 40px rgba(0,0,0,0.1)" }}>
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{ position: "fixed", inset: 0, background: "rgba(10, 31, 68, 0.6)", zIndex: 300, display: "flex", alignItems: "flex-end", backdropFilter: "blur(4px)" }} 
+      onClick={onClose}
+    >
+      <motion.div 
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+        className="sup" 
+        onClick={e => e.stopPropagation()}
+        style={{ background: C.card, borderRadius: "32px 32px 0 0", padding: "32px 24px 48px", width: "100%", maxWidth: 500, margin: "0 auto", boxShadow: "0 -10px 40px rgba(0,0,0,0.1)" }}
+      >
         <div style={{ width: 40, height: 5, background: C.bg, borderRadius: 10, margin: "0 auto 24px" }} />
-        <h2 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, marginBottom: 24, letterSpacing: "-0.8px" }}>Add New Item</h2>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 24 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 14, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Shirt color={C.accent} size={24} />
+          </div>
+          <h2 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, letterSpacing: "-0.8px", margin: 0 }}>Add New Item</h2>
+        </div>
 
         <label className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 8 }}>Item Description *</label>
         <div style={{ border: `2px solid ${C.bg}`, borderRadius: 16, padding: "14px 18px", marginBottom: 12, background: C.bg, transition: "all 0.2s" }}>
@@ -96,26 +116,37 @@ export const AddItemModal = ({ onAdd, onClose }: { onAdd: (item: Item) => void, 
         )}
 
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-          <button onClick={onClose} style={{ padding: "18px", borderRadius: 18, border: `2px solid ${C.border}`, fontWeight: 800, fontSize: 15, color: C.muted, background: "none" }}>Cancel</button>
-          <button onClick={submit} style={{ padding: "18px", borderRadius: 18, background: C.dark, color: C.accent, fontWeight: 900, fontSize: 15, border: `1.5px solid ${C.accent}`, boxShadow: "0 8px 20px rgba(10, 31, 68, 0.2)", textTransform: "uppercase", letterSpacing: "0.5px" }}>Add Item ＋</button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={onClose} style={{ padding: "18px", borderRadius: 18, border: `2px solid ${C.border}`, fontWeight: 800, fontSize: 15, color: C.muted, background: "none", cursor: "pointer" }}>Cancel</motion.button>
+          <motion.button whileTap={{ scale: 0.95 }} onClick={submit} style={{ padding: "18px", borderRadius: 18, background: C.dark, color: C.accent, fontWeight: 900, fontSize: 15, border: `1.5px solid ${C.accent}`, boxShadow: "0 8px 20px rgba(10, 31, 68, 0.2)", textTransform: "uppercase", letterSpacing: "0.5px", cursor: "pointer" }}>Add Item ＋</motion.button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };
 
 export const Confirm = ({ msg, onYes, onNo }: { msg: string, onYes: () => void, onNo: () => void }) => (
-  <div style={{ position: "fixed", inset: 0, background: "rgba(10, 31, 68, 0.6)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(4px)" }}>
-    <div className="fade" style={{ background: C.card, borderRadius: 28, padding: 32, width: "100%", maxWidth: 340, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", border: `1px solid ${C.border}` }}>
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    style={{ position: "fixed", inset: 0, background: "rgba(10, 31, 68, 0.6)", zIndex: 400, display: "flex", alignItems: "center", justifyContent: "center", padding: 24, backdropFilter: "blur(4px)" }}
+  >
+    <motion.div 
+      initial={{ scale: 0.9, opacity: 0, y: 20 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.9, opacity: 0, y: 20 }}
+      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+      style={{ background: C.card, borderRadius: 28, padding: 32, width: "100%", maxWidth: 340, textAlign: "center", boxShadow: "0 20px 60px rgba(0,0,0,0.15)", border: `1px solid ${C.border}` }}
+    >
       <div style={{ width: 72, height: 72, borderRadius: "50%", background: "#FFF0F0", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
-        <span style={{ fontSize: 32 }}>⚠️</span>
+        <AlertCircle color={C.red} size={32} />
       </div>
       <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 12 }}>Are you sure?</h3>
       <p style={{ fontSize: 14, color: C.muted, marginBottom: 28, fontWeight: 500, lineHeight: 1.5 }}>{msg}. This action cannot be undone.</p>
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-        <button onClick={onNo} style={{ padding: "14px", borderRadius: 16, border: `2px solid ${C.border}`, fontWeight: 800, color: C.muted, background: "none" }}>Cancel</button>
-        <button onClick={onYes} style={{ padding: "14px", borderRadius: 16, background: C.red, color: "#fff", fontWeight: 900, border: "none", boxShadow: "0 8px 20px rgba(239, 68, 68, 0.2)" }}>Yes, Delete</button>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={onNo} style={{ padding: "14px", borderRadius: 16, border: `2px solid ${C.border}`, fontWeight: 800, color: C.muted, background: "none", cursor: "pointer" }}>Cancel</motion.button>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={onYes} style={{ padding: "14px", borderRadius: 16, background: C.red, color: "#fff", fontWeight: 900, border: "none", boxShadow: "0 8px 20px rgba(239, 68, 68, 0.2)", cursor: "pointer" }}>Yes, Delete</motion.button>
       </div>
-    </div>
-  </div>
+    </motion.div>
+  </motion.div>
 );

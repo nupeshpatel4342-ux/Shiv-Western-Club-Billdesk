@@ -4,6 +4,7 @@ import { Bill, Settings } from "../types";
 import { fmt } from "../utils/formatters";
 import { Pill } from "../components/Layout";
 import { Plus } from "lucide-react";
+import { motion } from "framer-motion";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, Cell, PieChart, Pie
@@ -93,9 +94,29 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
     return Object.values(map).sort((a, b) => b.balance - a.balance);
   }, [bills]);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="fade" style={{ padding: "20px 18px 100px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={{ padding: "20px 18px 100px" }}
+    >
+      <motion.div variants={itemVariants} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {settings.logo && (
             <img src={settings.logo} alt="Logo" style={{ width: 44, height: 44, borderRadius: 12, objectFit: "contain", background: "#fff", border: `1px solid ${C.border}` }} />
@@ -115,19 +136,22 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
         >
           🔄
         </button>
-      </div>
+      </motion.div>
 
       {/* Quick Action */}
-      <button 
+      <motion.button 
+        variants={itemVariants}
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={onCreateBill}
         style={{ width: "100%", background: C.dark, color: C.bg, padding: "18px", borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", gap: 10, marginBottom: 24, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.25)", border: "none" }}
       >
         <Plus size={22} color={C.accent} strokeWidth={3} />
         <span className="pf" style={{ fontSize: 16, fontWeight: 800, letterSpacing: "0.5px" }}>CREATE NEW BILL</span>
-      </button>
+      </motion.button>
 
       {/* Summary Cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <div style={{ background: C.card, borderRadius: 20, padding: 20, border: `1.5px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
             <div style={{ width: 8, height: 8, borderRadius: 4, background: C.accent }} />
@@ -147,9 +171,9 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
           <p className="pf" style={{ fontSize: 26, fontWeight: 900, color: C.red }}>₹{fmt(stats.totalUdhar)}</p>
           <p style={{ fontSize: 11, color: C.muted, marginTop: 6, fontWeight: 500 }}>Pending payments</p>
         </div>
-      </div>
+      </motion.div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
+      <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 24 }}>
         <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1.5px solid ${C.border}` }}>
           <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px" }}>Avg. Bill Value</p>
           <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginTop: 4 }}>₹{fmt(stats.avgBill)}</p>
@@ -158,10 +182,10 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
           <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.8px" }}>Monthly Sales</p>
           <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginTop: 4 }}>₹{fmt(stats.month.total)}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Sales Trend Chart */}
-      <div style={{ background: C.card, borderRadius: 24, padding: "20px 16px", border: `1.5px solid ${C.border}`, marginBottom: 24 }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: "20px 16px", border: `1.5px solid ${C.border}`, marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 800, color: C.dark, marginBottom: 20, paddingLeft: 4 }}>Last 7 Days Sales Trend</p>
         <div style={{ width: "100%", height: 200 }}>
           <ResponsiveContainer width="100%" height="100%">
@@ -183,10 +207,10 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
             </AreaChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </motion.div>
 
       {/* Top Selling Items */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 20, border: `1.5px solid ${C.border}`, marginBottom: 24 }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 20, border: `1.5px solid ${C.border}`, marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 800, color: C.dark, marginBottom: 16 }}>Top Selling Items</p>
         {topItems.length === 0 ? (
           <p style={{ fontSize: 13, color: C.muted, textAlign: "center", padding: "20px 0" }}>No data available</p>
@@ -211,10 +235,10 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
             ))}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Pending Udhar List */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 20, border: `1.5px solid ${C.border}` }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 20, border: `1.5px solid ${C.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <p style={{ fontSize: 13, fontWeight: 800, color: C.dark }}>Pending Udhar (Credit) List</p>
           <Pill bg="#FFF0F0" color={C.accent} small>{udharList.length} People</Pill>
@@ -237,7 +261,7 @@ export const DashboardScreen = ({ bills, settings, onResetAllData, onCreateBill,
             ))}
           </div>
         )}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

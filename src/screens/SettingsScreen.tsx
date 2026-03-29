@@ -5,6 +5,7 @@ import { Divider, Pill } from "../components/Layout";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageUtils";
 import { ZoomIn, RotateCw, X, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const SettingsScreen = ({ 
   settings, 
@@ -83,15 +84,35 @@ export const SettingsScreen = ({
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+  };
+
   return (
-    <div className="fade" style={{ padding: "20px 18px 100px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+    <motion.div 
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      style={{ padding: "20px 18px 100px" }}
+    >
+      <motion.div variants={itemVariants} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <h2 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, letterSpacing: "-0.8px" }}>Settings</h2>
         {(saved || profileSaved) && <Pill bg={C.green} color="#fff">✓ SAVED</Pill>}
-      </div>
+      </motion.div>
 
       {/* App Preferences */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
         <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>App Preferences</p>
         
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -125,11 +146,11 @@ export const SettingsScreen = ({
             }} />
           </button>
         </div>
-      </div>
+      </motion.div>
 
       {/* User Profile Section */}
       {p && (
-        <div style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+        <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
           <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>Your Profile</p>
           
           <div style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 20 }}>
@@ -169,17 +190,19 @@ export const SettingsScreen = ({
             </div>
           </div>
           
-          <button 
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             onClick={saveProfile}
             style={{ width: "100%", background: C.dark, color: C.accent, padding: "14px", borderRadius: 14, fontSize: 13, fontWeight: 900, border: `1.5px solid ${C.accent}`, boxShadow: "0 4px 12px rgba(10, 31, 68, 0.15)", textTransform: "uppercase", letterSpacing: "0.5px" }}
           >
             {profileSaved ? "Profile Saved! ✓" : "Update Profile"}
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
       )}
 
       {/* Shop Identity Section */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
         <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 24 }}>Shop Identity</p>
         
         <div style={{ marginBottom: 28, display: "flex", alignItems: "center", gap: 20 }}>
@@ -251,10 +274,10 @@ export const SettingsScreen = ({
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* UPI QR Code Section */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
         <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 24 }}>UPI QR Code (For Invoices)</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           {s.upiQrCode ? (
@@ -294,10 +317,10 @@ export const SettingsScreen = ({
           />
           <p style={{ fontSize: 12, color: C.muted, fontWeight: 500, lineHeight: 1.5 }}>Upload your PhonePe, GPay, or any UPI QR code image. It will be displayed on your invoices for easy customer payments.</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Invoice Template Section */}
-      <div style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+      <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
         <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 24 }}>Invoice Template</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {[
@@ -321,33 +344,49 @@ export const SettingsScreen = ({
             </label>
           ))}
         </div>
-      </div>
+      </motion.div>
 
       {/* Save Shop Settings Button */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
-        <button onClick={() => setS(settings)} style={{ padding: "18px", borderRadius: 18, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}>Discard</button>
-        <button onClick={saveSettings}
-          style={{ background: saved ? C.green : C.dark, color: saved ? "#fff" : C.accent, padding: "18px", borderRadius: 18, fontSize: 14, fontWeight: 900, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.15)", transition: "all 0.2s", border: `1.5px solid ${C.accent}`, textTransform: "uppercase", letterSpacing: "0.5px" }}>
+      <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setS(settings)} 
+          style={{ padding: "18px", borderRadius: 18, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 14, fontWeight: 800, background: "none" }}
+        >
+          Discard
+        </motion.button>
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={saveSettings}
+          style={{ background: saved ? C.green : C.dark, color: saved ? "#fff" : C.accent, padding: "18px", borderRadius: 18, fontSize: 14, fontWeight: 900, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.15)", transition: "all 0.2s", border: `1.5px solid ${C.accent}`, textTransform: "uppercase", letterSpacing: "0.5px" }}
+        >
           {saved ? "Saved! ✓" : "Save Settings"}
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
-      <div style={{ marginTop: 40, textAlign: "center" }}>
+      <motion.div variants={itemVariants} style={{ marginTop: 40, textAlign: "center" }}>
         <p style={{ fontSize: 11, color: C.muted, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Shiv Western Club v1.0</p>
         <p style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Made with ❤️ for Shop Owners</p>
-      </div>
+      </motion.div>
 
       {/* Cropper Modal */}
+      <AnimatePresence>
       {imageToCrop && (
-        <div style={{ 
-          position: "fixed", 
-          inset: 0, 
-          background: "#000", 
-          zIndex: 2000, 
-          display: "flex", 
-          flexDirection: "column",
-          animation: "fadeIn 0.3s ease"
-        }}>
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          style={{ 
+            position: "fixed", 
+            inset: 0, 
+            background: "#000", 
+            zIndex: 2000, 
+            display: "flex", 
+            flexDirection: "column"
+          }}
+        >
           {/* Header */}
           <div style={{ 
             padding: "12px 20px", 
@@ -392,7 +431,7 @@ export const SettingsScreen = ({
           </div>
 
           {/* Compact Controls Overlay */}
-          <div style={{ 
+          <motion.div style={{ 
             padding: "20px 20px calc(20px + env(safe-area-inset-bottom))", 
             background: C.card, 
             borderTop: `1px solid ${C.border}`,
@@ -462,9 +501,10 @@ export const SettingsScreen = ({
                 {isCropping ? "..." : <><Check size={18} /> Save Photo</>}
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
-    </div>
+      </AnimatePresence>
+    </motion.div>
   );
 };

@@ -5,26 +5,26 @@ import { Bill, Settings } from "../types";
 import { Divider, Pill } from "./Layout";
 
 export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, settings: Settings, invRef: React.RefObject<HTMLDivElement | null> }) => (
-  <div ref={invRef} style={{ minWidth: 600, background: C.card, borderRadius: 24, padding: 32, marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
+  <div ref={invRef} style={{ width: "100%", maxWidth: 800, margin: "0 auto", background: C.card, borderRadius: 24, padding: "24px 16px", marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}>
     <div style={{ position: "absolute", top: -20, right: -20, width: 128, height: 128, borderRadius: "50%", opacity: 0.05, background: C.accent }} />
     
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32 }}>
-      <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
         {settings.logo && (
-          <div style={{ width: 56, height: 56, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
             <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
         )}
         <div>
-          <h1 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
-          <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, maxWidth: 250, lineHeight: 1.4 }}>{settings.address}</p>
-          <p style={{ fontSize: 12, fontWeight: 600, color: C.muted, marginTop: 4 }}>📞 {settings.phone}</p>
+          <h1 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
+          <p style={{ fontSize: 11, fontWeight: 500, color: C.muted, maxWidth: 200, lineHeight: 1.4 }}>{settings.address}</p>
+          <p style={{ fontSize: 11, fontWeight: 600, color: C.muted, marginTop: 4 }}>📞 {settings.phone}</p>
         </div>
       </div>
-      <div style={{ textAlign: "right" }}>
+      <div style={{ textAlign: "right", minWidth: 100 }}>
         <Pill bg={C.dark} color={C.accent}>INVOICE</Pill>
-        <p className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, marginTop: 8 }}>#{bill.id}</p>
-        <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginTop: 4 }}>{bill.date} &middot; {bill.time}</p>
+        <p className="pf" style={{ fontSize: 16, fontWeight: 900, color: C.dark, marginTop: 8 }}>#{bill.id}</p>
+        <p style={{ fontSize: 11, fontWeight: 500, color: C.muted, marginTop: 4 }}>{bill.date} &middot; {bill.time}</p>
       </div>
     </div>
 
@@ -45,8 +45,8 @@ export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, setti
       {bill.customerObj.address && <p style={{ fontSize: 12, fontWeight: 500, color: C.muted, marginTop: 8 }}>📍 {bill.customerObj.address}</p>}
     </div>
 
-    <div style={{ marginBottom: 32 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "10px 0", borderBottom: `2px solid ${C.dark}`, marginBottom: 12 }}>
+    <div style={{ marginBottom: 32, overflowX: "auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "10px 0", borderBottom: `2px solid ${C.dark}`, marginBottom: 12 }}>
         <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", letterSpacing: "1px" }}>Item Description</span>
         <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "center", letterSpacing: "1px" }}>Qty</span>
         <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>MRP</span>
@@ -54,15 +54,15 @@ export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, setti
         <span className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Amount</span>
       </div>
       {bill.items.map(it => (
-        <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "16px 0", borderBottom: `1px solid ${C.bg}` }}>
+        <div key={it.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "16px 0", borderBottom: `1px solid ${C.bg}` }}>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: C.dark }}>{it.name}</p>
-            {it.sku && <p style={{ fontSize: 11, fontWeight: 500, color: C.muted }}>#{it.sku}</p>}
+            <p style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>{it.name}</p>
+            {it.sku && <p style={{ fontSize: 10, fontWeight: 500, color: C.muted }}>#{it.sku}</p>}
           </div>
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.dark, textAlign: "center" }}>{it.qty}</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
-          <span style={{ fontSize: 14, fontWeight: 600, color: C.accent, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
-          <span className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.dark, textAlign: "center" }}>{it.qty}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: C.accent, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
+          <span className="pf" style={{ fontSize: 13, fontWeight: 800, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
         </div>
       ))}
     </div>
@@ -109,24 +109,24 @@ export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, setti
 );
 
 export const MinimalTemplate = ({ bill, settings, invRef }: { bill: Bill, settings: Settings, invRef: React.RefObject<HTMLDivElement | null> }) => (
-  <div ref={invRef} style={{ minWidth: 600, background: C.card, padding: 32, marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}` }}>
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, borderBottom: `2px solid ${C.dark}`, paddingBottom: 24 }}>
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+  <div ref={invRef} style={{ width: "100%", maxWidth: 800, margin: "0 auto", background: C.card, padding: "24px 16px", marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}` }}>
+    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, borderBottom: `2px solid ${C.dark}`, paddingBottom: 24, gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         {settings.logo && (
-          <div style={{ width: 48, height: 48 }}>
+          <div style={{ width: 40, height: 40 }}>
             <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
         )}
         <div>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: C.dark, marginBottom: 4, textTransform: "uppercase", letterSpacing: "1px" }}>{settings.shopName}</h1>
-          <p style={{ fontSize: 11, color: C.muted, maxWidth: 200 }}>{settings.address}</p>
-          <p style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{settings.phone} {settings.email ? `| ${settings.email}` : ""}</p>
+          <h1 style={{ fontSize: 18, fontWeight: 700, color: C.dark, marginBottom: 4, textTransform: "uppercase", letterSpacing: "1px" }}>{settings.shopName}</h1>
+          <p style={{ fontSize: 10, color: C.muted, maxWidth: 180 }}>{settings.address}</p>
+          <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{settings.phone} {settings.email ? `| ${settings.email}` : ""}</p>
         </div>
       </div>
-      <div style={{ textAlign: "right" }}>
-        <h2 style={{ fontSize: 24, fontWeight: 300, color: C.dark, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 8 }}>Invoice</h2>
-        <p style={{ fontSize: 14, fontWeight: 600, color: C.dark }}>#{bill.id}</p>
-        <p style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>{bill.date} &middot; {bill.time}</p>
+      <div style={{ textAlign: "right", minWidth: 100 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 300, color: C.dark, textTransform: "uppercase", letterSpacing: "2px", marginBottom: 8 }}>Invoice</h2>
+        <p style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>#{bill.id}</p>
+        <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>{bill.date} &middot; {bill.time}</p>
       </div>
     </div>
 
@@ -143,8 +143,8 @@ export const MinimalTemplate = ({ bill, settings, invRef }: { bill: Bill, settin
       </div>
     </div>
 
-    <div style={{ marginBottom: 40 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "8px 0", borderBottom: `1px solid ${C.dark}`, marginBottom: 8 }}>
+    <div style={{ marginBottom: 40, overflowX: "auto" }}>
+      <div style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "8px 0", borderBottom: `1px solid ${C.dark}`, marginBottom: 8 }}>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.dark, textTransform: "uppercase", letterSpacing: "1px" }}>Description</span>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.dark, textTransform: "uppercase", textAlign: "center", letterSpacing: "1px" }}>Qty</span>
         <span style={{ fontSize: 10, fontWeight: 700, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>MRP</span>
@@ -152,15 +152,15 @@ export const MinimalTemplate = ({ bill, settings, invRef }: { bill: Bill, settin
         <span style={{ fontSize: 10, fontWeight: 700, color: C.dark, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Amount</span>
       </div>
       {bill.items.map(it => (
-        <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
+        <div key={it.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "12px 0", borderBottom: `1px solid ${C.border}` }}>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 500, color: C.dark }}>{it.name}</p>
-            {it.sku && <p style={{ fontSize: 10, color: C.muted }}>#{it.sku}</p>}
+            <p style={{ fontSize: 12, fontWeight: 500, color: C.dark }}>{it.name}</p>
+            {it.sku && <p style={{ fontSize: 9, color: C.muted }}>#{it.sku}</p>}
           </div>
-          <span style={{ fontSize: 13, color: C.dark, textAlign: "center" }}>{it.qty}</span>
-          <span style={{ fontSize: 13, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
-          <span style={{ fontSize: 13, color: C.dark, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
-          <span style={{ fontSize: 13, fontWeight: 600, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
+          <span style={{ fontSize: 12, color: C.dark, textAlign: "center" }}>{it.qty}</span>
+          <span style={{ fontSize: 12, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
+          <span style={{ fontSize: 12, color: C.dark, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
         </div>
       ))}
     </div>
@@ -206,24 +206,24 @@ export const MinimalTemplate = ({ bill, settings, invRef }: { bill: Bill, settin
 );
 
 export const ModernTemplate = ({ bill, settings, invRef }: { bill: Bill, settings: Settings, invRef: React.RefObject<HTMLDivElement | null> }) => (
-  <div ref={invRef} style={{ minWidth: 600, background: C.card, borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.08)", marginBottom: 32, overflow: "hidden", border: `1px solid ${C.border}` }}>
+  <div ref={invRef} style={{ width: "100%", maxWidth: 800, margin: "0 auto", background: C.card, borderRadius: 16, boxShadow: "0 8px 32px rgba(0,0,0,0.08)", marginBottom: 32, overflow: "hidden", border: `1px solid ${C.border}` }}>
     {/* Header */}
-    <div style={{ background: C.dark, color: C.card, padding: "40px 32px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+    <div style={{ background: C.dark, color: C.card, padding: "32px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
         {settings.logo && (
-          <div style={{ width: 64, height: 64, borderRadius: 12, background: "#fff", padding: 4 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 10, background: "#fff", padding: 4 }}>
             <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
         )}
         <div>
-          <h1 style={{ fontSize: 28, fontWeight: 800, margin: 0, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
-          <p style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>{settings.address}</p>
-          <p style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>{settings.phone} {settings.email ? `| ${settings.email}` : ""}</p>
+          <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
+          <p style={{ fontSize: 11, opacity: 0.8, marginTop: 4, maxWidth: 200 }}>{settings.address}</p>
+          <p style={{ fontSize: 11, opacity: 0.8, marginTop: 2 }}>{settings.phone} {settings.email ? `| ${settings.email}` : ""}</p>
         </div>
       </div>
-      <div style={{ textAlign: "right" }}>
-        <h2 style={{ fontSize: 32, fontWeight: 900, margin: 0, color: C.accent, letterSpacing: "1px", textTransform: "uppercase" }}>Invoice</h2>
-        <p style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>#{bill.id}</p>
+      <div style={{ textAlign: "right", minWidth: 100 }}>
+        <h2 style={{ fontSize: 24, fontWeight: 900, margin: 0, color: C.accent, letterSpacing: "1px", textTransform: "uppercase" }}>Invoice</h2>
+        <p style={{ fontSize: 14, fontWeight: 600, marginTop: 4 }}>#{bill.id}</p>
       </div>
     </div>
 
@@ -255,24 +255,24 @@ export const ModernTemplate = ({ bill, settings, invRef }: { bill: Bill, setting
       </div>
 
       {/* Items Table */}
-      <div style={{ marginBottom: 40 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "12px 16px", background: C.dark, color: C.card, borderRadius: 8, marginBottom: 12 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Description</span>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", textAlign: "center", letterSpacing: "1px" }}>Qty</span>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>MRP</span>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Discount</span>
-          <span style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Amount</span>
+      <div style={{ marginBottom: 40, overflowX: "auto" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "12px 16px", background: C.dark, color: C.card, borderRadius: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Description</span>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", textAlign: "center", letterSpacing: "1px" }}>Qty</span>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>MRP</span>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Discount</span>
+          <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", textAlign: "right", letterSpacing: "1px" }}>Amount</span>
         </div>
         {bill.items.map((it, idx) => (
-          <div key={it.id} style={{ display: "grid", gridTemplateColumns: "1.5fr 0.5fr 0.8fr 0.8fr 1fr", padding: "16px", background: idx % 2 === 0 ? C.card : C.bg, borderRadius: 8 }}>
+          <div key={it.id} style={{ display: "grid", gridTemplateColumns: "2fr 0.5fr 1fr 1fr 1fr", minWidth: 450, padding: "16px", background: idx % 2 === 0 ? C.card : C.bg, borderRadius: 8 }}>
             <div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: C.dark }}>{it.name}</p>
-              {it.sku && <p style={{ fontSize: 11, color: C.muted, marginTop: 2 }}>#{it.sku}</p>}
+              <p style={{ fontSize: 13, fontWeight: 600, color: C.dark }}>{it.name}</p>
+              {it.sku && <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>#{it.sku}</p>}
             </div>
-            <span style={{ fontSize: 14, fontWeight: 500, color: C.dark, textAlign: "center" }}>{it.qty}</span>
-            <span style={{ fontSize: 14, fontWeight: 500, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
-            <span style={{ fontSize: 14, fontWeight: 500, color: C.accent, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.dark, textAlign: "center" }}>{it.qty}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.muted, textAlign: "right" }}>₹{fmt(it.price)}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: C.accent, textAlign: "right" }}>{it.discount ? `-₹${fmt(it.discount)}` : "-"}</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: C.dark, textAlign: "right" }}>₹{fmt(it.qty * Math.max(0, it.price - (it.discount || 0)))}</span>
           </div>
         ))}
       </div>
