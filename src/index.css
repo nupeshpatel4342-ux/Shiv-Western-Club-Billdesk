@@ -89,6 +89,43 @@ textarea {
   backdrop-filter: blur(14px);
 }
 
+.fashion-animated-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.5;
+}
+
+.fashion-float {
+  position: absolute;
+  bottom: -30px;
+  color: color-mix(in srgb, var(--accent) 65%, var(--dark));
+  animation-name: clothFloat;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+.cloth-login-card {
+  animation: cardFloat 4.8s ease-in-out infinite;
+}
+
+.cloth-logo-wrap {
+  animation: pulseGlow 2.4s ease-in-out infinite;
+}
+
+.cloth-glow {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 32%, transparent), transparent 64%);
+  top: -50px;
+  right: -45px;
+  z-index: -1;
+  filter: blur(2px);
+}
+
 .brand-btn {
   width: 100%;
   background: linear-gradient(135deg, var(--dark), color-mix(in srgb, var(--dark) 85%, #1e293b));
@@ -151,4 +188,28 @@ textarea {
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
+}
+
+@keyframes clothFloat {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate3d(0, -95vh, 0) rotate(20deg);
+    opacity: 0;
+  }
+}
+
+@keyframes cardFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 12px 28px color-mix(in srgb, var(--accent) 35%, rgba(0,0,0,0.1)); }
 }
