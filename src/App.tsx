@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { C } from "./constants";
 import { Bill, Settings, UserProfile } from "./types";
 import { Header, Drawer, BottomNav } from "./components/Layout";
-import { Shirt } from "lucide-react";
+import { Shirt, Sparkles } from "lucide-react";
 import { NewBillScreen } from "./screens/NewBillScreen";
 import { InvoiceScreen } from "./screens/InvoiceScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
@@ -348,17 +348,36 @@ const App = () => {
 
   if (!user) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
-        <div className="fade glass-card" style={{ width: "100%", maxWidth: 380, borderRadius: 30, padding: 30, textAlign: "center" }}>
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20, position: "relative", overflow: "hidden" }}>
+        <div className="fashion-animated-bg" aria-hidden="true">
+          {Array.from({ length: 10 }).map((_, index) => (
+            <span
+              key={index}
+              className="fashion-float"
+              style={{
+                left: `${8 + index * 9}%`,
+                animationDelay: `${index * 0.4}s`,
+                animationDuration: `${6 + (index % 4)}s`
+              }}
+            >
+              <Shirt size={index % 2 === 0 ? 20 : 16} strokeWidth={1.8} />
+            </span>
+          ))}
+        </div>
+        <div className="fade glass-card cloth-login-card" style={{ width: "100%", maxWidth: 380, borderRadius: 30, padding: 30, textAlign: "center", position: "relative", zIndex: 1 }}>
+          <div className="cloth-glow" aria-hidden="true" />
           {settings?.logo ? (
             <img src={settings.logo} alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", margin: "0 auto 24px" }} />
           ) : (
-            <div style={{ width: 64, height: 64, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
+            <div className="cloth-logo-wrap" style={{ width: 64, height: 64, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
               <Shirt color={C.accent} size={32} strokeWidth={2.5} />
             </div>
           )}
           <h1 className="pf" style={{ fontSize: 25, fontWeight: 800, color: C.dark, marginBottom: 8, letterSpacing: "-0.02em" }}>{settings?.shopName || "Shiv Western Club"}</h1>
-          <p style={{ fontSize: 14, color: C.muted, marginBottom: 28, lineHeight: 1.6 }}>Welcome back 👋 Please authenticate to continue billing operations.</p>
+          <p style={{ fontSize: 14, color: C.muted, marginBottom: 28, lineHeight: 1.6, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            <Sparkles size={14} />
+            Welcome back 👋 Please authenticate to continue billing operations.
+          </p>
           
           {loginMode === "direct" ? (
             <>
