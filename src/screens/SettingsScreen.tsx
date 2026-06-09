@@ -13,14 +13,18 @@ export const SettingsScreen = ({
   profile, 
   onUpdateProfile,
   darkMode,
-  onToggleDarkMode
+  onToggleDarkMode,
+  users = [],
+  onUpdateUserRole
 }: { 
   settings: Settings, 
   onSave: (s: Settings) => void, 
   profile: UserProfile | null,
   onUpdateProfile: (p: UserProfile) => void,
   darkMode: boolean,
-  onToggleDarkMode: () => void
+  onToggleDarkMode: () => void,
+  users?: UserProfile[],
+  onUpdateUserRole?: (uid: string, newRole: any) => Promise<void>
 }) => {
   const [s, setS] = useState<Settings>(settings);
   const [p, setP] = useState<UserProfile | null>(profile);
@@ -345,6 +349,44 @@ export const SettingsScreen = ({
           ))}
         </div>
       </motion.div>
+
+
+      {/* Staff Management Directory (Admin/Owner only) */}
+      {(profile?.role === "owner" || profile?.role === "admin") && (
+        <motion.div variants={itemVariants} style={{ background: C.card, borderRadius: 24, padding: 28, boxShadow: "0 8px 24px rgba(10, 31, 68, 0.06)", marginBottom: 28, border: `1px solid ${C.border}` }}>
+          <p className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 24 }}>Staff Management & Roles</p>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {users.filter(u => u.role !== "customer").map(u => (
+              <div key={u.uid} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: 12, background: C.bg, borderRadius: 12 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {u.photoURL ? (
+                    <img src={u.photoURL} style={{ width: 32, height: 32, borderRadius: "50%" }} alt="User" />
+                  ) : (
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#000" }}>👤</div>
+                  )}
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: C.dark, margin: 0 }}>{u.displayName || "Staff Member"}</p>
+                    <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{u.email}</p>
+                  </div>
+                </div>
+                <div>
+                  <select 
+                    value={u.role} 
+                    onChange={e => onUpdateUserRole && onUpdateUserRole(u.uid, e.target.value)}
+                    style={{ padding: "6px 10px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 12, fontWeight: 600, background: C.card, color: C.dark }}
+                  >
+                    <option value="owner">Owner</option>
+                    <option value="manager">Manager</option>
+                    <option value="billing_staff">Billing Staff</option>
+                    <option value="admin">Admin</option>
+                    <option value="staff">Staff</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Save Shop Settings Button */}
       <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 40 }}>

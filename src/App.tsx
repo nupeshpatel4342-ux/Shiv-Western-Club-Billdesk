@@ -9,19 +9,37 @@ import { HistoryScreen } from "./screens/HistoryScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
 import { ProductsScreen } from "./screens/ProductsScreen";
+import { CustomerScreen } from "./screens/CustomerScreen";
+import { InventoryScreen } from "./screens/InventoryScreen";
+import { CustomersScreen } from "./screens/CustomersScreen";
+import { OrdersScreen } from "./screens/OrdersScreen";
+import { ReportsScreen } from "./screens/ReportsScreen";
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp, where, getDocs } from "firebase/firestore";
 import { AnimatePresence, motion } from "motion/react";
 
 
 const App = () => {
-  const [tab, setTab] = useState("bill");
+  const [tab, setTab] = useState("dashboard"); // Default to dashboard for admin
   const [drawer, setDrawer] = useState(false);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // Portal Mode (Customer vs Staff/Admin)
+  const [portalMode, setPortalMode] = useState<"customer" | "admin">("customer");
+  
+  // Customer Login/Register states
+  const [custPhone, setCustPhone] = useState("");
+  const [custPassword, setCustPassword] = useState("");
+  const [custName, setCustName] = useState("");
+  const [custAddress, setCustAddress] = useState("");
+  const [custRegister, setCustRegister] = useState(false);
+  const [custReset, setCustReset] = useState(false);
+
+  // Admin login states
   const [loginMode, setLoginMode] = useState<"direct" | "google" | "email" | "phone">("direct");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -40,6 +58,8 @@ const App = () => {
   });
   const [bills, setBills] = useState<Bill[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentBill, setCurrentBill] = useState<Bill | null>(null);
   const [billToEdit, setBillToEdit] = useState<Bill | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
@@ -48,7 +68,8 @@ const App = () => {
   });
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = profile?.role === "admin" || profile?.role === "owner" || profile?.role === "manager";
+  const isOwner = profile?.role === "admin" || profile?.role === "owner";
 
   useEffect(() => {
     const handleResize = () => {
@@ -75,29 +96,52 @@ const App = () => {
       if (u) {
         // Fetch or Create Profile
         const pDoc = await getDoc(doc(db, "users", u.uid));
-        const isAdmin = u.email?.toLowerCase() === "nupeshpatel4342@gmail.com";
+        const isOwnerEmail = u.email?.toLowerCase() === "nupeshpatel4342@gmail.com";
         
         if (pDoc.exists()) {
-          const currentProfile = pDoc.data() as UserProfile;
-          // Ensure owner always has admin role
-          if (isAdmin && currentProfile.role !== "admin") {
-            const updatedProfile = { ...currentProfile, role: "admin" as const };
-            await setDoc(doc(db, "users", u.uid), updatedProfile);
-            setProfile(updatedProfile);
+          const currentProfile = pDoc.data() as any;
+          if (currentProfile.role === "customer") {
+            const cDoc = await getDoc(doc(db, "customers", u.uid));
+            if (cDoc.exists()) {
+              setProfile({ ...currentProfile, ...cDoc.data() });
+            } else {
+              setProfile(currentProfile);
+            }
           } else {
-            setProfile(currentProfile);
+            // Ensure owner always has owner role
+            if (isOwnerEmail && currentProfile.role !== "admin" && currentProfile.role !== "owner") {
+              const updatedProfile = { ...currentProfile, role: "owner" as const };
+              await setDoc(doc(db, "users", u.uid), updatedProfile);
+              setProfile(updatedProfile);
+            } else {
+              setProfile(currentProfile);
+            }
           }
         } else {
-          const newProfile: UserProfile = {
-            uid: u.uid,
-            email: u.email || "",
-            displayName: u.displayName || "Staff Member",
-            photoURL: u.photoURL || "",
-            role: isAdmin ? "admin" : "staff",
-            createdAt: Date.now()
-          };
-          await setDoc(doc(db, "users", u.uid), newProfile);
-          setProfile(newProfile);
+          // If it is virtual customer email, create customer profile
+          if (u.email?.endsWith("@customer.shivwestern.com")) {
+            // Handled during registration, but fallback here
+            const newProfile = {
+              uid: u.uid,
+              email: u.email,
+              displayName: u.displayName || "Customer",
+              role: "customer",
+              createdAt: Date.now()
+            };
+            await setDoc(doc(db, "users", u.uid), newProfile);
+            setProfile(newProfile);
+          } else {
+            const newProfile: UserProfile = {
+              uid: u.uid,
+              email: u.email || "",
+              displayName: u.displayName || "Staff Member",
+              photoURL: u.photoURL || "",
+              role: isOwnerEmail ? "owner" : "staff",
+              createdAt: Date.now()
+            };
+            await setDoc(doc(db, "users", u.uid), newProfile);
+            setProfile(newProfile);
+          }
         }
       } else {
         setProfile(null);
@@ -138,11 +182,94 @@ const App = () => {
     return unsub;
   }, [user]);
 
+  // Sync Orders
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (s) => {
+      const oList = s.docs.map(d => ({ id: d.id, ...d.data() }));
+      setOrders(oList);
+    }, (err) => console.error(err));
+    return unsub;
+  }, [user]);
+
+  // Sync Users Directory (for staff roles)
+  useEffect(() => {
+    if (!user || (profile?.role !== "admin" && profile?.role !== "owner")) return;
+    const q = query(collection(db, "users"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (s) => {
+      const uList = s.docs.map(d => d.data() as UserProfile);
+      setUsers(uList);
+    }, (err) => console.error(err));
+    return unsub;
+  }, [user, profile]);
+
+
+  const updateCustomerLedgerAndStock = async (bill: Bill) => {
+    try {
+      // 1. Deduct Stock for each billed item
+      for (const item of bill.items) {
+        const cleanItemName = item.name.toLowerCase().trim();
+        const cleanItemSku = item.sku ? item.sku.toLowerCase().trim() : "";
+        const prod = products.find(p => p.name.toLowerCase().trim() === cleanItemName || (p.sku && p.sku.toLowerCase().trim() === cleanItemSku));
+        if (prod) {
+          const currentStock = (prod as any).stock !== undefined ? (prod as any).stock : 0;
+          const newStock = Math.max(0, currentStock - item.qty);
+          await setDoc(doc(db, "products", prod.id), {
+            ...prod,
+            stock: newStock
+          });
+          // Log history in inventory_history
+          const { addDoc } = await import("firebase/firestore");
+          await addDoc(collection(db, "inventory_history"), {
+            productId: prod.id,
+            productName: prod.name,
+            previousStock: currentStock,
+            newStock: newStock,
+            change: -item.qty,
+            type: "sale",
+            updatedBy: profile?.displayName || "Staff Billing",
+            timestamp: Date.now(),
+            reason: `Billed in Invoice #${bill.id}`
+          });
+        }
+      }
+
+      // 2. Update Customer Ledger
+      const cleanPhone = bill.customerObj.phone.replace(/\D/g, "");
+      if (cleanPhone.length >= 10) {
+        const custQuery = query(collection(db, "customers"), where("phone", "==", bill.customerObj.phone));
+        const qSnap = await getDocs(custQuery);
+        if (!qSnap.empty) {
+          const custDoc = qSnap.docs[0];
+          const custData = custDoc.data() as any;
+          const updatedHistory = [...(custData.purchaseHistory || [])];
+          if (!updatedHistory.includes(bill.id)) {
+            updatedHistory.push(bill.id);
+          }
+          const newTotalPurchase = (custData.totalPurchase || 0) + bill.total;
+          const newLoyaltyPoints = Math.floor(newTotalPurchase / 100);
+          await setDoc(doc(db, "customers", custDoc.id), {
+            ...custData,
+            purchaseHistory: updatedHistory,
+            totalPurchase: newTotalPurchase,
+            loyaltyPoints: newLoyaltyPoints
+          });
+        }
+      }
+    } catch (e) {
+      console.error("Ledger Sync Error:", e);
+    }
+  };
 
   const handleGenerate = async (bill: Bill) => {
     try {
       const billWithUser = { ...bill, createdBy: user?.uid };
       await setDoc(doc(db, "bills", bill.id), billWithUser);
+      
+      // Update ledger & inventory stock
+      await updateCustomerLedgerAndStock(bill);
+
       setCurrentBill(billWithUser);
       setBillToEdit(null);
       setTab("invoice");
@@ -229,6 +356,132 @@ const App = () => {
   const handleNav = (newTab: string) => {
     if (newTab === "bill") setBillToEdit(null);
     setTab(newTab);
+  };
+
+  // Customer Auth Virtualization Handlers
+  const handleCustomerLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoggingIn) return;
+    const cleanPhone = custPhone.trim();
+    if (!cleanPhone || !custPassword) {
+      alert("Please enter mobile number and password.");
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const virtualEmail = `${cleanPhone}@customer.shivwestern.com`;
+      await loginWithEmail(virtualEmail, custPassword);
+      setPortalMode("customer");
+    } catch (err: any) {
+      console.error("Customer Login Error:", err);
+      if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
+        alert("Invalid mobile number or password.");
+      } else {
+        alert(err.message || "Login failed.");
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleCustomerRegister = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isLoggingIn) return;
+    const cleanPhone = custPhone.trim();
+    if (!cleanPhone || !custPassword || !custName) {
+      alert("Please fill in Name, Mobile, and Password.");
+      return;
+    }
+    if (cleanPhone.length < 10) {
+      alert("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+    setIsLoggingIn(true);
+    try {
+      const virtualEmail = `${cleanPhone}@customer.shivwestern.com`;
+      // Check if customer phone already exists in customers collection to avoid duplicates
+      const phoneQuery = query(collection(db, "customers"), where("phone", "==", cleanPhone));
+      const phoneSnap = await getDocs(phoneQuery);
+      if (!phoneSnap.empty) {
+        alert("This mobile number is already registered.");
+        setIsLoggingIn(false);
+        return;
+      }
+
+      const userCred = await registerWithEmail(virtualEmail, custPassword);
+      const u = userCred.user;
+
+      // 1. Create user profile in users
+      const newProfile = {
+        uid: u.uid,
+        email: virtualEmail,
+        displayName: custName,
+        role: "customer",
+        createdAt: Date.now()
+      };
+      await setDoc(doc(db, "users", u.uid), newProfile);
+
+      // 2. Create customer details in customers
+      const customerDetails = {
+        uid: u.uid,
+        name: custName,
+        phone: cleanPhone,
+        password: custPassword,
+        address: custAddress,
+        loyaltyPoints: 0,
+        totalPurchase: 0,
+        purchaseHistory: [],
+        createdAt: Date.now()
+      };
+      await setDoc(doc(db, "customers", u.uid), customerDetails);
+
+      setProfile({ ...newProfile, ...customerDetails });
+      setPortalMode("customer");
+      alert("🎉 Account created successfully! Welcome to Shiv Western Club.");
+    } catch (err: any) {
+      console.error("Customer Register Error:", err);
+      if (err.code === "auth/email-already-in-use") {
+        alert("This mobile number is already registered.");
+      } else {
+        alert(err.message || "Registration failed.");
+      }
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleCustomerResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPhone = custPhone.trim();
+    if (!cleanPhone) {
+      alert("Please enter your registered mobile number.");
+      return;
+    }
+    try {
+      const q = query(collection(db, "customers"), where("phone", "==", cleanPhone));
+      const qSnap = await getDocs(q);
+      if (qSnap.empty) {
+        alert("Mobile number not registered.");
+        return;
+      }
+      const data = qSnap.docs[0].data();
+      alert(`Security Check: Registered name is "${data.name}". Your password is: ${data.password}`);
+      setCustReset(false);
+    } catch (err) {
+      console.error(err);
+      alert("Failed to retrieve password. Please contact shop staff.");
+    }
+  };
+
+  const handleCreateOrder = async (orderData: any) => {
+    const { addDoc } = await import("firebase/firestore");
+    await addDoc(collection(db, "orders"), orderData);
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, status: string) => {
+    const orderRef = doc(db, "orders", orderId);
+    const { updateDoc } = await import("firebase/firestore");
+    await updateDoc(orderRef, { status });
   };
 
   const handleLogin = async () => {
@@ -375,18 +628,159 @@ const App = () => {
   if (!user) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
-        <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)" }}>
+        <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)", border: `1px solid ${C.border}` }}>
           {settings?.logo ? (
-            <img src={settings.logo} alt="Logo" style={{ width: 120, height: 120, objectFit: "contain", margin: "0 auto 24px" }} />
+            <img src={settings.logo} alt="Logo" style={{ width: 100, height: 100, objectFit: "contain", margin: "0 auto 20px" }} />
           ) : (
-            <div style={{ width: 64, height: 64, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
-              <Shirt color={C.accent} size={32} strokeWidth={2.5} />
+            <div style={{ width: 60, height: 60, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
+              <Shirt color={C.accent} size={30} strokeWidth={2.5} />
             </div>
           )}
-          <h1 className="pf" style={{ fontSize: 22, fontWeight: 700, color: C.dark, marginBottom: 8 }}>{settings?.shopName || "Shiv Western Club"}</h1>
-          <p style={{ fontSize: 14, color: C.muted, marginBottom: 32 }}>Staff & Admin Login required to continue.</p>
-          
-          {loginMode === "direct" ? (
+          <h1 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings?.shopName || "Shiv Western Club"}</h1>
+          <p style={{ fontSize: 11, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>BillDesk & Customer Club</p>
+
+          {/* Portal Switcher Tabs */}
+          <div style={{ display: "flex", background: C.bg, borderRadius: 12, padding: 4, marginBottom: 24 }}>
+            <button 
+              type="button" 
+              onClick={() => { setPortalMode("customer"); setCustRegister(false); setCustReset(false); }} 
+              style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", background: portalMode === "customer" ? C.dark : "transparent", color: portalMode === "customer" ? C.accent : C.muted, transition: "0.2s" }}
+            >
+              🛍️ Customer Portal
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setPortalMode("admin")} 
+              style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", background: portalMode === "admin" ? C.dark : "transparent", color: portalMode === "admin" ? C.accent : C.muted, transition: "0.2s" }}
+            >
+              💼 Staff / Admin
+            </button>
+          </div>
+
+          {portalMode === "customer" ? (
+            /* CUSTOMER PORTAL VIEWS */
+            custReset ? (
+              <form onSubmit={handleCustomerResetPassword} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <h3 className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, marginBottom: 4 }}>Recover Club Password</h3>
+                <p style={{ fontSize: 11, color: C.muted, marginBottom: 8 }}>Enter your registered mobile number to retrieve your portal password.</p>
+                <input 
+                  type="tel" 
+                  placeholder="Registered Mobile Number" 
+                  value={custPhone} 
+                  onChange={e => setCustPhone(e.target.value)}
+                  required
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                />
+                <button 
+                  type="submit"
+                  style={{ width: "100%", background: C.dark, color: C.accent, padding: "16px", borderRadius: 16, fontSize: 14, fontWeight: 800, border: `2px solid ${C.accent}`, cursor: "pointer", marginTop: 8 }}
+                >
+                  Retrieve Password Key
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setCustReset(false)}
+                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 4 }}
+                >
+                  ← Back to login
+                </button>
+              </form>
+            ) : custRegister ? (
+              <form onSubmit={handleCustomerRegister} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <h3 className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, marginBottom: 4 }}>Join Our Customer Club</h3>
+                <input 
+                  type="text" 
+                  placeholder="Full Name" 
+                  value={custName} 
+                  onChange={e => setCustName(e.target.value)}
+                  required
+                  style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13 }}
+                />
+                <input 
+                  type="tel" 
+                  placeholder="Mobile Number" 
+                  value={custPhone} 
+                  onChange={e => setCustPhone(e.target.value)}
+                  required
+                  style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13 }}
+                />
+                <input 
+                  type="password" 
+                  placeholder="Create Portal Password" 
+                  value={custPassword} 
+                  onChange={e => setCustPassword(e.target.value)}
+                  required
+                  style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13 }}
+                />
+                <input 
+                  type="text" 
+                  placeholder="Delivery Address (Optional)" 
+                  value={custAddress} 
+                  onChange={e => setCustAddress(e.target.value)}
+                  style={{ padding: "12px 14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 13 }}
+                />
+                <button 
+                  type="submit"
+                  disabled={isLoggingIn}
+                  style={{ width: "100%", background: C.dark, color: C.accent, padding: "14px", borderRadius: 14, fontSize: 14, fontWeight: 800, border: `2px solid ${C.accent}`, cursor: "pointer", marginTop: 4 }}
+                >
+                  {isLoggingIn ? "Registering..." : "Register & Sign In"}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => setCustRegister(false)}
+                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 4 }}
+                >
+                  Already have an account? Login
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleCustomerLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <h3 className="pf" style={{ fontSize: 14, fontWeight: 800, color: C.dark, marginBottom: 4 }}>Customer Login</h3>
+                <input 
+                  type="tel" 
+                  placeholder="Mobile Number" 
+                  value={custPhone} 
+                  onChange={e => setCustPhone(e.target.value)}
+                  required
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={custPassword} 
+                  onChange={e => setCustPassword(e.target.value)}
+                  required
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                />
+                <button 
+                  type="submit"
+                  disabled={isLoggingIn}
+                  style={{ width: "100%", background: C.dark, color: C.accent, padding: "16px", borderRadius: 16, fontSize: 14, fontWeight: 800, border: `2px solid ${C.accent}`, cursor: "pointer", marginTop: 8 }}
+                >
+                  {isLoggingIn ? "Logging in..." : "Login to Portal"}
+                </button>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                  <button 
+                    type="button"
+                    onClick={() => setCustRegister(true)}
+                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Create Account
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCustReset(true)}
+                    style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+              </form>
+            )
+          ) : (
+            /* STAFF / ADMIN VIEW */
+            loginMode === "direct" ? (
             <>
               <button 
                 onClick={handleDirectLogin} 
@@ -573,11 +967,27 @@ const App = () => {
                 Back to Google
               </button>
             </form>
-          )}
+          ))}
           
           <p style={{ fontSize: 11, color: C.muted, marginTop: 24 }}>Authorized access only. Contact owner for staff access.</p>
         </div>
       </div>
+    );
+  }
+
+  // Redirect Customer to Customer Portal Screen
+  if (profile?.role === "customer") {
+    return (
+      <CustomerScreen
+        products={products}
+        settings={settings}
+        bills={bills}
+        profile={profile}
+        orders={orders}
+        onLogout={logout}
+        onUpdateProfile={handleUpdateProfile}
+        onCreateOrder={handleCreateOrder}
+      />
     );
   }
 
@@ -607,6 +1017,10 @@ const App = () => {
       case "history": return wrapScreen(<HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} isDesktop={isDesktop} />, "history");
       case "products": return wrapScreen(<ProductsScreen products={products} settings={settings} isAdmin={isAdmin} />, "products");
       case "dashboard": return wrapScreen(<DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />, "dashboard");
+      case "inventory": return wrapScreen(<InventoryScreen products={products} settings={settings} isAdmin={isAdmin} userProfile={profile} />, "inventory");
+      case "customers": return wrapScreen(<CustomersScreen bills={bills} />, "customers");
+      case "orders": return wrapScreen(<OrdersScreen orders={orders} onUpdateStatus={handleUpdateOrderStatus} />, "orders");
+      case "reports": return wrapScreen(<ReportsScreen bills={bills} products={products} />, "reports");
       case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />, "settings");
       default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "default");
     }
@@ -642,7 +1056,7 @@ const App = () => {
         </AnimatePresence>
       </main>
 
-      {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} isAdmin={isAdmin} />}
+      {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} role={profile?.role} />}
     </div>
   );
 

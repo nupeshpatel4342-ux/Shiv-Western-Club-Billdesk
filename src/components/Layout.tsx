@@ -1,7 +1,7 @@
 import React from "react";
 import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
-import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard, Boxes, Users, ClipboardList, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { children: React.ReactNode, color?: string, bg?: string, small?: boolean }) => (
@@ -10,7 +10,26 @@ export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { child
 
 export const Divider = ({ my = 12 }: { my?: number }) => <div style={{ height: 1, background: C.border, margin: `${my}px 0` }} />;
 
+const getNavLinks = (role?: string) => {
+  const isOwner = role === "owner" || role === "admin";
+  const isManager = role === "manager";
+  
+  return [
+    { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isOwner || isManager },
+    { icon: <Plus size={20} />, label: "Billing", tab: "bill", show: true },
+    { icon: <History size={20} />, label: "Bill History", tab: "history", show: true },
+    { icon: <ShoppingBag size={20} />, label: "Products Catalog", tab: "products", show: true },
+    { icon: <Boxes size={20} />, label: "Stock Inventory", tab: "inventory", show: isOwner || isManager },
+    { icon: <Users size={20} />, label: "Customers", tab: "customers", show: isOwner || isManager },
+    { icon: <ClipboardList size={20} />, label: "Orders Queue", tab: "orders", show: true },
+    { icon: <TrendingUp size={20} />, label: "Analytics Reports", tab: "reports", show: isOwner || isManager },
+    { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: isOwner }
+  ].filter(l => l.show);
+};
+
 export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { open: boolean, onClose: () => void, settings: Settings, onNav: (tab: string) => void, user: UserProfile | null, onLogout: () => void }) => {
+  const links = getNavLinks(user?.role);
+  
   return (
     <AnimatePresence>
       {open && (
@@ -31,43 +50,38 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
             style={{ width: 275, background: C.card, height: "100%", display: "flex", flexDirection: "column", boxShadow: "6px 0 28px rgba(0,0,0,0.18)" }}
           >
             <div style={{ background: C.dark, padding: "32px 24px 26px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
-            {user?.photoURL ? (
-              <img src={user.photoURL} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
-            ) : settings.logo ? (
-              <img src={settings.logo} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}`, background: "#fff", objectFit: "contain" }} alt="Logo" />
-            ) : (
-              <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.3)" }}>
-                <Shirt color={C.bg} size={30} strokeWidth={2.5} />
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
+                {user?.photoURL ? (
+                  <img src={user.photoURL} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
+                ) : settings.logo ? (
+                  <img src={settings.logo} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}`, background: "#fff", objectFit: "contain" }} alt="Logo" />
+                ) : (
+                  <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.3)" }}>
+                    <Shirt color={C.bg} size={30} strokeWidth={2.5} />
+                  </div>
+                )}
+                <div>
+                  <p className="pf" style={{ color: C.bg, fontWeight: 800, fontSize: 20, marginBottom: 4, letterSpacing: "-0.5px" }}>{user?.displayName}</p>
+                  <Pill bg={user?.role === "admin" || user?.role === "owner" ? C.accent : C.muted} small>{user?.role?.toUpperCase() || "STAFF"}</Pill>
+                </div>
               </div>
-            )}
-            <div>
-              <p className="pf" style={{ color: C.bg, fontWeight: 800, fontSize: 20, marginBottom: 4, letterSpacing: "-0.5px" }}>{user?.displayName}</p>
-              <Pill bg={user?.role === "admin" ? C.accent : C.muted} small>{user?.role?.toUpperCase()}</Pill>
+              <p style={{ color: C.bg, opacity: 0.7, fontSize: 13, fontWeight: 400 }}>{user?.email}</p>
             </div>
-          </div>
-          <p style={{ color: C.bg, opacity: 0.7, fontSize: 13, fontWeight: 400 }}>{user?.email}</p>
-        </div>
-        <div style={{ padding: "14px 10px", flex: 1 }}>
-          {[
-            { icon: <Plus size={20} />, label: "New Bill", tab: "bill", show: true },
-            { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: true },
-            { icon: <History size={20} />, label: "Bill History", tab: "history", show: true },
-            { icon: <ShoppingBag size={20} />, label: "Product Catalog", tab: "products", show: true },
-            { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: true }
-          ].filter(l => l.show).map(l => (
-            <button key={l.tab} onClick={() => { onNav(l.tab); onClose(); }}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderRadius: 12, marginBottom: 4, textAlign: "left", color: C.dark, fontWeight: 600, fontSize: 15, transition: "all 0.2s" }}
-              onMouseEnter={e => (e.currentTarget.style.background = C.bg)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
-              <span style={{ color: C.green }}>{l.icon}</span>{l.label}
-            </button>
-          ))}
-          <Divider my={8} />
-          <button onClick={onLogout}
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "13px 14px", borderRadius: 12, marginBottom: 4, textAlign: "left", color: C.accent, fontWeight: 700, fontSize: 15 }}>
-            🚪 Logout
-          </button>
-        </div>
+            <div style={{ padding: "14px 10px", flex: 1, overflowY: "auto" }}>
+              {links.map(l => (
+                <button key={l.tab} onClick={() => { onNav(l.tab); onClose(); }}
+                  style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, marginBottom: 4, textAlign: "left", color: C.dark, fontWeight: 600, fontSize: 14, transition: "all 0.2s", border: "none", background: "transparent", cursor: "pointer" }}
+                  onMouseEnter={e => (e.currentTarget.style.background = C.bg)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                  <span style={{ color: C.accent, display: "flex", alignItems: "center" }}>{l.icon}</span>{l.label}
+                </button>
+              ))}
+              <Divider my={8} />
+              <button onClick={onLogout}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", borderRadius: 12, marginBottom: 4, textAlign: "left", color: C.red, fontWeight: 700, fontSize: 14, border: "none", background: "transparent", cursor: "pointer" }}
+                onMouseEnter={e => (e.currentTarget.style.background = `${C.red}11`)} onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+                🚪 Logout
+              </button>
+            </div>
             <div style={{ padding: "12px 20px 22px", borderTop: `1px solid ${C.border}` }}>
               <p style={{ fontSize: 11, color: C.muted }}>{settings.shopName} · v1.2 Cloud</p>
             </div>
@@ -80,7 +94,7 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
 
 export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Settings }) => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 20px 12px", background: C.card, borderBottom: `1px solid ${C.border}`, position: "sticky", top: 0, zIndex: 100 }}>
-    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s" }}>
+    <button onClick={onMenu} style={{ background: C.bg, borderRadius: 12, width: 42, height: 42, display: "flex", alignItems: "center", justifyContent: "center", color: C.dark, border: `1px solid ${C.border}`, transition: "0.2s", cursor: "pointer" }}>
       <Menu size={22} />
     </button>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -97,35 +111,40 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
   </div>
 );
 
-export const BottomNav = ({ active, onChange, isAdmin }: { active: string, onChange: (id: string) => void, isAdmin?: boolean }) => (
-  <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
-    {[
-      { id: "bill", icon: <Plus size={22} />, label: "Bill", show: true },
-      { id: "dashboard", icon: <LayoutDashboard size={22} />, label: "Stats", show: true },
-      { id: "history", icon: <History size={22} />, label: "History", show: true },
-      { id: "products", icon: <ShoppingBag size={22} />, label: "Catalog", show: true },
-      { id: "settings", icon: <SettingsIcon size={22} />, label: "Settings", show: true }
-    ].filter(t => t.show).map(t => (
-      <motion.button 
-        key={t.id} 
-        onClick={() => onChange(t.id)}
-        whileTap={{ scale: 0.9 }}
-        style={{ flex: 1, padding: "10px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
-          color: active === t.id ? C.dark : C.muted, borderTop: active === t.id ? `3px solid ${C.accent}` : "3px solid transparent", transition: "color 0.2s, border-top 0.2s", background: "none", borderLeft: "none", borderRight: "none", borderBottom: "none" }}
-      >
-        <motion.div
-          animate={{ y: active === t.id ? -1 : 0, color: active === t.id ? C.accent : C.muted }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+export const BottomNav = ({ active, onChange, role }: { active: string, onChange: (id: string) => void, role?: string }) => {
+  const links = getNavLinks(role);
+  // Pick a subset for mobile bottom nav to avoid clutter (e.g. Dashboard, Billing, History, Products, Orders)
+  const mobileSubset = links.filter(l => ["dashboard", "bill", "history", "orders", "inventory"].includes(l.tab)).slice(0, 5);
+  // Fallback to whatever is available
+  const displayLinks = mobileSubset.length > 0 ? mobileSubset : links.slice(0, 5);
+
+  return (
+    <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
+      {displayLinks.map(t => (
+        <motion.button 
+          key={t.id || t.tab} 
+          onClick={() => onChange(t.tab)}
+          whileTap={{ scale: 0.9 }}
+          style={{ flex: 1, padding: "10px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+            color: active === t.tab ? C.dark : C.muted, borderTop: active === t.tab ? `3px solid ${C.accent}` : "3px solid transparent", transition: "color 0.2s, border-top 0.2s", background: "none", borderLeft: "none", borderRight: "none", borderBottom: "none", cursor: "pointer" }}
         >
-          {t.icon}
-        </motion.div>
-        <span className="pf" style={{ fontSize: 9, fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.2px" }}>{t.label}</span>
-      </motion.button>
-    ))}
-  </div>
-);
+          <motion.div
+            animate={{ y: active === t.tab ? -1 : 0, color: active === t.tab ? C.accent : C.muted }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            {t.icon}
+          </motion.div>
+          <span className="pf" style={{ fontSize: 9, fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.2px" }}>{t.label.split(" ")[0]}</span>
+        </motion.button>
+      ))}
+    </div>
+  );
+};
 
 export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: string, onNav: (tab: string) => void, settings: Settings, user: UserProfile | null, onLogout: () => void }) => {
+  const links = getNavLinks(user?.role);
+  
   return (
     <div style={{ width: 260, background: C.card, height: "100vh", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, position: "sticky", top: 0, flexShrink: 0 }}>
       {/* Shop Info */}
@@ -144,14 +163,8 @@ export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: s
       </div>
 
       {/* Navigation Links */}
-      <div style={{ padding: "20px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-        {[
-          { icon: <Plus size={20} />, label: "New Bill", tab: "bill" },
-          { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard" },
-          { icon: <History size={20} />, label: "Bill History", tab: "history" },
-          { icon: <ShoppingBag size={20} />, label: "Product Catalog", tab: "products" },
-          { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings" }
-        ].map(l => {
+      <div style={{ padding: "20px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 4, overflowY: "auto" }}>
+        {links.map(l => {
           const isActive = active === l.tab;
           return (
             <button 
@@ -181,7 +194,7 @@ export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: s
                 if (!isActive) e.currentTarget.style.background = "transparent";
               }}
             >
-              <span style={{ color: isActive ? C.accent : C.green, display: "flex", alignItems: "center" }}>{l.icon}</span>
+              <span style={{ color: isActive ? C.accent : C.accent, display: "flex", alignItems: "center" }}>{l.icon}</span>
               {l.label}
             </button>
           );
@@ -200,7 +213,7 @@ export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: s
           )}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p className="pf" style={{ color: C.dark, fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.displayName}</p>
-            <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{user?.role?.toUpperCase()}</p>
+            <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{user?.role?.toUpperCase() || "STAFF"}</p>
           </div>
         </div>
         
