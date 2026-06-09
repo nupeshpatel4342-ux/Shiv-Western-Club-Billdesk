@@ -53,6 +53,7 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
             { icon: <Plus size={20} />, label: "New Bill", tab: "bill", show: true },
             { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: true },
             { icon: <History size={20} />, label: "Bill History", tab: "history", show: true },
+            { icon: <ShoppingBag size={20} />, label: "Product Catalog", tab: "products", show: true },
             { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: true }
           ].filter(l => l.show).map(l => (
             <button key={l.tab} onClick={() => { onNav(l.tab); onClose(); }}
@@ -99,26 +100,134 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
 export const BottomNav = ({ active, onChange, isAdmin }: { active: string, onChange: (id: string) => void, isAdmin?: boolean }) => (
   <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
     {[
-      { id: "bill", icon: <Plus size={24} />, label: "Bill", show: true },
-      { id: "dashboard", icon: <LayoutDashboard size={24} />, label: "Stats", show: true },
-      { id: "history", icon: <History size={24} />, label: "History", show: true },
-      { id: "settings", icon: <SettingsIcon size={24} />, label: "Settings", show: true }
+      { id: "bill", icon: <Plus size={22} />, label: "Bill", show: true },
+      { id: "dashboard", icon: <LayoutDashboard size={22} />, label: "Stats", show: true },
+      { id: "history", icon: <History size={22} />, label: "History", show: true },
+      { id: "products", icon: <ShoppingBag size={22} />, label: "Catalog", show: true },
+      { id: "settings", icon: <SettingsIcon size={22} />, label: "Settings", show: true }
     ].filter(t => t.show).map(t => (
       <motion.button 
         key={t.id} 
         onClick={() => onChange(t.id)}
         whileTap={{ scale: 0.9 }}
-        style={{ flex: 1, padding: "14px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+        style={{ flex: 1, padding: "10px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
           color: active === t.id ? C.dark : C.muted, borderTop: active === t.id ? `3px solid ${C.accent}` : "3px solid transparent", transition: "color 0.2s, border-top 0.2s", background: "none", borderLeft: "none", borderRight: "none", borderBottom: "none" }}
       >
         <motion.div
-          animate={{ y: active === t.id ? -2 : 0, color: active === t.id ? C.accent : C.muted }}
+          animate={{ y: active === t.id ? -1 : 0, color: active === t.id ? C.accent : C.muted }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
         >
           {t.icon}
         </motion.div>
-        <span className="pf" style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>{t.label}</span>
+        <span className="pf" style={{ fontSize: 9, fontWeight: 850, textTransform: "uppercase", letterSpacing: "0.2px" }}>{t.label}</span>
       </motion.button>
     ))}
   </div>
 );
+
+export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: string, onNav: (tab: string) => void, settings: Settings, user: UserProfile | null, onLogout: () => void }) => {
+  return (
+    <div style={{ width: 260, background: C.card, height: "100vh", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, position: "sticky", top: 0, flexShrink: 0 }}>
+      {/* Shop Info */}
+      <div style={{ padding: "28px 24px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${C.border}` }}>
+        {settings.logo ? (
+          <img src={settings.logo} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain", background: "#fff", border: `1px solid ${C.border}` }} alt="Logo" />
+        ) : (
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Shirt size={22} color={C.accent} />
+          </div>
+        )}
+        <div style={{ minWidth: 0 }}>
+          <h1 className="pf" style={{ fontSize: 17, fontWeight: 900, color: C.dark, letterSpacing: "-0.5px", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{settings.shopName}</h1>
+          <p style={{ fontSize: 9, color: C.muted, fontWeight: 800, margin: 0 }}>BILLING DESK</p>
+        </div>
+      </div>
+
+      {/* Navigation Links */}
+      <div style={{ padding: "20px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
+        {[
+          { icon: <Plus size={20} />, label: "New Bill", tab: "bill" },
+          { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard" },
+          { icon: <History size={20} />, label: "Bill History", tab: "history" },
+          { icon: <ShoppingBag size={20} />, label: "Product Catalog", tab: "products" },
+          { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings" }
+        ].map(l => {
+          const isActive = active === l.tab;
+          return (
+            <button 
+              key={l.tab} 
+              onClick={() => onNav(l.tab)}
+              style={{ 
+                width: "100%", 
+                display: "flex", 
+                alignItems: "center", 
+                gap: 12, 
+                padding: "12px 16px", 
+                borderRadius: 12, 
+                textAlign: "left", 
+                color: isActive ? C.accent : C.dark, 
+                background: isActive ? C.dark : "transparent",
+                fontWeight: 700, 
+                fontSize: 14, 
+                transition: "all 0.2s",
+                border: "none",
+                cursor: "pointer",
+                boxShadow: isActive ? "0 4px 12px rgba(10, 31, 68, 0.15)" : "none"
+              }}
+              onMouseEnter={e => {
+                if (!isActive) e.currentTarget.style.background = C.bg;
+              }} 
+              onMouseLeave={e => {
+                if (!isActive) e.currentTarget.style.background = "transparent";
+              }}
+            >
+              <span style={{ color: isActive ? C.accent : C.green, display: "flex", alignItems: "center" }}>{l.icon}</span>
+              {l.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Profile & Logout */}
+      <div style={{ padding: "16px 20px", borderTop: `1px solid ${C.border}`, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          {user?.photoURL ? (
+            <img src={user.photoURL} style={{ width: 36, height: 36, borderRadius: "50%", border: `1.5px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
+          ) : (
+            <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 16, color: C.bg }}>👤</span>
+            </div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p className="pf" style={{ color: C.dark, fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.displayName}</p>
+            <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>{user?.role?.toUpperCase()}</p>
+          </div>
+        </div>
+        
+        <button 
+          onClick={onLogout}
+          style={{ 
+            width: "100%", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center",
+            gap: 8, 
+            padding: "10px", 
+            borderRadius: 10, 
+            background: `${C.red}11`, 
+            color: C.red, 
+            fontWeight: 800, 
+            fontSize: 13,
+            border: "none",
+            cursor: "pointer",
+            transition: "0.2s"
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = `${C.red}22`}
+          onMouseLeave={e => e.currentTarget.style.background = `${C.red}11`}
+        >
+          🚪 Logout
+        </button>
+      </div>
+    </div>
+  );
+};

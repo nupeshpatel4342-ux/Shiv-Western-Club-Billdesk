@@ -7,7 +7,19 @@ import { StandardTemplate, MinimalTemplate, ModernTemplate } from "../components
 import { motion, AnimatePresence } from "framer-motion";
 import Confetti from "react-confetti";
 
-export const InvoiceScreen = ({ bill, settings, onBack, onNew }: { bill: Bill, settings: Settings, onBack: () => void, onNew: () => void }) => {
+export const InvoiceScreen = ({ 
+  bill, 
+  settings, 
+  onBack, 
+  onNew,
+  hideBack = false
+}: { 
+  bill: Bill, 
+  settings: Settings, 
+  onBack: () => void, 
+  onNew: () => void,
+  hideBack?: boolean
+}) => {
   const invRef = useRef<HTMLDivElement>(null);
   const [showCelebration, setShowCelebration] = useState(false);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
@@ -35,6 +47,16 @@ export const InvoiceScreen = ({ bill, settings, onBack, onNew }: { bill: Bill, s
   const handlePDF = () => {
     doPDF(bill, settings, undefined, invRef);
   };
+
+  const handlePrint = () => {
+    const invoiceEl = invRef.current;
+    if (!invoiceEl) return;
+    const originalId = invoiceEl.id;
+    invoiceEl.id = "invoice-print-root";
+    window.print();
+    invoiceEl.id = originalId;
+  };
+
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -91,34 +113,46 @@ export const InvoiceScreen = ({ bill, settings, onBack, onNew }: { bill: Bill, s
             }}
           >
             <span style={{ fontSize: 24 }}>🎉</span> 
-            Customer Saved {fmt(bill.discount, settings.currency)}!
+            Customer Saved {settings.currency || "₹"}{fmt(bill.discount)}!
           </motion.div>
+
         )}
       </AnimatePresence>
 
-      <motion.div variants={itemVariants} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-        <button onClick={onBack} style={{ color: C.muted, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, background: "none", border: "none" }}>
-          <span style={{ fontSize: 18 }}>←</span> Back
-        </button>
-        <h2 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, letterSpacing: "-0.8px" }}>Invoice</h2>
-        <button onClick={onNew} style={{ color: C.accent, fontSize: 13, fontWeight: 800, background: "none", border: "none" }}>New Bill ＋</button>
-      </motion.div>
+      {!hideBack && (
+        <motion.div variants={itemVariants} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+          <button onClick={onBack} style={{ color: C.muted, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", cursor: "pointer" }}>
+            <span style={{ fontSize: 18 }}>←</span> Back
+          </button>
+          <h2 className="pf" style={{ fontSize: 24, fontWeight: 900, color: C.dark, letterSpacing: "-0.8px" }}>Invoice</h2>
+          <button onClick={onNew} style={{ color: C.accent, fontSize: 13, fontWeight: 800, background: "none", border: "none", cursor: "pointer" }}>New Bill ＋</button>
+        </motion.div>
+      )}
 
       {/* Actual Invoice View */}
-      <motion.div variants={itemVariants} style={{ overflowX: "auto", margin: "0 -18px", padding: "0 18px", paddingBottom: 16 }}>
+      <motion.div variants={itemVariants} style={{ overflowX: "auto", margin: hideBack ? "0" : "0 -18px", padding: hideBack ? "0" : "0 18px", paddingBottom: 16 }}>
         {(!settings.invoiceLayout || settings.invoiceLayout === 'standard') && <StandardTemplate bill={bill} settings={settings} invRef={invRef} />}
         {settings.invoiceLayout === 'minimal' && <MinimalTemplate bill={bill} settings={settings} invRef={invRef} />}
         {settings.invoiceLayout === 'modern' && <ModernTemplate bill={bill} settings={settings} invRef={invRef} />}
       </motion.div>
 
       {/* Action Buttons */}
-      <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+      <motion.div variants={itemVariants} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16 }}>
+        <motion.button 
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handlePrint} 
+          style={{ background: C.card, border: `1.5px solid ${C.border}`, padding: "20px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.02)", cursor: "pointer" }}
+        >
+          <span style={{ fontSize: 26 }}>🖨️</span>
+          <span className="pf" style={{ fontSize: 13, fontWeight: 800, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Print Bill</span>
+        </motion.button>
         <motion.button 
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={handlePDF} 
           className="spin-on-click"
-          style={{ background: C.card, border: `1.5px solid ${C.border}`, padding: "20px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.02)" }}
+          style={{ background: C.card, border: `1.5px solid ${C.border}`, padding: "20px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "0 4px 12px rgba(0,0,0,0.02)", cursor: "pointer" }}
         >
           <span style={{ fontSize: 26 }}>📄</span>
           <span className="pf" style={{ fontSize: 13, fontWeight: 800, color: C.dark, textTransform: "uppercase", letterSpacing: "0.5px" }}>Download PDF</span>
@@ -128,12 +162,13 @@ export const InvoiceScreen = ({ bill, settings, onBack, onNew }: { bill: Bill, s
           whileTap={{ scale: 0.98 }}
           onClick={handleWhatsApp} 
           className="spin-on-click"
-          style={{ background: "#25D366", color: "#fff", padding: "20px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "0 8px 24px rgba(37,211,102,0.25)", border: "none" }}
+          style={{ background: "#25D366", color: "#fff", padding: "20px", borderRadius: 20, display: "flex", flexDirection: "column", alignItems: "center", gap: 8, boxShadow: "0 8px 24px rgba(37,211,102,0.25)", border: "none", cursor: "pointer" }}
         >
           <span style={{ fontSize: 26 }}>💬</span>
           <span className="pf" style={{ fontSize: 13, fontWeight: 900, textTransform: "uppercase", letterSpacing: "0.5px" }}>Share WhatsApp</span>
         </motion.button>
       </motion.div>
+
 
       <motion.div variants={itemVariants} style={{ marginTop: 24, textAlign: "center" }}>
         <p style={{ fontSize: 12, color: C.muted }}>Invoice generated successfully. You can find it in History anytime.</p>

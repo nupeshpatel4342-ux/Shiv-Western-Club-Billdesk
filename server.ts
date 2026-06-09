@@ -31,7 +31,8 @@ async function startServer() {
       const page = await browser.newPage();
 
       // Set content and wait for it to be fully loaded
-      await page.setContent(html, { waitUntil: "networkidle0" });
+      await page.setContent(html, { waitUntil: "networkidle0" as any });
+
 
       // Generate PDF
       const pdfBuffer = await page.pdf({

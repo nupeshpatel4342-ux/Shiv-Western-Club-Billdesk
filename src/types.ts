@@ -59,3 +59,12 @@ export interface Settings {
   logo?: string;      // Base64 string of the shop logo
   invoiceLayout?: 'standard' | 'minimal' | 'modern';
 }
+
+export interface CatalogProduct {
+  id: string;
+  name: string;
+  sku: string;
+  price: number;
+  createdAt: number;
+}
+

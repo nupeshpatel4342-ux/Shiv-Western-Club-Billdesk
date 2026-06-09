@@ -1,16 +1,18 @@
 import React, { useState } from "react";
 import { C } from "../constants";
 import { fmt } from "../utils/formatters";
-import { Item } from "../types";
+import { Item, CatalogProduct } from "../types";
 import { motion } from "motion/react";
 import { Shirt, Tag, AlertCircle } from "lucide-react";
 
-export const AddItemModal = ({ onAdd, onClose }: { onAdd: (item: Item) => void, onClose: () => void }) => {
+export const AddItemModal = ({ onAdd, onClose, products = [] }: { onAdd: (item: Item) => void, onClose: () => void, products?: CatalogProduct[] }) => {
   const [name, setName] = useState("");
   const [qty, setQty] = useState(1);
   const [price, setPrice] = useState("");
   const [discountPct, setDiscountPct] = useState("");
   const [sku, setSku] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
 
   const submit = () => {
     if (!name.trim() || !price) { alert("Item name aur price required hai!"); return; }
@@ -49,9 +51,71 @@ export const AddItemModal = ({ onAdd, onClose }: { onAdd: (item: Item) => void, 
         </div>
 
         <label className="pf" style={{ fontSize: 10, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "1px", display: "block", marginBottom: 8 }}>Item Description *</label>
-        <div style={{ border: `2px solid ${C.bg}`, borderRadius: 16, padding: "14px 18px", marginBottom: 12, background: C.bg, transition: "all 0.2s" }}>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Italian Slim Fit Chinos" style={{ fontSize: 16, color: C.dark, fontWeight: 600, width: "100%", border: "none", outline: "none", background: "transparent" }} autoFocus />
+        <div style={{ position: "relative", marginBottom: 12 }}>
+          <div style={{ border: `2px solid ${C.bg}`, borderRadius: 16, padding: "14px 18px", background: C.bg, transition: "all 0.2s" }}>
+            <input 
+              value={name} 
+              onChange={e => { setName(e.target.value); setShowSuggestions(true); }} 
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+              placeholder="e.g. Italian Slim Fit Chinos" 
+              style={{ fontSize: 16, color: C.dark, fontWeight: 600, width: "100%", border: "none", outline: "none", background: "transparent" }} 
+              autoFocus 
+            />
+          </div>
+          
+          {/* Autocomplete suggestions */}
+          {showSuggestions && products.length > 0 && (
+            <div style={{ 
+              position: "absolute", 
+              top: "105%", 
+              left: 0, 
+              right: 0, 
+              background: C.card, 
+              borderRadius: 16, 
+              border: `1.5px solid ${C.border}`, 
+              boxShadow: "0 10px 30px rgba(0,0,0,0.15)", 
+              zIndex: 50,
+              maxHeight: 185,
+              overflowY: "auto"
+            }}>
+              {products
+                .filter(p => !name.trim() || p.name.toLowerCase().includes(name.toLowerCase()) || p.sku.toLowerCase().includes(name.toLowerCase()))
+                .map(p => (
+                  <div 
+                    key={p.id}
+                    onClick={() => {
+                      setName(p.name);
+                      setSku(p.sku);
+                      setPrice(String(p.price));
+                      setShowSuggestions(false);
+                    }}
+                    style={{ 
+                      padding: "12px 16px", 
+                      cursor: "pointer", 
+                      borderBottom: `1px solid ${C.bg}`,
+                      fontSize: 13,
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center"
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = C.bg}
+                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                  >
+                    <div>
+                      <p style={{ fontWeight: 700, color: C.dark, margin: 0 }}>{p.name}</p>
+                      <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>SKU: {p.sku}</p>
+                    </div>
+                    <span style={{ fontWeight: 850, color: C.green }}>₹{p.price.toLocaleString("en-IN")}</span>
+                  </div>
+                ))}
+              {products.filter(p => !name.trim() || p.name.toLowerCase().includes(name.toLowerCase()) || p.sku.toLowerCase().includes(name.toLowerCase())).length === 0 && (
+                <div style={{ padding: "12px 16px", fontSize: 12, color: C.muted, textAlign: "center" }}>No matching catalog product</div>
+              )}
+            </div>
+          )}
         </div>
+
 
         {/* Quick Select Items */}
         <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 16, marginBottom: 8, scrollbarWidth: "none", msOverflowStyle: "none" }}>

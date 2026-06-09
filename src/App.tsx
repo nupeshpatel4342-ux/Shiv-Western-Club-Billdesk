@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { C } from "./constants";
-import { Bill, Settings, UserProfile } from "./types";
-import { Header, Drawer, BottomNav } from "./components/Layout";
+import { Bill, Settings, UserProfile, CatalogProduct } from "./types";
+import { Header, Drawer, BottomNav, Sidebar } from "./components/Layout";
 import { Shirt } from "lucide-react";
 import { NewBillScreen } from "./screens/NewBillScreen";
 import { InvoiceScreen } from "./screens/InvoiceScreen";
 import { HistoryScreen } from "./screens/HistoryScreen";
 import { SettingsScreen } from "./screens/SettingsScreen";
 import { DashboardScreen } from "./screens/DashboardScreen";
+import { ProductsScreen } from "./screens/ProductsScreen";
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { AnimatePresence, motion } from "motion/react";
+
 
 const App = () => {
   const [tab, setTab] = useState("bill");
@@ -37,14 +39,25 @@ const App = () => {
     currency: "₹"
   });
   const [bills, setBills] = useState<Bill[]>([]);
+  const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [currentBill, setCurrentBill] = useState<Bill | null>(null);
   const [billToEdit, setBillToEdit] = useState<Bill | null>(null);
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("darkMode");
     return saved === "true";
   });
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
   const isAdmin = profile?.role === "admin";
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
 
   useEffect(() => {
     if (darkMode) {
@@ -113,6 +126,18 @@ const App = () => {
     }, (err) => handleFirestoreError(err, OperationType.LIST, "bills"));
     return unsub;
   }, [user]);
+
+  // Sync Products
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
+    const unsub = onSnapshot(q, (s) => {
+      const pList = s.docs.map(d => ({ id: d.id, ...d.data() }) as CatalogProduct);
+      setProducts(pList);
+    }, (err) => handleFirestoreError(err, OperationType.LIST, "products"));
+    return unsub;
+  }, [user]);
+
 
   const handleGenerate = async (bill: Bill) => {
     try {
@@ -577,15 +602,35 @@ const App = () => {
     );
 
     switch (tab) {
-      case "bill": return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />, "bill");
-      case "invoice": return wrapScreen(currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />, "invoice");
-      case "history": return wrapScreen(<HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} />, "history");
+      case "bill": return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />, "bill");
+      case "invoice": return wrapScreen(currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "invoice");
+      case "history": return wrapScreen(<HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} isDesktop={isDesktop} />, "history");
+      case "products": return wrapScreen(<ProductsScreen products={products} settings={settings} isAdmin={isAdmin} />, "products");
       case "dashboard": return wrapScreen(<DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />, "dashboard");
       case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />, "settings");
-      default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} />, "default");
+      default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "default");
     }
   };
 
+  if (isDesktop) {
+    return (
+      <div style={{ display: "flex", minHeight: "100vh", background: C.bg }}>
+        {/* Desktop Sidebar */}
+        <Sidebar active={tab} onNav={handleNav} settings={settings} user={profile} onLogout={logout} />
+        
+        {/* Main Content Area */}
+        <main style={{ flex: 1, height: "100vh", overflowY: "auto", padding: "40px" }} id="main-content-scroll">
+          <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+            <AnimatePresence mode="wait">
+              {renderScreen()}
+            </AnimatePresence>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Mobile layout
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(0,0,0,0.05)" }}>
       <Header onMenu={() => setDrawer(true)} settings={settings} />
@@ -600,6 +645,7 @@ const App = () => {
       {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} isAdmin={isAdmin} />}
     </div>
   );
+
 };
 
 export default App;
