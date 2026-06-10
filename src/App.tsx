@@ -1078,33 +1078,15 @@ const App = () => {
     );
   }
 
-  // Case B: Staff/Admin logged in, but tries to access / (Customer Portal)
+  // Case B: Staff/Admin logged in, but tries to access / (Customer Portal) - auto-redirect
   if (!isPathAdmin && profile?.role && profile.role !== "customer") {
-    return (
-      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
-        <div style={{ width: "100%", maxWidth: 380, background: C.card, borderRadius: 28, padding: 32, textAlign: "center", border: `1.5px solid ${C.accent}`, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
-          <span style={{ fontSize: 44 }}>💼</span>
-          <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginTop: 16, marginBottom: 8 }}>Staff Session Active</h3>
-          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24 }}>You are signed in with an Admin/Staff account. Admin panels are accessed on the dedicated `/admin` path.</p>
-          <button 
-            onClick={() => navigateTo("admin")}
-            style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
-          >
-            Go to Admin Panel →
-          </button>
-          <button 
-            onClick={logout}
-            style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 16 }}
-          >
-            Log Out from Staff
-          </button>
-        </div>
-      </div>
-    );
+    // Auto-redirect staff/admin to admin portal
+    navigateTo("admin");
+    return null;
   }
 
   // Case C: Customer logged in on / (Customer view)
-  if (!isPathAdmin && profile?.role === "customer") {
+  if (!isPathAdmin && profile && profile.role === "customer") {
     return (
       <React.Suspense fallback={
         <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg }}>
