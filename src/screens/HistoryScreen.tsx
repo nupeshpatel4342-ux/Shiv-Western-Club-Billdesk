@@ -32,6 +32,7 @@ export const HistoryScreen = ({
 }) => {
   const [search, setSearch] = useState("");
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [visibleCount, setVisibleCount] = useState(10);
   const [selectedBill, setSelectedBill] = useState<Bill | null>(null);
 
   useEffect(() => {
@@ -155,7 +156,7 @@ export const HistoryScreen = ({
           style={{ display: "flex", flexDirection: "column", gap: 16 }}
         >
           <AnimatePresence>
-            {filtered.map(b => {
+            {filtered.slice(0, visibleCount).map(b => {
               const isSelected = isDesktop && selectedBill?.id === b.id;
               return (
                 <motion.div 
@@ -267,9 +268,14 @@ export const HistoryScreen = ({
         </motion.div>
       )}
 
-      {bills.length > 10 && (
+      {filtered.length > visibleCount && (
         <div style={{ marginTop: 30, textAlign: "center" }}>
-          <button style={{ padding: "10px 20px", borderRadius: 100, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 13, fontWeight: 700 }}>Load More History</button>
+          <button 
+            onClick={() => setVisibleCount(v => v + 10)}
+            style={{ padding: "10px 20px", borderRadius: 100, border: `1.5px solid ${C.border}`, color: C.muted, fontSize: 13, fontWeight: 700, cursor: "pointer", background: C.bg }}
+          >
+            Load More History
+          </button>
         </div>
       )}
     </>

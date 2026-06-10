@@ -400,6 +400,15 @@ const App = () => {
     }
   };
 
+  const handleUpdateUserRole = async (uid: string, newRole: string) => {
+    try {
+      await setDoc(doc(db, "users", uid), { role: newRole }, { merge: true });
+    } catch (err) {
+      console.error("Failed to update role", err);
+      alert("Error updating role");
+    }
+  };
+
   const handleUpdateProfile = async (p: any) => {
     try {
       if (isGuestMode || p.isGuest) {
@@ -1177,7 +1186,7 @@ const App = () => {
       case "customers": return wrapScreen(<CustomersScreen bills={bills} />, "customers");
       case "orders": return wrapScreen(<OrdersScreen orders={orders} onUpdateStatus={handleUpdateOrderStatus} />, "orders");
       case "reports": return wrapScreen(<ReportsScreen bills={bills} products={products} />, "reports");
-      case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} />, "settings");
+      case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} users={users} onUpdateUserRole={handleUpdateUserRole} />, "settings");
       default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "default");
     }
   };
