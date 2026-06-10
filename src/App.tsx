@@ -608,10 +608,12 @@ const App = () => {
     if ((cleanUsername === "9724557728" || cleanUsername === "-9724557728") && cleanPassword === "120496") {
       setIsLoggingIn(true);
       try {
+        // Set the session flag BEFORE signing in anonymously to prevent the auth listener race condition
+        localStorage.setItem("admin_session", "true");
+        
         const cred = await loginAnonymously();
         const u = cred.user;
         
-        localStorage.setItem("admin_session", "true");
         setUser(u);
         setProfile({
           uid: u.uid,
@@ -622,6 +624,7 @@ const App = () => {
         });
         setTab("dashboard");
       } catch (err: any) {
+        localStorage.removeItem("admin_session");
         console.error("Admin Login anonymous auth error:", err);
         setAdminError("Database authentication failed. Please try again.");
       } finally {
