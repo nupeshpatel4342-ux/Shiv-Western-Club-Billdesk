@@ -874,13 +874,6 @@ const App = () => {
                     Forgot Password?
                   </button>
                 </div>
-                <button 
-                  type="button"
-                  onClick={() => navigateTo("admin")}
-                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 14, textDecoration: "underline" }}
-                >
-                  Are you Staff? Go to Admin Portal →
-                </button>
               </form>
             )
           ) : (
