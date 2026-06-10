@@ -29,27 +29,34 @@ const App = () => {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isGuestMode, setIsGuestMode] = useState(false);
   
-  // Hash-Based Portal Routing (#admin for admin, no hash for customer)
-  const [isAdminPortal, setIsAdminPortal] = useState(() => {
-    const h = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
-    return h === 'admin';
-  });
+  // Hash & Path-Based Portal Routing (/admin or #admin for admin, else customer)
+  const checkIsAdmin = () => {
+    const path = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '').toLowerCase();
+    const hash = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
+    return path === 'admin' || hash === 'admin';
+  };
+
+  const [isAdminPortal, setIsAdminPortal] = useState(checkIsAdmin);
 
   useEffect(() => {
-    const handleHashChange = () => {
-      const h = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
-      setIsAdminPortal(h === 'admin');
+    const handleLocationChange = () => {
+      setIsAdminPortal(checkIsAdmin());
     };
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener("hashchange", handleLocationChange);
+    window.addEventListener("popstate", handleLocationChange);
+    return () => {
+      window.removeEventListener("hashchange", handleLocationChange);
+      window.removeEventListener("popstate", handleLocationChange);
+    };
   }, []);
 
   const navigateTo = (portal: "admin" | "customer") => {
     if (portal === "admin") {
-      window.location.hash = "admin";
+      history.pushState(null, "", "/admin");
+      setIsAdminPortal(true);
     } else {
-      window.location.hash = "";
-      history.replaceState(null, "", window.location.pathname);
+      history.pushState(null, "", "/");
+      setIsAdminPortal(false);
     }
   };
   
