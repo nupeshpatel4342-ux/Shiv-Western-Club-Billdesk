@@ -352,11 +352,33 @@ const App = () => {
     }
   };
 
-  const handleUpdateProfile = async (p: UserProfile) => {
+  const handleUpdateProfile = async (p: any) => {
     try {
-      await setDoc(doc(db, "users", p.uid), p);
+      await setDoc(doc(db, "users", p.uid), {
+        uid: p.uid,
+        email: p.email || "",
+        displayName: p.displayName || p.name || "",
+        photoURL: p.photoURL || "",
+        role: p.role || "customer",
+        createdAt: p.createdAt || Date.now()
+      });
+      if (p.role === "customer") {
+        await setDoc(doc(db, "customers", p.uid), {
+          uid: p.uid,
+          name: p.displayName || p.name || "Customer",
+          phone: p.phone || "",
+          password: p.password || "",
+          address: p.address || "",
+          loyaltyPoints: p.loyaltyPoints || 0,
+          totalPurchase: p.totalPurchase || 0,
+          purchaseHistory: p.purchaseHistory || [],
+          wishlist: p.wishlist || [],
+          createdAt: p.createdAt || Date.now()
+        });
+      }
       setProfile(p);
     } catch (err) {
+      console.error("Profile update error:", err);
       handleFirestoreError(err, OperationType.UPDATE, `users/${p.uid}`);
     }
   };
