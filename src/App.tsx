@@ -23,6 +23,7 @@ import { AnimatePresence, motion } from "motion/react";
 const App = () => {
   const [tab, setTab] = useState("dashboard"); // Default to dashboard for admin
   const [drawer, setDrawer] = useState(false);
+  const anonymousLoginPromiseRef = React.useRef<Promise<any> | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -591,6 +592,16 @@ const App = () => {
   };
 
   const handleCreateOrder = async (orderData: any) => {
+    if (!auth.currentUser) {
+      if (!anonymousLoginPromiseRef.current) {
+        anonymousLoginPromiseRef.current = loginAnonymously();
+      }
+      const cred = await anonymousLoginPromiseRef.current;
+      orderData.customerId = cred.user.uid;
+      anonymousLoginPromiseRef.current = null;
+    } else if (auth.currentUser?.isAnonymous && orderData.customerId === "guest") {
+      orderData.customerId = auth.currentUser.uid;
+    }
     await addDoc(collection(db, "orders"), orderData);
   };
 
