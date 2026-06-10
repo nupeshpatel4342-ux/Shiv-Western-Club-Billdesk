@@ -236,6 +236,10 @@ const App = () => {
     if (!user || !profile) return;
     let q;
     if (profile.role === "customer") {
+      if (!profile.phone) {
+        setOrders([]);
+        return;
+      }
       q = query(
         collection(db, "orders"),
         where("customerPhone", "==", profile.phone),
