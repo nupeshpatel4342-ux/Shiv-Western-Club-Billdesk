@@ -28,20 +28,28 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  // Path-Based Routing States
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  // Hash-Based Portal Routing (#admin for admin, no hash for customer)
+  const [isAdminPortal, setIsAdminPortal] = useState(() => {
+    const h = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
+    return h === 'admin';
+  });
 
   useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
+    const handleHashChange = () => {
+      const h = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
+      setIsAdminPortal(h === 'admin');
     };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const navigateTo = (newPath: string) => {
-    window.history.pushState({}, "", newPath);
-    setCurrentPath(newPath);
+  const navigateTo = (portal: "admin" | "customer") => {
+    if (portal === "admin") {
+      window.location.hash = "admin";
+    } else {
+      window.location.hash = "";
+      history.replaceState(null, "", window.location.pathname);
+    }
   };
   
   // Customer Login/Register states
@@ -445,7 +453,7 @@ const App = () => {
     try {
       const virtualEmail = `${cleanPhone}@customer.shivwestern.com`;
       await loginWithEmail(virtualEmail, custPassword);
-      navigateTo("/");
+      navigateTo("customer");
     } catch (err: any) {
       console.error("Customer Login Error:", err);
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
@@ -503,7 +511,7 @@ const App = () => {
       await setDoc(doc(db, "customers", u.uid), customerDetails);
 
       setProfile({ ...newProfile, ...customerDetails });
-      navigateTo("/");
+      navigateTo("customer");
       alert("🎉 Account created successfully! Welcome to Shiv Western Club.");
     } catch (err: any) {
       console.error("Customer Register Error:", err);
@@ -693,7 +701,7 @@ const App = () => {
   }
 
   if (!user) {
-    const isAdminPath = currentPath.startsWith("/admin");
+    const isAdminPath = isAdminPortal;
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
         <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)", border: `1px solid ${C.border}` }}>
@@ -830,7 +838,7 @@ const App = () => {
                 </div>
                 <button 
                   type="button"
-                  onClick={() => navigateTo("/admin")}
+                  onClick={() => navigateTo("admin")}
                   style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 14, textDecoration: "underline" }}
                 >
                   Are you Staff? Go to Admin Portal →
@@ -876,7 +884,7 @@ const App = () => {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => navigateTo("/")}
+                  onClick={() => navigateTo("customer")}
                   style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 16, textDecoration: "underline", display: "block", width: "100%" }}
                 >
                   Are you a Customer? Go to Customer Portal →
@@ -1043,7 +1051,7 @@ const App = () => {
   }
 
   // REDIRECT AND ENFORCE PATH-BASED AUTHENTICATION ROLES
-  const isPathAdmin = currentPath.startsWith("/admin");
+  const isPathAdmin = isAdminPortal;
 
   // Case A: Customer logged in, but tries to access /admin
   if (isPathAdmin && profile?.role === "customer") {
@@ -1054,7 +1062,7 @@ const App = () => {
           <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.red, marginTop: 16, marginBottom: 8 }}>Access Denied</h3>
           <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24 }}>You do not have staff/admin privileges. This account is registered in the Customer Club.</p>
           <button 
-            onClick={() => navigateTo("/")}
+            onClick={() => navigateTo("customer")}
             style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
           >
             Go to Customer Portal →
@@ -1079,7 +1087,7 @@ const App = () => {
           <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginTop: 16, marginBottom: 8 }}>Staff Session Active</h3>
           <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24 }}>You are signed in with an Admin/Staff account. Admin panels are accessed on the dedicated `/admin` path.</p>
           <button 
-            onClick={() => navigateTo("/admin")}
+            onClick={() => navigateTo("admin")}
             style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
           >
             Go to Admin Panel →
