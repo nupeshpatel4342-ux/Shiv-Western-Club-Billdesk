@@ -1148,10 +1148,13 @@ const App = () => {
           bills={bills}
           profile={activeProfile}
           orders={orders}
-          onLogout={() => {
+          onLogout={(startRegister?: boolean) => {
             if (isGuestMode) {
               setIsGuestMode(false);
               setProfile(null);
+              if (startRegister) {
+                setCustRegister(true);
+              }
             } else {
               logout();
             }

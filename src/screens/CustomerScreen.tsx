@@ -19,7 +19,11 @@ import {
   Search, 
   Calendar,
   LogOut,
-  FileText
+  FileText,
+  ShoppingCart,
+  Plus,
+  Minus,
+  Trash2
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { doWhatsApp, doPDF } from "../utils/exportUtils";
@@ -108,11 +112,11 @@ export const CustomerScreen = ({
   bills: Bill[],
   profile: any,
   orders?: Order[],
-  onLogout: () => void,
+  onLogout: (startRegister?: boolean) => void,
   onUpdateProfile: (p: any) => void,
   onCreateOrder: (order: any) => Promise<void>
 }) => {
-  const [activeTab, setActiveTab] = useState<"home" | "products" | "offers" | "profile" | "bills" | "history" | "wishlist">("home");
+  const [activeTab, setActiveTab] = useState<"home" | "products" | "offers" | "profile" | "bills" | "history" | "wishlist" | "cart">("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
@@ -124,6 +128,28 @@ export const CustomerScreen = ({
   const [editName, setEditName] = useState(profile?.displayName || profile?.name || "");
   const [editAddress, setEditAddress] = useState(profile?.address || "");
   const [isSavingProfile, setIsSavingProfile] = useState(false);
+
+  // Cart State (Persisted in localStorage)
+  const [cart, setCart] = useState<any[]>(() => {
+    try {
+      return JSON.parse(localStorage.getItem("customer_cart") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // Guest Conversion and Checkout states
+  const [showConversionModal, setShowConversionModal] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [guestPhone, setGuestPhone] = useState("");
+  const [guestAddress, setGuestAddress] = useState("");
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+  // Sync cart to localStorage
+  React.useEffect(() => {
+    localStorage.setItem("customer_cart", JSON.stringify(cart));
+  }, [cart]);
 
   const categories = ["All", "Shirt", "T-Shirt", "Jeans", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
 
@@ -275,6 +301,131 @@ export const CustomerScreen = ({
     }
   };
 
+  const addToCart = (product: any) => {
+    if (!selectedSize) {
+      alert("Please select a size!");
+      return;
+    }
+    const colors = product.color ? product.color.split(",").map((c: string) => c.trim()) : [];
+    const colorVal = selectedColor || (colors.length > 0 ? colors[0] : "Default");
+
+    const existingIndex = cart.findIndex(
+      item => item.id === product.id && item.size === selectedSize && item.color === colorVal
+    );
+
+    let updatedCart;
+    if (existingIndex > -1) {
+      updatedCart = [...cart];
+      updatedCart[existingIndex].qty += 1;
+    } else {
+      updatedCart = [...cart, {
+        id: product.id,
+        name: product.name,
+        price: product.price || product.sellingPrice,
+        size: selectedSize,
+        color: colorVal,
+        image: product.image,
+        brand: product.brand,
+        qty: 1
+      }];
+    }
+
+    setCart(updatedCart);
+    setSelectedProduct(null);
+    setSelectedSize("");
+    setSelectedColor("");
+
+    if (profile.isGuest) {
+      // Trigger conversion popup prompt for guest
+      setShowConversionModal(true);
+    } else {
+      // Direct notification/alert for registered customer
+      alert("🎉 Product added to your cart!");
+    }
+  };
+
+  const updateCartQty = (productId: string, size: string, color: string, delta: number) => {
+    const updated = cart.map(item => {
+      if (item.id === productId && item.size === size && item.color === color) {
+        const newQty = item.qty + delta;
+        return { ...item, qty: Math.max(1, newQty) };
+      }
+      return item;
+    });
+    setCart(updated);
+  };
+
+  const removeFromCart = (productId: string, size: string, color: string) => {
+    const updated = cart.filter(
+      item => !(item.id === productId && item.size === size && item.color === color)
+    );
+    setCart(updated);
+  };
+
+  const handleCartCheckout = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (cart.length === 0) return;
+
+    let custName = "";
+    let custPhone = "";
+    let custAddress = "";
+
+    if (profile.isGuest) {
+      if (!guestName.trim() || !guestPhone.trim()) {
+        alert("Please enter your Name and Mobile Number for guest checkout.");
+        return;
+      }
+      custName = guestName.trim();
+      custPhone = guestPhone.trim();
+      custAddress = guestAddress.trim();
+    } else {
+      custName = profile.displayName || profile.name || "Customer";
+      custPhone = profile.phone;
+      custAddress = profile.address || "";
+    }
+
+    setIsPlacingOrder(true);
+    try {
+      // Create a reservation for each cart item
+      const promises = cart.map(item => {
+        const orderData = {
+          customerId: profile.uid,
+          customerName: custName,
+          customerPhone: custPhone,
+          productId: item.id,
+          productName: item.name,
+          size: item.size,
+          color: item.color,
+          price: item.price,
+          status: "Reserved" as const,
+          createdAt: Date.now()
+        };
+        return onCreateOrder(orderData);
+      });
+
+      await Promise.all(promises);
+      alert(`🎉 Checkout Successful!\nYour ${cart.length} items have been reserved. Please visit the store billing counter to complete your purchase.`);
+      
+      // Clear cart
+      setCart([]);
+      setCheckoutMode(false);
+      setGuestName("");
+      setGuestPhone("");
+      setGuestAddress("");
+
+      if (!profile.isGuest) {
+        setActiveTab("profile"); // Switch to profile to check reservations
+      } else {
+        setActiveTab("home");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to place reservations. Please try again.");
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
+
   const handleEnquiry = (product: any) => {
     const sizeStr = selectedSize ? `Size: ${selectedSize}` : "Size: Any";
     const colorStr = selectedColor ? `Color: ${selectedColor}` : "Color: Any";
@@ -304,6 +455,7 @@ export const CustomerScreen = ({
   const menuItems = [
     { id: "home", label: "Home", icon: "🏠" },
     { id: "products", label: "Products", icon: "🛍️" },
+    { id: "cart", label: `My Cart ${cart.length > 0 ? `(${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, icon: "🛒" },
     { id: "offers", label: "Offers", icon: "🏷️" },
     { id: "profile", label: "My Profile", icon: "👤" },
     { id: "bills", label: "My Bills", icon: "📄" },
@@ -395,21 +547,12 @@ export const CustomerScreen = ({
         )}
 
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-          {profile.isGuest ? (
-            <button 
-              onClick={() => { setSelectedProduct(null); onLogout(); }}
-              style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              🔑 Log In to Reserve
-            </button>
-          ) : (
-            <button 
-              onClick={() => handleReserve(product)}
-              style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-            >
-              🛎️ Reserve Product
-            </button>
-          )}
+          <button 
+            onClick={() => addToCart(product)}
+            style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+          >
+            🛒 Add to Cart
+          </button>
           <button 
             onClick={() => handleEnquiry(product)}
             style={{ background: "#25D366", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 54 }}
@@ -941,7 +1084,7 @@ export const CustomerScreen = ({
                             onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
                             style={{ background: C.dark, border: `1px solid ${C.accent}`, color: C.accent, fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, cursor: "pointer" }}
                           >
-                            Reserve
+                            View
                           </button>
                         </div>
                       </div>
@@ -1177,6 +1320,177 @@ export const CustomerScreen = ({
               )
             )}
 
+            {/* 8. MY CART TAB */}
+            {activeTab === "cart" && (
+              <motion.div key="cart" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+                <div>
+                  <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>My Shopping Cart</h3>
+                  <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 16px" }}>Manage items and place reservation orders</p>
+                </div>
+
+                {cart.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 20px", border: `2px dashed ${C.border}`, borderRadius: 24, background: C.card }}>
+                    <div style={{ display: "inline-flex", width: 64, height: 64, borderRadius: "50%", background: C.bg, alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                      <ShoppingCart size={28} color={C.muted} />
+                    </div>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: C.dark, margin: 0 }}>Your Cart is Empty</p>
+                    <p style={{ fontSize: 13, color: C.muted, marginTop: 6, marginBottom: 24 }}>Browse our premium collections and add your favorite wear to the cart.</p>
+                    <button 
+                      onClick={() => setActiveTab("products")}
+                      style={{ background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "12px 28px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
+                    >
+                      Shop Collection
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: window.innerWidth >= 768 ? "row" : "column", gap: 24, alignItems: "flex-start" }}>
+                    {/* Cart Items List */}
+                    <div style={{ flex: 1.5, width: "100%", display: "flex", flexDirection: "column", gap: 16 }}>
+                      <div style={{ background: C.card, borderRadius: 20, border: `1px solid ${C.border}`, padding: 20 }}>
+                        <h4 className="pf" style={{ fontSize: 15, fontWeight: 800, color: C.dark, marginBottom: 16 }}>Cart Items ({cart.reduce((sum, item) => sum + item.qty, 0)})</h4>
+                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                          {cart.map(item => (
+                            <div key={`${item.id}-${item.size}-${item.color}`} style={{ display: "flex", gap: 14, alignItems: "center", paddingBottom: 14, borderBottom: `1px solid ${C.border}` }}>
+                              <div style={{ width: 60, height: 60, borderRadius: 10, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${C.border}`, overflow: "hidden", flexShrink: 0 }}>
+                                {item.image ? (
+                                  <img src={item.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={item.name} />
+                                ) : (
+                                  <Shirt size={24} color={C.muted} />
+                                )}
+                              </div>
+                              <div style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ fontSize: 10, color: C.accent, fontWeight: 800, textTransform: "uppercase" }}>{item.brand || "Shiv Western"}</span>
+                                <h5 style={{ fontSize: 14, fontWeight: 700, color: C.dark, margin: "2px 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</h5>
+                                <p style={{ fontSize: 11, color: C.muted, margin: 0 }}>Size: {item.size} | Color: {item.color}</p>
+                              </div>
+                              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
+                                <span className="pf" style={{ fontSize: 15, fontWeight: 800, color: C.dark }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</span>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                  {/* Quantity selector */}
+                                  <div style={{ display: "flex", alignItems: "center", border: `1px solid ${C.border}`, borderRadius: 8, background: C.bg }}>
+                                    <button 
+                                      onClick={() => updateCartQty(item.id, item.size, item.color, -1)}
+                                      style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: C.dark }}
+                                    >
+                                      <Minus size={12} />
+                                    </button>
+                                    <span style={{ fontSize: 12, fontWeight: 700, minWidth: 20, textAlign: "center", color: C.dark }}>{item.qty}</span>
+                                    <button 
+                                      onClick={() => updateCartQty(item.id, item.size, item.color, 1)}
+                                      style={{ padding: "4px 8px", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: C.dark }}
+                                    >
+                                      <Plus size={12} />
+                                    </button>
+                                  </div>
+                                  {/* Delete button */}
+                                  <button 
+                                    onClick={() => removeFromCart(item.id, item.size, item.color)}
+                                    style={{ background: "none", border: "none", color: C.red, cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+                                    title="Remove item"
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cart Summary & Checkout Card */}
+                    <div style={{ flex: 1, width: "100%", display: "flex", flexDirection: "column", gap: 18, position: "sticky", top: 20 }}>
+                      <div style={{ background: C.card, borderRadius: 24, padding: 20, border: `1px solid ${C.border}`, boxShadow: "0 4px 15px rgba(0,0,0,0.01)" }}>
+                        <h4 className="pf" style={{ fontSize: 15, fontWeight: 800, color: C.dark, marginBottom: 16 }}>Order Summary</h4>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                          <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Subtotal</span>
+                          <span className="pf" style={{ fontWeight: 700, color: C.dark, fontSize: 15 }}>₹{cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toLocaleString("en-IN")}</span>
+                        </div>
+                        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                          <span style={{ color: C.muted, fontSize: 13, fontWeight: 500 }}>Delivery / Reservation Fee</span>
+                          <span style={{ color: C.green, fontSize: 12, fontWeight: 700 }}>FREE</span>
+                        </div>
+                        
+                        <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: 14, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                          <span style={{ color: C.dark, fontWeight: 700, fontSize: 14 }}>Total</span>
+                          <span className="pf" style={{ fontSize: 22, fontWeight: 900, color: C.dark }}>₹{cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toLocaleString("en-IN")}</span>
+                        </div>
+
+                        {/* Checkout Form Toggle / Details */}
+                        {!checkoutMode ? (
+                          <button 
+                            onClick={() => setCheckoutMode(true)}
+                            style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                          >
+                            Proceed to Reservation
+                          </button>
+                        ) : (
+                          <form onSubmit={handleCartCheckout} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                            <h5 className="pf" style={{ fontSize: 13, fontWeight: 800, color: C.dark, margin: "10px 0 2px" }}>
+                              {profile.isGuest ? "Guest Billing Details" : "Billing Details"}
+                            </h5>
+
+                            {profile.isGuest ? (
+                              <>
+                                <div style={{ border: `1.5px solid ${C.accent}22`, background: "#FFFBF0", borderRadius: 12, padding: 12, marginBottom: 4 }}>
+                                  <p style={{ fontSize: 11, color: C.accent, fontWeight: 800, margin: "0 0 4px", textTransform: "uppercase" }}>💡 Exclusive Club offer Available</p>
+                                  <p style={{ fontSize: 10, color: C.muted, margin: 0, lineHeight: 1.4 }}>Create a free account to automatically save **Flat 50% Off** and earn loyalty points!</p>
+                                </div>
+                                <input 
+                                  value={guestName}
+                                  onChange={e => setGuestName(e.target.value)}
+                                  placeholder="Full Name *"
+                                  required
+                                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                                />
+                                <input 
+                                  value={guestPhone}
+                                  onChange={e => setGuestPhone(e.target.value)}
+                                  placeholder="10-digit Mobile Number *"
+                                  required
+                                  type="tel"
+                                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                                />
+                                <input 
+                                  value={guestAddress}
+                                  onChange={e => setGuestAddress(e.target.value)}
+                                  placeholder="Delivery / Billing Address (Optional)"
+                                  style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: `1px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                                />
+                              </>
+                            ) : (
+                              <div style={{ background: C.bg, borderRadius: 12, padding: 12, fontSize: 12, display: "flex", flexDirection: "column", gap: 6 }}>
+                                <p style={{ margin: 0, color: C.dark }}><strong>Name:</strong> {profile.displayName || profile.name}</p>
+                                <p style={{ margin: 0, color: C.dark }}><strong>Phone:</strong> {profile.phone}</p>
+                                <p style={{ margin: 0, color: C.dark }}><strong>Address:</strong> {profile.address || "Not set (Please edit in Profile)"}</p>
+                              </div>
+                            )}
+
+                            <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                              <button 
+                                type="button"
+                                onClick={() => setCheckoutMode(false)}
+                                style={{ flex: 1, background: "transparent", color: C.muted, border: `1px solid ${C.border}`, padding: "12px", borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: "pointer" }}
+                              >
+                                Back
+                              </button>
+                              <button 
+                                type="submit"
+                                disabled={isPlacingOrder}
+                                style={{ flex: 2, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "12px", borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: "pointer" }}
+                              >
+                                {isPlacingOrder ? "Placing..." : "Confirm Reservation"}
+                              </button>
+                            </div>
+                          </form>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
           </AnimatePresence>
         </main>
 
@@ -1185,8 +1499,8 @@ export const CustomerScreen = ({
           {[
             { id: "home", icon: "🏠", label: "Home" },
             { id: "products", icon: "🛍️", label: "Products" },
+            { id: "cart", icon: `🛒${cart.length > 0 ? ` (${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, label: "Cart" },
             { id: "wishlist", icon: "❤️", label: "Wishlist" },
-            { id: "bills", icon: "📄", label: "My Bills" },
             { id: "profile", icon: "👤", label: "My Profile" }
           ].map(nav => (
             <button
@@ -1233,6 +1547,86 @@ export const CustomerScreen = ({
               </button>
               <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, marginBottom: 18 }}>Product Details</h3>
               {renderProductDetails(selectedProduct)}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Guest Conversion Modal Popup */}
+      <AnimatePresence>
+        {showConversionModal && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", padding: 20 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 30 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 30 }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              style={{ background: "linear-gradient(135deg, #0A1F44 0%, #000 100%)", borderRadius: 28, padding: "32px 28px", width: "100%", maxWidth: 440, border: `2px solid ${C.accent}`, boxShadow: "0 20px 50px rgba(0,0,0,0.3)", position: "relative", textAlign: "center", color: "#fff" }}
+            >
+              <button 
+                onClick={() => setShowConversionModal(false)}
+                style={{ position: "absolute", right: 20, top: 20, background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", fontWeight: 700 }}
+              >
+                ✕
+              </button>
+
+              <div style={{ display: "inline-flex", width: 64, height: 64, borderRadius: "50%", background: "rgba(212, 175, 55, 0.15)", alignItems: "center", justifyContent: "center", border: `2px solid ${C.accent}`, marginBottom: 20 }}>
+                <Award size={32} color={C.accent} />
+              </div>
+
+              <h3 className="pf" style={{ fontSize: 22, fontWeight: 900, color: C.accent, marginBottom: 8 }}>Unlock Club Member Perks! 🌟</h3>
+              <p style={{ fontSize: 13, color: "#e0e0e0", lineHeight: 1.5, margin: "0 0 24px" }}>
+                Add items to cart and create a free account today to claim your special benefits. It takes less than 30 seconds!
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left", marginBottom: 28, background: "rgba(255,255,255,0.05)", padding: 18, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 16 }}>🏷️</span>
+                  <div>
+                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Flat 50% Off & Vouchers</h5>
+                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Unlock exclusive voucher codes (e.g. SHIVW50) at counter checkout.</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 16 }}>🏆</span>
+                  <div>
+                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Loyalty Cashpoints</h5>
+                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Earn 1 point per ₹100 spent, redeemable directly for cash discounts.</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 16 }}>📦</span>
+                  <div>
+                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Real-time Reservation Tracking</h5>
+                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Track reservation status, approvals, and order records instantly.</p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
+                  <span style={{ fontSize: 16 }}>📄</span>
+                  <div>
+                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Digital Receipts & PDF Invoices</h5>
+                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Retrieve or share your invoices via PDF download or WhatsApp.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button 
+                  onClick={() => {
+                    setShowConversionModal(false);
+                    onLogout(true);
+                  }}
+                  style={{ width: "100%", background: C.accent, color: "#000", border: "none", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: `0 4px 15px rgba(212, 175, 55, 0.4)` }}
+                >
+                  Create Club Account
+                </button>
+                <button 
+                  onClick={() => setShowConversionModal(false)}
+                  style={{ width: "100%", background: "transparent", color: "#ccc", border: "1.5px solid rgba(255,255,255,0.2)", padding: "12px", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Continue as Guest
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
