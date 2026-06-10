@@ -11,6 +11,7 @@ export interface Customer {
   name: string;
   phone: string;
   address?: string;
+  isGuest?: boolean;
 }
 
 export interface Bill {
@@ -44,6 +45,7 @@ export interface UserProfile {
   photoURL: string;
   role: Role;
   createdAt: number;
+  isGuest?: boolean;
 }
 
 export interface Settings {
@@ -72,5 +74,6 @@ export interface CatalogProduct {
   sellingPrice?: number;
   stock?: number;
   size?: string;
+  color?: string;
 }
 

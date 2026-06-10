@@ -38,6 +38,61 @@ interface Order {
   createdAt: number;
 }
 
+interface GuestGatingProps {
+  tabName: string;
+  onLogout: () => void;
+}
+
+const GuestGatingPrompt = ({ tabName, onLogout }: GuestGatingProps) => (
+  <motion.div 
+    initial={{ opacity: 0, y: 15 }}
+    animate={{ opacity: 1, y: 0 }}
+    style={{ 
+      padding: "60px 24px", 
+      background: "linear-gradient(135deg, #0A1F44 0%, #000 100%)",
+      borderRadius: 24, 
+      border: `2px solid ${C.accent}`,
+      textAlign: "center",
+      boxShadow: "0 15px 35px rgba(0,0,0,0.15)",
+      color: "#fff",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 16,
+      maxWidth: 480,
+      margin: "40px auto 0"
+    }}
+  >
+    <div style={{ width: 64, height: 64, borderRadius: "50%", background: "rgba(212, 175, 55, 0.15)", display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${C.accent}`, marginBottom: 8 }}>
+      <User size={32} color={C.accent} />
+    </div>
+    <h3 className="pf" style={{ fontSize: 22, fontWeight: 900, color: "#fff", margin: 0 }}>Login Required</h3>
+    <p style={{ fontSize: 13, color: "#ccc", lineHeight: 1.5, maxWidth: 360, margin: 0 }}>
+      You are currently browsing as a guest. Please create an account or log in to view your {tabName}, claim exclusive loyalty points, and make reservations.
+    </p>
+    <button 
+      onClick={onLogout}
+      style={{ 
+        background: C.accent, 
+        color: "#000", 
+        border: "none", 
+        padding: "14px 28px", 
+        borderRadius: 12, 
+        fontSize: 14, 
+        fontWeight: 800, 
+        cursor: "pointer", 
+        textTransform: "uppercase", 
+        letterSpacing: "0.5px", 
+        marginTop: 8,
+        boxShadow: "0 4px 12px rgba(212, 175, 55, 0.3)"
+      }}
+    >
+      Log In / Register Now
+    </button>
+  </motion.div>
+);
+
 export const CustomerScreen = ({
   products,
   settings,
@@ -137,7 +192,9 @@ export const CustomerScreen = ({
     return products.filter(p => {
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
       const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase()));
+                            (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                            (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);
@@ -207,7 +264,9 @@ export const CustomerScreen = ({
   };
 
   const handleEnquiry = (product: any) => {
-    const text = encodeURIComponent(`Hi, I'm interested in the "${product.name}" (${product.brand || "Shiv Western"}). Category: ${product.category || "General"}, Price: ₹${product.price}. Is it available?`);
+    const sizeStr = selectedSize ? `Size: ${selectedSize}` : "Size: Any";
+    const colorStr = selectedColor ? `Color: ${selectedColor}` : "Color: Any";
+    const text = encodeURIComponent(`Hi! I'm interested in the "${product.name}" from ${product.brand || "Shiv Western Club"}.\n\nCategory: ${product.category || "General"}\n${sizeStr}\n${colorStr}\nPrice: ₹${product.price || product.sellingPrice}\n\nIs this item available in stock?`);
     const shopPhoneClean = settings.phone.replace(/\D/g, "");
     window.open(`https://wa.me/${shopPhoneClean}?text=${text}`, "_blank");
   };
@@ -324,12 +383,21 @@ export const CustomerScreen = ({
         )}
 
         <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-          <button 
-            onClick={() => handleReserve(product)}
-            style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          >
-            🛎️ Reserve Product
-          </button>
+          {profile.isGuest ? (
+            <button 
+              onClick={() => { setSelectedProduct(null); onLogout(); }}
+              style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              🔑 Log In to Reserve
+            </button>
+          ) : (
+            <button 
+              onClick={() => handleReserve(product)}
+              style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+            >
+              🛎️ Reserve Product
+            </button>
+          )}
           <button 
             onClick={() => handleEnquiry(product)}
             style={{ background: "#25D366", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 54 }}
@@ -512,26 +580,41 @@ export const CustomerScreen = ({
                 </div>
 
                 {/* Account Points Preview */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Award size={24} color={C.accent} />
+                {profile.isGuest ? (
+                  <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1.5px dashed ${C.accent}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, boxShadow: "0 4px 15px rgba(0,0,0,0.02)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Award size={24} color={C.accent} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 13, fontWeight: 800, color: C.dark, margin: 0 }}>Join the Customer Club</p>
+                        <p style={{ fontSize: 11, color: C.muted, margin: "2px 0 0" }}>Earn loyalty points for discount key vouchers and track orders!</p>
+                      </div>
                     </div>
-                    <div>
-                      <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Loyalty Balance</p>
-                      <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>{loyaltyPoints} Pts</p>
+                    <button onClick={onLogout} style={{ background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>Join Now</button>
+                  </div>
+                ) : (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                    <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Award size={24} color={C.accent} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Loyalty Balance</p>
+                        <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>{loyaltyPoints} Pts</p>
+                      </div>
+                    </div>
+                    <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.green}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <ShoppingBag size={24} color={C.green} />
+                      </div>
+                      <div>
+                        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Total Purchases</p>
+                        <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0 }}>₹{totalPurchase.toLocaleString("en-IN")}</p>
+                      </div>
                     </div>
                   </div>
-                  <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.green}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <ShoppingBag size={24} color={C.green} />
-                    </div>
-                    <div>
-                      <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Total Purchases</p>
-                      <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0 }}>₹{totalPurchase.toLocaleString("en-IN")}</p>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Promo Spotlight Banner */}
                 <div 
@@ -643,39 +726,97 @@ export const CustomerScreen = ({
                     <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Try clearing search queries or checking other categories.</p>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: 16 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 20 }}>
                     {filteredProducts.map(p => {
                       const isWish = isProductWishlisted(p.id);
+                      const stockVal = p.stock !== undefined ? p.stock : 0;
+                      const hasStock = stockVal > 0;
+                      const isLowStock = hasStock && stockVal < 5;
+
                       return (
-                        <div 
+                        <motion.div 
                           key={p.id}
-                          style={{ background: C.card, borderRadius: 20, padding: 12, border: `1px solid ${C.border}`, position: "relative", boxShadow: "0 4px 10px rgba(0,0,0,0.01)" }}
+                          whileHover={{ y: -6, boxShadow: "0 12px 30px rgba(0,0,0,0.08)" }}
+                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                          style={{ background: C.card, borderRadius: 20, padding: 14, border: `1.5px solid ${C.border}`, position: "relative", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
                         >
-                          <button 
-                            onClick={() => toggleWishlist(p.id)}
-                            style={{ position: "absolute", top: 18, right: 18, background: "rgba(255,255,255,0.8)", border: "none", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, boxShadow: "0 2px 4px rgba(0,0,0,0.1)" }}
-                          >
-                            <Heart size={15} fill={isWish ? C.red : "none"} color={isWish ? C.red : C.muted} />
-                          </button>
-                          <div 
-                            onClick={() => setSelectedProduct(p)}
-                            style={{ width: "100%", height: 130, borderRadius: 12, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: 10, cursor: "pointer" }}
-                          >
-                            {p.image ? (
-                              <img src={p.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
-                            ) : (
-                              <Shirt size={36} color={C.muted} />
-                            )}
+                          <div>
+                            {/* Wishlist Heart Button */}
+                            <button 
+                              onClick={(e) => toggleWishlist(p.id, e)}
+                              style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.12)", transition: "0.2s" }}
+                            >
+                              <Heart size={16} fill={isWish ? C.red : "none"} color={isWish ? C.red : C.muted} />
+                            </button>
+
+                            {/* Product Image Wrapper */}
+                            <div 
+                              onClick={() => setSelectedProduct(p)}
+                              style={{ width: "100%", height: 160, borderRadius: 14, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: 12, cursor: "pointer", position: "relative" }}
+                            >
+                              {p.image ? (
+                                <img src={p.image} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }} className="hover-zoom" alt={p.name} />
+                              ) : (
+                                <Shirt size={44} color={C.muted} />
+                              )}
+                            </div>
+
+                            {/* Brand & Category */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                              <span style={{ fontSize: 10, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>{p.brand || "Shiv Western"}</span>
+                              <span style={{ background: C.bg, color: C.muted, fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{p.category || "General"}</span>
+                            </div>
+
+                            {/* Product Name */}
+                            <h4 style={{ fontSize: 14, fontWeight: 700, color: C.dark, margin: "0 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
+
+                            {/* Size & Color summary */}
+                            <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 10 }}>
+                              {p.size && (
+                                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
+                                  <strong>Sizes:</strong> {p.size}
+                                </p>
+                              )}
+                              {p.color && (
+                                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
+                                  <strong>Colors:</strong> {p.color}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <span style={{ fontSize: 9, color: C.accent, fontWeight: 800, textTransform: "uppercase" }}>{p.brand || "Shiv Western"}</span>
-                          <h4 style={{ fontSize: 13, fontWeight: 700, color: C.dark, margin: "2px 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                            <p className="pf" style={{ fontSize: 14, fontWeight: 900, color: C.dark, margin: 0 }}>₹{(p.price || p.sellingPrice || 0).toLocaleString("en-IN")}</p>
-                            <span style={{ fontSize: 9, color: p.stock && p.stock > 0 ? C.green : C.red, fontWeight: 800 }}>
-                              {p.stock && p.stock > 0 ? "In Stock" : "Out of Stock"}
-                            </span>
+
+                          <div>
+                            {/* Price and Stock Status */}
+                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                              <p className="pf" style={{ fontSize: 16, fontWeight: 900, color: C.dark, margin: 0 }}>₹{(p.price || p.sellingPrice || 0).toLocaleString("en-IN")}</p>
+                              
+                              {/* Stock status badge */}
+                              {isLowStock ? (
+                                <span style={{ background: "#FEF3C7", color: "#D97706", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
+                                  Only {stockVal} left!
+                                </span>
+                              ) : hasStock ? (
+                                <span style={{ background: "#D1FAE5", color: "#059669", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
+                                  In Stock
+                                </span>
+                              ) : (
+                                <span style={{ background: "#FEE2E2", color: "#DC2626", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
+                                  Out of Stock
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Enquiry Action Button */}
+                            <button 
+                              onClick={() => setSelectedProduct(p)}
+                              style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "10px", borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
+                              onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.color = "#000"; }}
+                              onMouseLeave={e => { e.currentTarget.style.background = C.dark; e.currentTarget.style.color = C.accent; }}
+                            >
+                              💬 View Details & Enquire
+                            </button>
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -685,52 +826,56 @@ export const CustomerScreen = ({
 
             {/* 3. OFFERS TAB */}
             {activeTab === "offers" && (
-              <motion.div key="offers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                <div>
-                  <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>Club Member Vouchers</h3>
-                  <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 16px" }}>Use these coupon codes during billing counters to save extra</p>
-                </div>
-
-                {/* Offer Card 1 */}
-                <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderRadius: 20, padding: 20, border: `2px solid ${C.accent}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", boxShadow: "0 6px 20px rgba(0,0,0,0.1)" }}>
+              profile.isGuest ? (
+                <GuestGatingPrompt tabName="exclusive discount vouchers" onLogout={onLogout} />
+              ) : (
+                <motion.div key="offers" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                   <div>
-                    <span style={{ background: C.accent, color: "#000", fontSize: 10, padding: "4px 10px", borderRadius: 100, fontWeight: 800, textTransform: "uppercase" }}>Season Sale</span>
-                    <h4 className="pf" style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: "10px 0 4px" }}>FLAT 50% OFF</h4>
-                    <p style={{ fontSize: 11, color: C.accent, margin: 0 }}>On purchase of second selected item</p>
+                    <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>Club Member Vouchers</h3>
+                    <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 16px" }}>Use these coupon codes during billing counters to save extra</p>
                   </div>
-                  <div style={{ textAlign: "center", borderLeft: `1px dashed rgba(212, 175, 55, 0.4)`, paddingLeft: 20 }}>
-                    <p style={{ fontSize: 10, color: "#ccc", margin: 0 }}>PROMO CODE</p>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: C.accent, marginTop: 4, letterSpacing: "1px" }}>SHIVW50</p>
-                  </div>
-                </div>
 
-                {/* Offer Card 2 */}
-                <div style={{ background: "linear-gradient(135deg, #111827 0%, #374151 100%)", borderRadius: 20, padding: 20, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff" }}>
-                  <div>
-                    <span style={{ background: C.green, color: "#fff", fontSize: 10, padding: "4px 10px", borderRadius: 100, fontWeight: 800, textTransform: "uppercase" }}>Loyalty Reward</span>
-                    <h4 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#fff", margin: "10px 0 4px" }}>EXTRA ₹200 CASHBACK</h4>
-                    <p style={{ fontSize: 11, color: "#ddd", margin: 0 }}>Redeem 100 loyalty points key at counter</p>
+                  {/* Offer Card 1 */}
+                  <div style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)", borderRadius: 20, padding: 20, border: `2px solid ${C.accent}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff", boxShadow: "0 6px 20px rgba(0,0,0,0.1)" }}>
+                    <div>
+                      <span style={{ background: C.accent, color: "#000", fontSize: 10, padding: "4px 10px", borderRadius: 100, fontWeight: 800, textTransform: "uppercase" }}>Season Sale</span>
+                      <h4 className="pf" style={{ fontSize: 24, fontWeight: 900, color: "#fff", margin: "10px 0 4px" }}>FLAT 50% OFF</h4>
+                      <p style={{ fontSize: 11, color: C.accent, margin: 0 }}>On purchase of second selected item</p>
+                    </div>
+                    <div style={{ textAlign: "center", borderLeft: `1px dashed rgba(212, 175, 55, 0.4)`, paddingLeft: 20 }}>
+                      <p style={{ fontSize: 10, color: "#ccc", margin: 0 }}>PROMO CODE</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: C.accent, marginTop: 4, letterSpacing: "1px" }}>SHIVW50</p>
+                    </div>
                   </div>
-                  <div style={{ textAlign: "center", borderLeft: `1px dashed rgba(255,255,255,0.2)`, paddingLeft: 20 }}>
-                    <p style={{ fontSize: 10, color: "#ccc", margin: 0 }}>PROMO CODE</p>
-                    <p style={{ fontSize: 15, fontWeight: 800, color: C.green, marginTop: 4, letterSpacing: "1px" }}>LOYAL20</p>
-                  </div>
-                </div>
 
-                {/* Loyalty Rules Card */}
-                <div style={{ background: C.card, borderRadius: 20, padding: 24, border: `1px solid ${C.border}` }}>
-                  <h4 className="pf" style={{ fontSize: 16, fontWeight: 900, color: C.dark, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
-                    <Award size={20} color={C.accent} />
-                    Loyalty Reward Policies
-                  </h4>
-                  <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, color: C.muted, display: "flex", flexDirection: "column", gap: 10, lineHeight: 1.4 }}>
-                    <li>Get **1 Loyalty Point** for every **₹100** spent on final invoice totals.</li>
-                    <li>Points automatically sync to your mobile number ledger on counter invoicing.</li>
-                    <li>Points can be redeemed for instant bill discounts: **1 point = ₹1 flat deduction**.</li>
-                    <li>To claim code benefits, simply mention your registered mobile number to billing staff at the store checkout.</li>
-                  </ul>
-                </div>
-              </motion.div>
+                  {/* Offer Card 2 */}
+                  <div style={{ background: "linear-gradient(135deg, #111827 0%, #374151 100%)", borderRadius: 20, padding: 20, border: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", color: "#fff" }}>
+                    <div>
+                      <span style={{ background: C.green, color: "#fff", fontSize: 10, padding: "4px 10px", borderRadius: 100, fontWeight: 800, textTransform: "uppercase" }}>Loyalty Reward</span>
+                      <h4 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#fff", margin: "10px 0 4px" }}>EXTRA ₹200 CASHBACK</h4>
+                      <p style={{ fontSize: 11, color: "#ddd", margin: 0 }}>Redeem 100 loyalty points key at counter</p>
+                    </div>
+                    <div style={{ textAlign: "center", borderLeft: `1px dashed rgba(255,255,255,0.2)`, paddingLeft: 20 }}>
+                      <p style={{ fontSize: 10, color: "#ccc", margin: 0 }}>PROMO CODE</p>
+                      <p style={{ fontSize: 15, fontWeight: 800, color: C.green, marginTop: 4, letterSpacing: "1px" }}>LOYAL20</p>
+                    </div>
+                  </div>
+
+                  {/* Loyalty Rules Card */}
+                  <div style={{ background: C.card, borderRadius: 20, padding: 24, border: `1px solid ${C.border}` }}>
+                    <h4 className="pf" style={{ fontSize: 16, fontWeight: 900, color: C.dark, marginBottom: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                      <Award size={20} color={C.accent} />
+                      Loyalty Reward Policies
+                    </h4>
+                    <ul style={{ paddingLeft: 20, margin: 0, fontSize: 13, color: C.muted, display: "flex", flexDirection: "column", gap: 10, lineHeight: 1.4 }}>
+                      <li>Get **1 Loyalty Point** for every **₹100** spent on final invoice totals.</li>
+                      <li>Points automatically sync to your mobile number ledger on counter invoicing.</li>
+                      <li>Points can be redeemed for instant bill discounts: **1 point = ₹1 flat deduction**.</li>
+                      <li>To claim code benefits, simply mention your registered mobile number to billing staff at the store checkout.</li>
+                    </ul>
+                  </div>
+                </motion.div>
+              )
             )}
 
             {/* 4. WISHLIST TAB */}
@@ -796,7 +941,10 @@ export const CustomerScreen = ({
 
             {/* 5. MY BILLS TAB */}
             {activeTab === "bills" && (
-              <motion.div key="bills" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              profile.isGuest ? (
+                <GuestGatingPrompt tabName="invoices and digital receipts" onLogout={onLogout} />
+              ) : (
+                <motion.div key="bills" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div>
                   <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>My Invoices & Bills</h3>
                   <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 16px" }}>Digital receipts for purchases made at Shiv Western Club</p>
@@ -859,11 +1007,15 @@ export const CustomerScreen = ({
                   </div>
                 )}
               </motion.div>
+              )
             )}
 
             {/* 6. PURCHASE HISTORY TAB */}
             {activeTab === "history" && (
-              <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              profile.isGuest ? (
+                <GuestGatingPrompt tabName="itemized purchase history" onLogout={onLogout} />
+              ) : (
+                <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 <div>
                   <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>Itemized Purchase History</h3>
                   <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 16px" }}>Detailed list of all individual clothing items you have bought in the past</p>
@@ -907,11 +1059,15 @@ export const CustomerScreen = ({
                   </div>
                 )}
               </motion.div>
+              )
             )}
 
             {/* 7. PROFILE TAB */}
             {activeTab === "profile" && (
-              <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+              profile.isGuest ? (
+                <GuestGatingPrompt tabName="profile details and reservations" onLogout={onLogout} />
+              ) : (
+                <motion.div key="profile" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
                 {/* Premium Golden Card */}
                 <div style={{ background: "linear-gradient(135deg, #0A1F44 0%, #000 100%)", borderRadius: 24, padding: 24, border: `2px solid ${C.accent}`, color: "#fff", position: "relative", overflow: "hidden", boxShadow: "0 10px 25px rgba(0,0,0,0.15)" }}>
                   <div style={{ position: "relative", zIndex: 2, display: "flex", gap: 16, alignItems: "center" }}>
@@ -1006,6 +1162,7 @@ export const CustomerScreen = ({
                   )}
                 </div>
               </motion.div>
+              )
             )}
 
           </AnimatePresence>

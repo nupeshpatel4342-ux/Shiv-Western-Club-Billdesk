@@ -27,6 +27,7 @@ const App = () => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isGuestMode, setIsGuestMode] = useState(false);
   
   // Hash-Based Portal Routing (#admin for admin, no hash for customer)
   const [isAdminPortal, setIsAdminPortal] = useState(() => {
@@ -402,6 +403,11 @@ const App = () => {
 
   const handleUpdateProfile = async (p: any) => {
     try {
+      if (isGuestMode || p.isGuest) {
+        localStorage.setItem("guest_wishlist", JSON.stringify(p.wishlist || []));
+        setProfile(p);
+        return;
+      }
       await setDoc(doc(db, "users", p.uid), {
         uid: p.uid,
         email: p.email || "",
@@ -700,7 +706,7 @@ const App = () => {
     );
   }
 
-  if (!user) {
+  if (!user && !isGuestMode) {
     const isAdminPath = isAdminPortal;
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
@@ -819,6 +825,25 @@ const App = () => {
                   style={{ width: "100%", background: C.dark, color: C.accent, padding: "16px", borderRadius: 16, fontSize: 14, fontWeight: 800, border: `2px solid ${C.accent}`, cursor: "pointer", marginTop: 8 }}
                 >
                   {isLoggingIn ? "Logging in..." : "Login to Portal"}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsGuestMode(true);
+                    setProfile({
+                      uid: "guest",
+                      email: "guest@shivwestern.com",
+                      displayName: "Guest Customer",
+                      role: "customer",
+                      isGuest: true,
+                      wishlist: JSON.parse(localStorage.getItem("guest_wishlist") || "[]"),
+                      phone: "",
+                      address: ""
+                    });
+                  }}
+                  style={{ width: "100%", background: "transparent", color: C.dark, padding: "12px", borderRadius: 16, fontSize: 13, fontWeight: 800, border: `1.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
+                >
+                  🛍️ Browse Catalog as Guest
                 </button>
                 <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
                   <button 
@@ -1085,8 +1110,19 @@ const App = () => {
     return null;
   }
 
-  // Case C: Customer logged in on / (Customer view)
-  if (!isPathAdmin && profile && profile.role === "customer") {
+  // Case C: Customer logged in on / (Customer view) OR guest mode active
+  if (!isPathAdmin && (isGuestMode || (profile && profile.role === "customer"))) {
+    const activeProfile = isGuestMode ? (profile || {
+      uid: "guest",
+      email: "guest@shivwestern.com",
+      displayName: "Guest Customer",
+      role: "customer",
+      isGuest: true,
+      wishlist: JSON.parse(localStorage.getItem("guest_wishlist") || "[]"),
+      phone: "",
+      address: ""
+    }) : profile;
+
     return (
       <React.Suspense fallback={
         <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg }}>
@@ -1097,9 +1133,16 @@ const App = () => {
           products={products}
           settings={settings}
           bills={bills}
-          profile={profile}
+          profile={activeProfile}
           orders={orders}
-          onLogout={logout}
+          onLogout={() => {
+            if (isGuestMode) {
+              setIsGuestMode(false);
+              setProfile(null);
+            } else {
+              logout();
+            }
+          }}
           onUpdateProfile={handleUpdateProfile}
           onCreateOrder={handleCreateOrder}
         />
