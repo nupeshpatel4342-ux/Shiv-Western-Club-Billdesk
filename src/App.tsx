@@ -243,10 +243,9 @@ const App = () => {
         }
       }
 
-      // 2. Update Customer Ledger
-      const cleanPhone = bill.customerObj.phone.replace(/\D/g, "");
+      const cleanPhone = bill.customerObj.phone.replace(/\D/g, "").slice(-10);
       if (cleanPhone.length >= 10) {
-        const custQuery = query(collection(db, "customers"), where("phone", "==", bill.customerObj.phone));
+        const custQuery = query(collection(db, "customers"), where("phone", "==", cleanPhone));
         const qSnap = await getDocs(custQuery);
         if (!qSnap.empty) {
           const custDoc = qSnap.docs[0];
@@ -392,9 +391,13 @@ const App = () => {
   const handleCustomerLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn) return;
-    const cleanPhone = custPhone.trim();
+    const cleanPhone = custPhone.replace(/\D/g, "").slice(-10);
     if (!cleanPhone || !custPassword) {
       alert("Please enter mobile number and password.");
+      return;
+    }
+    if (cleanPhone.length < 10) {
+      alert("Please enter a valid 10-digit mobile number.");
       return;
     }
     setIsLoggingIn(true);
@@ -417,7 +420,7 @@ const App = () => {
   const handleCustomerRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isLoggingIn) return;
-    const cleanPhone = custPhone.trim();
+    const cleanPhone = custPhone.replace(/\D/g, "").slice(-10);
     if (!cleanPhone || !custPassword || !custName) {
       alert("Please fill in Name, Mobile, and Password.");
       return;
@@ -453,6 +456,7 @@ const App = () => {
         loyaltyPoints: 0,
         totalPurchase: 0,
         purchaseHistory: [],
+        wishlist: [],
         createdAt: Date.now()
       };
       await setDoc(doc(db, "customers", u.uid), customerDetails);
@@ -474,9 +478,9 @@ const App = () => {
 
   const handleCustomerResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanPhone = custPhone.trim();
-    if (!cleanPhone) {
-      alert("Please enter your registered mobile number.");
+    const cleanPhone = custPhone.replace(/\D/g, "").slice(-10);
+    if (!cleanPhone || cleanPhone.length < 10) {
+      alert("Please enter a valid 10-digit mobile number.");
       return;
     }
     try {

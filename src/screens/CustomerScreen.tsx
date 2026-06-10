@@ -75,7 +75,7 @@ export const CustomerScreen = ({
   // Filter bills for this customer
   const customerBills = useMemo(() => {
     if (!profile?.phone) return [];
-    return bills.filter(b => b.customerObj.phone.replace(/\D/g, "") === profile.phone.replace(/\D/g, ""));
+    return bills.filter(b => b.customerObj.phone.replace(/\D/g, "").slice(-10) === profile.phone.replace(/\D/g, "").slice(-10));
   }, [bills, profile]);
 
   // Extract all individual clothing items purchased in the past
