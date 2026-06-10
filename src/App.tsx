@@ -69,13 +69,9 @@ const App = () => {
   const [custReset, setCustReset] = useState(false);
 
   // Admin login states
-  const [loginMode, setLoginMode] = useState<"direct" | "google" | "email" | "phone">("direct");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
-  const [isRegistering, setIsRegistering] = useState(false);
+  const [adminUsername, setAdminUsername] = useState("");
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminError, setAdminError] = useState("");
 
   const [settings, setSettings] = useState<Settings>({
     shopName: "Shiv Western Club",
@@ -122,6 +118,23 @@ const App = () => {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
+        if (localStorage.getItem("admin_session") === "true") {
+          if (!u) {
+            await loginAnonymously();
+            return;
+          }
+          setUser(u);
+          setProfile({
+            uid: u.uid,
+            displayName: "Owner",
+            email: "contact@shivwestern.com",
+            role: "owner",
+            createdAt: Date.now()
+          });
+          setLoading(false);
+          return;
+        }
+
         setUser(u);
         if (u) {
           // Fetch or Create Profile
@@ -585,130 +598,46 @@ const App = () => {
     await updateDoc(orderRef, { status });
   };
 
-  const handleLogin = async () => {
-    if (isLoggingIn) return;
-    setIsLoggingIn(true);
-    try {
-      await loginWithGoogle();
-    } catch (err: any) {
-      if (err.code === "auth/cancelled-popup-request") {
-        console.warn("Login popup request was cancelled by a subsequent request.");
-      } else if (err.code === "auth/popup-closed-by-user") {
-        console.warn("Login popup was closed by the user.");
-      } else {
-        console.error("Login Error:", err);
-        alert("Login failed. Please try again.");
-      }
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleDirectLogin = async () => {
-    if (isLoggingIn) return;
-    setIsLoggingIn(true);
-    try {
-      await loginAnonymously();
-    } catch (err: any) {
-      console.error("Direct Login Error:", err);
-      alert("Failed to enter app. Please try again.");
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleAdminPortalLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isLoggingIn) return;
-    if (!email || !password) {
-      alert("Please enter email and password.");
-      return;
-    }
-    setIsLoggingIn(true);
-    try {
-      if (isRegistering) {
-        await registerWithEmail(email, password);
-      } else {
-        await loginWithEmail(email, password);
-      }
-    } catch (err: any) {
-      console.error("Email Login Error:", err);
-      if (err.code === "auth/user-not-found") {
-        alert("User not found. Please register first.");
-      } else if (err.code === "auth/wrong-password") {
-        alert("Incorrect password.");
-      } else if (err.code === "auth/email-already-in-use") {
-        alert("This email is already registered. Switching to Login mode.");
-        setIsRegistering(false);
-      } else {
-        alert(err.message || "Login failed.");
-      }
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
-
-  const setupRecaptcha = () => {
-    if (!(window as any).recaptchaVerifier) {
-      (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-        'size': 'invisible',
-        'callback': () => {
-          // reCAPTCHA solved, allow signInWithPhoneNumber.
-        }
-      });
-    }
-  };
-
-  const handlePhoneLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isLoggingIn) return;
+    setAdminError("");
     
-    let formattedPhone = phone.trim();
-    // If it's 10 digits and doesn't start with +, assume +91
-    if (formattedPhone.length === 10 && !formattedPhone.startsWith("+")) {
-      formattedPhone = "+91" + formattedPhone;
-    }
-
-    if (!formattedPhone.startsWith("+")) {
-      alert("Please include country code (e.g., +91 for India).");
-      return;
-    }
-
-    setIsLoggingIn(true);
-    try {
-      setupRecaptcha();
-      const appVerifier = (window as any).recaptchaVerifier;
-      const result = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-      setConfirmationResult(result);
-      alert("OTP sent to your mobile.");
-    } catch (err: any) {
-      console.error("Phone Auth Error:", err);
-      if (err.code === "auth/invalid-phone-number") {
-        alert("Invalid phone number format. Please use +91 followed by your 10-digit number.");
-      } else {
-        alert(err.message || "Failed to send OTP.");
+    const cleanUsername = adminUsername.trim();
+    const cleanPassword = adminPassword.trim();
+    
+    if ((cleanUsername === "9724557728" || cleanUsername === "-9724557728") && cleanPassword === "120496") {
+      setIsLoggingIn(true);
+      try {
+        const cred = await loginAnonymously();
+        const u = cred.user;
+        
+        localStorage.setItem("admin_session", "true");
+        setUser(u);
+        setProfile({
+          uid: u.uid,
+          displayName: "Owner",
+          email: "contact@shivwestern.com",
+          role: "owner",
+          createdAt: Date.now()
+        });
+        setTab("dashboard");
+      } catch (err: any) {
+        console.error("Admin Login anonymous auth error:", err);
+        setAdminError("Database authentication failed. Please try again.");
+      } finally {
+        setIsLoggingIn(false);
       }
-      if ((window as any).recaptchaVerifier) {
-        (window as any).recaptchaVerifier.clear();
-        (window as any).recaptchaVerifier = null;
-      }
-    } finally {
-      setIsLoggingIn(false);
+    } else {
+      setAdminError("Invalid mobile number or password!");
     }
   };
 
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otp || !confirmationResult) return;
-    setIsLoggingIn(true);
-    try {
-      await confirmationResult.confirm(otp);
-    } catch (err: any) {
-      console.error("OTP Verification Error:", err);
-      alert("Invalid OTP. Please try again.");
-    } finally {
-      setIsLoggingIn(false);
-    }
+  const handleLogout = async () => {
+    localStorage.removeItem("admin_session");
+    setAdminUsername("");
+    setAdminPassword("");
+    setAdminError("");
+    await logout();
   };
 
   if (loading) {
@@ -885,201 +814,107 @@ const App = () => {
             )
           ) : (
             /* STAFF / ADMIN VIEW */
-            loginMode === "direct" ? (
-              <>
-                <button 
-                  onClick={handleDirectLogin} 
-                  disabled={isLoggingIn}
-                  style={{ 
-                    width: "100%", 
-                    background: C.dark, 
-                    color: C.accent, 
-                    padding: "18px", 
-                    borderRadius: 20, 
-                    fontSize: 16, 
-                    fontWeight: 800, 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    gap: 12, 
-                    boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
-                    opacity: isLoggingIn ? 0.7 : 1,
-                    cursor: isLoggingIn ? "not-allowed" : "pointer",
-                    border: `2px solid ${C.accent}`,
-                    textTransform: "uppercase",
-                    letterSpacing: "1px"
-                  }}
-                >
-                  {isLoggingIn ? (
-                    <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                  ) : "Enter App Directly"}
-                </button>
-                <button 
-                  onClick={() => setLoginMode("google")}
-                  style={{ marginTop: 20, background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                >
-                  Staff Login (Google/Email/Phone)
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => navigateTo("customer")}
-                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 16, textDecoration: "underline", display: "block", width: "100%" }}
-                >
-                  Are you a Customer? Go to Customer Portal →
-                </button>
-              </>
-            ) : loginMode === "google" ? (
-              <>
-                <button 
-                  onClick={handleLogin} 
-                  disabled={isLoggingIn}
-                  style={{ 
-                    width: "100%", 
-                    background: isLoggingIn ? C.muted : C.dark, 
-                    color: isLoggingIn ? "#fff" : C.accent, 
-                    padding: "16px", 
-                    borderRadius: 16, 
-                    fontSize: 15, 
-                    fontWeight: 700, 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    gap: 12, 
-                    boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                    opacity: isLoggingIn ? 0.7 : 1,
-                    cursor: isLoggingIn ? "not-allowed" : "pointer",
-                    border: `2px solid ${C.accent}`
-                  }}
-                >
-                  {isLoggingIn ? (
-                    <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                  ) : (
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google" />
-                  )}
-                  {isLoggingIn ? "Signing in..." : "Sign in with Google"}
-                </button>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
-                  <button 
-                    onClick={() => setLoginMode("email")}
-                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Login with Email/Password
-                  </button>
-                  <button 
-                    onClick={() => setLoginMode("phone")}
-                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                  >
-                    Login with Phone Number
-                  </button>
-                  <button 
-                    onClick={() => setLoginMode("direct")}
-                    style={{ background: "transparent", border: "none", color: C.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", marginTop: 8 }}
-                  >
-                    Back to Direct Entry
-                  </button>
+            <form onSubmit={handleAdminPortalLogin} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div style={{ textAlign: "center", marginBottom: 8 }}>
+                <h3 className="pf" style={{ fontSize: 16, fontWeight: 800, color: C.dark, marginBottom: 4 }}>Admin Secure Sign In</h3>
+                <p style={{ fontSize: 11, color: C.muted }}>Enter administrative credentials to gain access.</p>
+              </div>
+
+              {adminError && (
+                <div className="fade" style={{ 
+                  background: `${C.red}15`, 
+                  border: `1px solid ${C.red}`, 
+                  color: C.red, 
+                  fontSize: 12, 
+                  fontWeight: 600, 
+                  padding: "10px 12px", 
+                  borderRadius: 12, 
+                  textAlign: "left",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 8
+                }}>
+                  <span>⚠️</span> {adminError}
                 </div>
-              </>
-            ) : loginMode === "email" ? (
-              <form onSubmit={handleEmailLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <input 
-                  type="email" 
-                  placeholder="Email Address" 
-                  value={email} 
-                  onChange={e => setEmail(e.target.value)}
-                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-                />
-                <input 
-                  type="password" 
-                  placeholder="Password" 
-                  value={password} 
-                  onChange={e => setPassword(e.target.value)}
-                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-                />
-                <button 
-                  type="submit"
-                  disabled={isLoggingIn}
-                  style={{ 
-                    width: "100%", 
-                    background: C.dark, 
-                    color: C.accent, 
-                    padding: "16px", 
-                    borderRadius: 16, 
-                    fontSize: 15, 
-                    fontWeight: 700, 
-                    marginTop: 8,
-                    border: `2px solid ${C.accent}`,
-                    opacity: isLoggingIn ? 0.7 : 1
-                  }}
-                >
-                  {isLoggingIn ? "Processing..." : (isRegistering ? "Create Account" : "Login")}
-                </button>
-                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                  <button 
-                    type="button"
-                    onClick={() => setIsRegistering(!isRegistering)}
-                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 600 }}
-                  >
-                    {isRegistering ? "Already have an account? Login" : "New Staff? Register"}
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setLoginMode("google")}
-                    style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700 }}
-                  >
-                    Back to Google
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <form onSubmit={confirmationResult ? handleVerifyOtp : handlePhoneLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {!confirmationResult ? (
-                  <>
-                    <input 
-                      type="tel" 
-                      placeholder="Mobile Number (e.g. 9876543210)" 
-                      value={phone} 
-                      onChange={e => setPhone(e.target.value)}
-                      style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-                    />
-                    <p style={{ fontSize: 10, color: C.muted, marginTop: -8, marginLeft: 4 }}>* Include +91 if outside India</p>
-                  </>
-                ) : (
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ position: "relative" }}>
                   <input 
                     type="text" 
-                    placeholder="Enter 6-digit OTP" 
-                    value={otp} 
-                    onChange={e => setOtp(e.target.value)}
-                    style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14, textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
+                    placeholder="Username (Mobile Number)" 
+                    value={adminUsername} 
+                    onChange={e => setAdminUsername(e.target.value)}
+                    required
+                    style={{ 
+                      width: "100%",
+                      padding: "14px 14px 14px 40px", 
+                      borderRadius: 14, 
+                      border: `1.5px solid ${adminError ? C.red : C.border}`, 
+                      fontSize: 14, 
+                      background: "transparent",
+                      color: C.dark,
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
                   />
+                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, opacity: 0.7 }}>👤</span>
+                </div>
+
+                <div style={{ position: "relative" }}>
+                  <input 
+                    type="password" 
+                    placeholder="Security Password" 
+                    value={adminPassword} 
+                    onChange={e => setAdminPassword(e.target.value)}
+                    required
+                    style={{ 
+                      width: "100%",
+                      padding: "14px 14px 14px 40px", 
+                      borderRadius: 14, 
+                      border: `1.5px solid ${adminError ? C.red : C.border}`, 
+                      fontSize: 14, 
+                      background: "transparent",
+                      color: C.dark,
+                      outline: "none",
+                      boxSizing: "border-box"
+                    }}
+                  />
+                  <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 16, opacity: 0.7 }}>🔒</span>
+                </div>
+              </div>
+
+              <button 
+                type="submit"
+                disabled={isLoggingIn}
+                style={{ 
+                  width: "100%", 
+                  background: C.dark, 
+                  color: C.accent, 
+                  padding: "16px", 
+                  borderRadius: 16, 
+                  fontSize: 15, 
+                  fontWeight: 800, 
+                  border: `2px solid ${C.accent}`, 
+                  cursor: isLoggingIn ? "not-allowed" : "pointer", 
+                  marginTop: 8,
+                  boxShadow: `0 8px 20px rgba(0,0,0,0.15)`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 10,
+                  opacity: isLoggingIn ? 0.7 : 1,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                {isLoggingIn ? (
+                  <div style={{ width: 18, height: 18, border: `2px solid ${C.accent}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                ) : (
+                  <span>🔐 Access Dashboard</span>
                 )}
-                <div id="recaptcha-container"></div>
-                <button 
-                  type="submit"
-                  disabled={isLoggingIn}
-                  style={{ 
-                    width: "100%", 
-                    background: C.dark, 
-                    color: C.accent, 
-                    padding: "16px", 
-                    borderRadius: 16, 
-                    fontSize: 15, 
-                    fontWeight: 700, 
-                    marginTop: 8,
-                    border: `2px solid ${C.accent}`,
-                    opacity: isLoggingIn ? 0.7 : 1
-                  }}
-                >
-                  {isLoggingIn ? "Processing..." : (confirmationResult ? "Verify OTP" : "Send OTP")}
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => { setLoginMode("google"); setConfirmationResult(null); }}
-                  style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700, marginTop: 12 }}
-                >
-                  Back to Google
-                </button>
-              </form>
-            )
+              </button>
+            </form>
           )}
           
           <p style={{ fontSize: 11, color: C.muted, marginTop: 24 }}>Authorized access only. Contact owner for staff access.</p>
@@ -1106,7 +941,7 @@ const App = () => {
             Go to Customer Portal →
           </button>
           <button 
-            onClick={logout}
+            onClick={handleLogout}
             style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 16 }}
           >
             Log Out from Account
@@ -1156,7 +991,7 @@ const App = () => {
                 setCustRegister(true);
               }
             } else {
-              logout();
+              handleLogout();
             }
           }}
           onUpdateProfile={handleUpdateProfile}
@@ -1205,7 +1040,7 @@ const App = () => {
     return (
       <div style={{ display: "flex", minHeight: "100vh", background: C.bg }}>
         {/* Desktop Sidebar */}
-        <Sidebar active={tab} onNav={handleNav} settings={settings} user={profile} onLogout={logout} />
+        <Sidebar active={tab} onNav={handleNav} settings={settings} user={profile} onLogout={handleLogout} />
         
         {/* Main Content Area */}
         <main style={{ flex: 1, height: "100vh", overflowY: "auto", padding: "40px" }} id="main-content-scroll">
@@ -1229,7 +1064,7 @@ const App = () => {
   return (
     <div style={{ maxWidth: 480, margin: "0 auto", minHeight: "100vh", background: C.bg, display: "flex", flexDirection: "column", position: "relative", boxShadow: "0 0 40px rgba(0,0,0,0.05)" }}>
       <Header onMenu={() => setDrawer(true)} settings={settings} />
-      <Drawer open={drawer} onClose={() => setDrawer(false)} settings={settings} onNav={handleNav} user={profile} onLogout={logout} />
+      <Drawer open={drawer} onClose={() => setDrawer(false)} settings={settings} onNav={handleNav} user={profile} onLogout={handleLogout} />
       
       <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
         <React.Suspense fallback={
