@@ -195,7 +195,7 @@ const App = () => {
     if (!user || !profile) return;
     let q;
     if (profile.role === "customer") {
-      const cleanPhone = profile.phone ? profile.phone.replace(/\D/g, "").slice(-10) : "";
+      const cleanPhone = profile.phone ? String(profile.phone).replace(/\D/g, "").slice(-10) : "";
       if (!cleanPhone) {
         setBills([]);
         return;
@@ -266,33 +266,36 @@ const App = () => {
   const updateCustomerLedgerAndStock = async (bill: Bill) => {
     try {
       // 1. Deduct Stock for each billed item
-      for (const item of bill.items) {
-        const cleanItemName = item.name.toLowerCase().trim();
-        const cleanItemSku = item.sku ? item.sku.toLowerCase().trim() : "";
-        const prod = products.find(p => p.name.toLowerCase().trim() === cleanItemName || (p.sku && p.sku.toLowerCase().trim() === cleanItemSku));
-        if (prod) {
-          const currentStock = (prod as any).stock !== undefined ? (prod as any).stock : 0;
-          const newStock = Math.max(0, currentStock - item.qty);
-          await setDoc(doc(db, "products", prod.id), {
-            ...prod,
-            stock: newStock
-          });
-          // Log history in inventory_history
-          await addDoc(collection(db, "inventory_history"), {
-            productId: prod.id,
-            productName: prod.name,
-            previousStock: currentStock,
-            newStock: newStock,
-            change: -item.qty,
-            type: "sale",
-            updatedBy: profile?.displayName || "Staff Billing",
-            timestamp: Date.now(),
-            reason: `Billed in Invoice #${bill.id}`
-          });
+      if (Array.isArray(bill.items)) {
+        for (const item of bill.items) {
+          if (!item || !item.name) continue;
+          const cleanItemName = String(item.name).toLowerCase().trim();
+          const cleanItemSku = item.sku ? String(item.sku).toLowerCase().trim() : "";
+          const prod = products.find(p => p && p.name && String(p.name).toLowerCase().trim() === cleanItemName || (p.sku && String(p.sku).toLowerCase().trim() === cleanItemSku));
+          if (prod) {
+            const currentStock = (prod as any).stock !== undefined ? (prod as any).stock : 0;
+            const newStock = Math.max(0, currentStock - item.qty);
+            await setDoc(doc(db, "products", prod.id), {
+              ...prod,
+              stock: newStock
+            });
+            // Log history in inventory_history
+            await addDoc(collection(db, "inventory_history"), {
+              productId: prod.id,
+              productName: prod.name,
+              previousStock: currentStock,
+              newStock: newStock,
+              change: -item.qty,
+              type: "sale",
+              updatedBy: profile?.displayName || "Staff Billing",
+              timestamp: Date.now(),
+              reason: `Billed in Invoice #${bill.id}`
+            });
+          }
         }
       }
 
-      const cleanPhone = bill.customerObj.phone.replace(/\D/g, "").slice(-10);
+      const cleanPhone = bill?.customerObj?.phone ? String(bill.customerObj.phone).replace(/\D/g, "").slice(-10) : "";
       if (cleanPhone.length >= 10) {
         const custQuery = query(collection(db, "customers"), where("phone", "==", cleanPhone));
         const qSnap = await getDocs(custQuery);

@@ -130,24 +130,33 @@ export const CustomerScreen = ({
   // Filter bills for this customer
   const customerBills = useMemo(() => {
     if (!profile?.phone) return [];
-    return bills.filter(b => b.customerObj.phone.replace(/\D/g, "").slice(-10) === profile.phone.replace(/\D/g, "").slice(-10));
+    const profPhoneClean = String(profile.phone).replace(/\D/g, "").slice(-10);
+    return bills.filter(b => {
+      const billPhone = b?.customerObj?.phone;
+      if (!billPhone) return false;
+      return String(billPhone).replace(/\D/g, "").slice(-10) === profPhoneClean;
+    });
   }, [bills, profile]);
 
   // Extract all individual clothing items purchased in the past
   const purchasedItems = useMemo(() => {
     const items: any[] = [];
     customerBills.forEach(bill => {
-      bill.items.forEach(item => {
-        // Find product details from products list if available for brand info
-        const prod = products.find(p => p.name.toLowerCase() === item.name.toLowerCase());
-        items.push({
-          ...item,
-          brand: prod?.brand || "Shiv Western Club",
-          billId: bill.id,
-          date: bill.date,
-          timestamp: bill.timestamp || Date.now()
+      if (bill && Array.isArray(bill.items)) {
+        bill.items.forEach(item => {
+          if (item && item.name) {
+            // Find product details from products list if available for brand info
+            const prod = products.find(p => p && p.name && String(p.name).toLowerCase() === String(item.name).toLowerCase());
+            items.push({
+              ...item,
+              brand: prod?.brand || "Shiv Western Club",
+              billId: bill.id,
+              date: bill.date,
+              timestamp: bill.timestamp || Date.now()
+            });
+          }
         });
-      });
+      }
     });
     // Newest purchases first
     return items.sort((a, b) => b.timestamp - a.timestamp);
@@ -155,7 +164,7 @@ export const CustomerScreen = ({
 
   // Total Purchase & Loyalty Points
   const totalPurchase = useMemo(() => {
-    return customerBills.reduce((sum, b) => sum + b.total, 0);
+    return customerBills.reduce((sum, b) => sum + (b.total || 0), 0);
   }, [customerBills]);
 
   const loyaltyPoints = Math.floor(totalPurchase / 100);
@@ -190,11 +199,14 @@ export const CustomerScreen = ({
   // Filter products
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
+      if (!p) return false;
+      const nameVal = String(p.name || '');
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
-      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (p.category && p.category.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                            (p.sku && p.sku.toLowerCase().includes(searchQuery.toLowerCase()));
+      const q = String(searchQuery || '').toLowerCase();
+      const matchesSearch = nameVal.toLowerCase().includes(q) || 
+                            (p.brand && String(p.brand).toLowerCase().includes(q)) ||
+                            (p.category && String(p.category).toLowerCase().includes(q)) ||
+                            (p.sku && String(p.sku).toLowerCase().includes(q));
       return matchesCategory && matchesSearch;
     });
   }, [products, selectedCategory, searchQuery]);
