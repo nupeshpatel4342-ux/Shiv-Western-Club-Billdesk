@@ -407,14 +407,6 @@ const App = () => {
     setIsLoggingIn(true);
     try {
       const virtualEmail = `${cleanPhone}@customer.shivwestern.com`;
-      // Check if customer phone already exists in customers collection to avoid duplicates
-      const phoneQuery = query(collection(db, "customers"), where("phone", "==", cleanPhone));
-      const phoneSnap = await getDocs(phoneQuery);
-      if (!phoneSnap.empty) {
-        alert("This mobile number is already registered.");
-        setIsLoggingIn(false);
-        return;
-      }
 
       const userCred = await registerWithEmail(virtualEmail, custPassword);
       const u = userCred.user;

@@ -34,7 +34,8 @@ service cloud.firestore {
 
     // Customers Ledger Collection
     match /customers/{userId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Orders Reservations Collection
