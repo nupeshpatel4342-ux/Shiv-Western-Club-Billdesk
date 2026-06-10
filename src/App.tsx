@@ -92,61 +92,69 @@ const App = () => {
   // Auth Listener
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) {
-        // Fetch or Create Profile
-        const pDoc = await getDoc(doc(db, "users", u.uid));
-        const isOwnerEmail = u.email?.toLowerCase() === "nupeshpatel4342@gmail.com";
-        
-        if (pDoc.exists()) {
-          const currentProfile = pDoc.data() as any;
-          if (currentProfile.role === "customer") {
-            const cDoc = await getDoc(doc(db, "customers", u.uid));
-            if (cDoc.exists()) {
-              setProfile({ ...currentProfile, ...cDoc.data() });
+      try {
+        setUser(u);
+        if (u) {
+          // Fetch or Create Profile
+          const pDoc = await getDoc(doc(db, "users", u.uid));
+          const isOwnerEmail = u.email?.toLowerCase() === "nupeshpatel4342@gmail.com";
+          
+          if (pDoc.exists()) {
+            const currentProfile = pDoc.data() as any;
+            if (currentProfile.role === "customer") {
+              const cDoc = await getDoc(doc(db, "customers", u.uid));
+              if (cDoc.exists()) {
+                setProfile({ ...currentProfile, ...cDoc.data() });
+              } else {
+                setProfile(currentProfile);
+              }
             } else {
-              setProfile(currentProfile);
+              // Ensure owner always has owner role
+              if (isOwnerEmail && currentProfile.role !== "admin" && currentProfile.role !== "owner") {
+                const updatedProfile = { ...currentProfile, role: "owner" as const };
+                await setDoc(doc(db, "users", u.uid), updatedProfile);
+                setProfile(updatedProfile);
+              } else {
+                setProfile(currentProfile);
+              }
             }
           } else {
-            // Ensure owner always has owner role
-            if (isOwnerEmail && currentProfile.role !== "admin" && currentProfile.role !== "owner") {
-              const updatedProfile = { ...currentProfile, role: "owner" as const };
-              await setDoc(doc(db, "users", u.uid), updatedProfile);
-              setProfile(updatedProfile);
+            // If it is virtual customer email, create customer profile
+            if (u.email?.endsWith("@customer.shivwestern.com")) {
+              // Handled during registration, but fallback here
+              const newProfile = {
+                uid: u.uid,
+                email: u.email,
+                displayName: u.displayName || "Customer",
+                role: "customer",
+                createdAt: Date.now()
+              };
+              await setDoc(doc(db, "users", u.uid), newProfile);
+              setProfile(newProfile);
             } else {
-              setProfile(currentProfile);
+              const newProfile: UserProfile = {
+                uid: u.uid,
+                email: u.email || "",
+                displayName: u.displayName || "Staff Member",
+                photoURL: u.photoURL || "",
+                role: isOwnerEmail ? "owner" : "staff",
+                createdAt: Date.now()
+              };
+              await setDoc(doc(db, "users", u.uid), newProfile);
+              setProfile(newProfile);
             }
           }
         } else {
-          // If it is virtual customer email, create customer profile
-          if (u.email?.endsWith("@customer.shivwestern.com")) {
-            // Handled during registration, but fallback here
-            const newProfile = {
-              uid: u.uid,
-              email: u.email,
-              displayName: u.displayName || "Customer",
-              role: "customer",
-              createdAt: Date.now()
-            };
-            await setDoc(doc(db, "users", u.uid), newProfile);
-            setProfile(newProfile);
-          } else {
-            const newProfile: UserProfile = {
-              uid: u.uid,
-              email: u.email || "",
-              displayName: u.displayName || "Staff Member",
-              photoURL: u.photoURL || "",
-              role: isOwnerEmail ? "owner" : "staff",
-              createdAt: Date.now()
-            };
-            await setDoc(doc(db, "users", u.uid), newProfile);
-            setProfile(newProfile);
-          }
+          setProfile(null);
         }
-      } else {
+      } catch (err) {
+        console.error("Auth sync profile error:", err);
+        // On error (e.g. Permission Denied), clear auth state so they can log in/out properly
         setProfile(null);
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return unsub;
   }, []);
