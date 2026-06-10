@@ -5,7 +5,7 @@ import { db, handleFirestoreError, OperationType } from "../firebase";
 import { collection, addDoc, doc, setDoc, query, orderBy, onSnapshot, getDocs } from "firebase/firestore";
 import { Pill } from "../components/Layout";
 import { Search, ShieldAlert, History, ArrowUpRight, ArrowDownRight, Save, Edit, RefreshCw } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 interface InventoryLog {
   id: string;

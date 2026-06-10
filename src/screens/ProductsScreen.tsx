@@ -5,7 +5,7 @@ import { db, handleFirestoreError, OperationType } from "../firebase";
 import { collection, doc, addDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { Pill } from "../components/Layout";
 import { ShoppingBag, Plus, Search, Trash2, Edit2, Check, X, Tag, Barcode, DollarSign, Image } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 export const ProductsScreen = ({ 
   products, 

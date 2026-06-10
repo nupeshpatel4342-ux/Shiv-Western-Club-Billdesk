@@ -4,7 +4,7 @@ import { fmt, numToWords } from "../utils/formatters";
 import { Bill, Settings } from "../types";
 import { doWhatsApp, doPDF } from "../utils/exportUtils";
 import { StandardTemplate, MinimalTemplate, ModernTemplate } from "../components/InvoiceTemplates";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import Confetti from "react-confetti";
 
 export const InvoiceScreen = ({ 

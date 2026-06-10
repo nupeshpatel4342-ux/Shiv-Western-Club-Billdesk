@@ -4,7 +4,7 @@ import { Bill, Settings } from "../types";
 import { fmt } from "../utils/formatters";
 import { Pill } from "../components/Layout";
 import { Plus } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, Cell, PieChart, Pie

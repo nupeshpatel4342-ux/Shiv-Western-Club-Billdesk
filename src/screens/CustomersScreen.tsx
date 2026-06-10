@@ -5,7 +5,7 @@ import { db } from "../firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { Pill } from "../components/Layout";
 import { Search, UserCheck, ShieldAlert, Award, FileText, Smartphone } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface CustomerLedger {
   id: string;

@@ -5,7 +5,7 @@ import { Divider, Pill } from "../components/Layout";
 import Cropper from "react-easy-crop";
 import { getCroppedImg } from "../utils/imageUtils";
 import { ZoomIn, RotateCw, X, Check } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 export const SettingsScreen = ({ 
   settings, 

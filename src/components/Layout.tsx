@@ -2,7 +2,7 @@ import React from "react";
 import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
 import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard, Boxes, Users, ClipboardList, TrendingUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { children: React.ReactNode, color?: string, bg?: string, small?: boolean }) => (
   <span className="pf" style={{ background: bg, color, fontSize: small ? 10 : 11, fontWeight: 700, padding: small ? "2px 8px" : "4px 12px", borderRadius: 100, letterSpacing: "0.8px", display: "inline-block", textTransform: "uppercase" }}>{children}</span>

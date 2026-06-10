@@ -4,7 +4,7 @@ import { fmt } from "../utils/formatters";
 import { Bill, Settings } from "../types";
 import { Pill } from "../components/Layout";
 import { Trash2, Shirt } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { doWhatsApp, doReminderWhatsApp, doExcelExport } from "../utils/exportUtils";
 import { InvoiceScreen } from "./InvoiceScreen";
 

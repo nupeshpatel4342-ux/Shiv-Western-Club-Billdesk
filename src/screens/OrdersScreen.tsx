@@ -4,7 +4,7 @@ import { Pill } from "../components/Layout";
 import { db } from "../firebase";
 import { doc, setDoc } from "firebase/firestore";
 import { Search, ClipboardList, Check, X, Tag, User, Clock, CheckCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface Order {
   id: string;
