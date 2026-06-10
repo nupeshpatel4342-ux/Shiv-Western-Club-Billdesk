@@ -16,7 +16,7 @@ const OrdersScreen = React.lazy(() => import("./screens/OrdersScreen").then(m =>
 const ReportsScreen = React.lazy(() => import("./screens/ReportsScreen").then(m => ({ default: m.ReportsScreen })));
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
 import { AnimatePresence, motion } from "motion/react";
 
 
@@ -183,12 +183,12 @@ const App = () => {
 
   // Sync Settings
   useEffect(() => {
-    if (!user) return;
+    if (!user && !isGuestMode) return;
     const unsub = onSnapshot(doc(db, "settings", "global"), (s) => {
       if (s.exists()) setSettings(s.data() as Settings);
     }, (err) => handleFirestoreError(err, OperationType.GET, "settings/global"));
     return unsub;
-  }, [user]);
+  }, [user, isGuestMode]);
 
   // Sync Bills
   useEffect(() => {
@@ -222,14 +222,14 @@ const App = () => {
 
   // Sync Products
   useEffect(() => {
-    if (!user) return;
+    if (!user && !isGuestMode) return;
     const q = query(collection(db, "products"), orderBy("createdAt", "desc"));
     const unsub = onSnapshot(q, (s) => {
       const pList = s.docs.map(d => ({ id: d.id, ...d.data() }) as CatalogProduct);
       setProducts(pList);
     }, (err) => handleFirestoreError(err, OperationType.LIST, "products"));
     return unsub;
-  }, [user]);
+  }, [user, isGuestMode]);
 
   // Sync Orders
   useEffect(() => {
@@ -278,7 +278,6 @@ const App = () => {
             stock: newStock
           });
           // Log history in inventory_history
-          const { addDoc } = await import("firebase/firestore");
           await addDoc(collection(db, "inventory_history"), {
             productId: prod.id,
             productName: prod.name,
@@ -555,13 +554,11 @@ const App = () => {
   };
 
   const handleCreateOrder = async (orderData: any) => {
-    const { addDoc } = await import("firebase/firestore");
     await addDoc(collection(db, "orders"), orderData);
   };
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     const orderRef = doc(db, "orders", orderId);
-    const { updateDoc } = await import("firebase/firestore");
     await updateDoc(orderRef, { status });
   };
 

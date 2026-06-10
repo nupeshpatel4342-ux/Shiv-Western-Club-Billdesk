@@ -24,12 +24,14 @@ service cloud.firestore {
 
     // Settings Collection
     match /settings/{docId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
     
     // Products Collection
     match /products/{prodId} {
-      allow read, write: if isAuthenticated();
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Customers Ledger Collection
