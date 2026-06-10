@@ -119,7 +119,7 @@ const App = () => {
     const unsub = onAuthStateChanged(auth, async (u) => {
       try {
         if (localStorage.getItem("admin_session") === "true") {
-          // Auto-login admin if session is active
+          // Auto-login admin if virtual session is active
           if (!u) {
             await loginAnonymously();
             return;
