@@ -3,17 +3,17 @@ import { C } from "./constants";
 import { Bill, Settings, UserProfile, CatalogProduct } from "./types";
 import { Header, Drawer, BottomNav, Sidebar } from "./components/Layout";
 import { Shirt } from "lucide-react";
-import { NewBillScreen } from "./screens/NewBillScreen";
-import { InvoiceScreen } from "./screens/InvoiceScreen";
-import { HistoryScreen } from "./screens/HistoryScreen";
-import { SettingsScreen } from "./screens/SettingsScreen";
-import { DashboardScreen } from "./screens/DashboardScreen";
-import { ProductsScreen } from "./screens/ProductsScreen";
-import { CustomerScreen } from "./screens/CustomerScreen";
-import { InventoryScreen } from "./screens/InventoryScreen";
-import { CustomersScreen } from "./screens/CustomersScreen";
-import { OrdersScreen } from "./screens/OrdersScreen";
-import { ReportsScreen } from "./screens/ReportsScreen";
+const NewBillScreen = React.lazy(() => import("./screens/NewBillScreen").then(m => ({ default: m.NewBillScreen })));
+const InvoiceScreen = React.lazy(() => import("./screens/InvoiceScreen").then(m => ({ default: m.InvoiceScreen })));
+const HistoryScreen = React.lazy(() => import("./screens/HistoryScreen").then(m => ({ default: m.HistoryScreen })));
+const SettingsScreen = React.lazy(() => import("./screens/SettingsScreen").then(m => ({ default: m.SettingsScreen })));
+const DashboardScreen = React.lazy(() => import("./screens/DashboardScreen").then(m => ({ default: m.DashboardScreen })));
+const ProductsScreen = React.lazy(() => import("./screens/ProductsScreen").then(m => ({ default: m.ProductsScreen })));
+const CustomerScreen = React.lazy(() => import("./screens/CustomerScreen").then(m => ({ default: m.CustomerScreen })));
+const InventoryScreen = React.lazy(() => import("./screens/InventoryScreen").then(m => ({ default: m.InventoryScreen })));
+const CustomersScreen = React.lazy(() => import("./screens/CustomersScreen").then(m => ({ default: m.CustomersScreen })));
+const OrdersScreen = React.lazy(() => import("./screens/OrdersScreen").then(m => ({ default: m.OrdersScreen })));
+const ReportsScreen = React.lazy(() => import("./screens/ReportsScreen").then(m => ({ default: m.ReportsScreen })));
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp, where, getDocs } from "firebase/firestore";
@@ -183,14 +183,33 @@ const App = () => {
 
   // Sync Bills
   useEffect(() => {
-    if (!user) return;
-    const q = query(collection(db, "bills"), orderBy("timestamp", "desc"));
+    if (!user || !profile) return;
+    let q;
+    if (profile.role === "customer") {
+      const cleanPhone = profile.phone ? profile.phone.replace(/\D/g, "").slice(-10) : "";
+      if (!cleanPhone) {
+        setBills([]);
+        return;
+      }
+      q = query(
+        collection(db, "bills"),
+        where("customerObj.phone", "in", [
+          cleanPhone,
+          `+91${cleanPhone}`,
+          `+91 ${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}`,
+          `${cleanPhone.slice(0, 5)} ${cleanPhone.slice(5)}`
+        ])
+      );
+    } else {
+      q = query(collection(db, "bills"), orderBy("timestamp", "desc"));
+    }
     const unsub = onSnapshot(q, (s) => {
       const bList = s.docs.map(d => d.data() as Bill);
-      setBills(bList);
+      const sorted = bList.sort((a, b) => b.timestamp - a.timestamp);
+      setBills(sorted);
     }, (err) => handleFirestoreError(err, OperationType.LIST, "bills"));
     return unsub;
-  }, [user]);
+  }, [user, profile]);
 
   // Sync Products
   useEffect(() => {
@@ -205,14 +224,23 @@ const App = () => {
 
   // Sync Orders
   useEffect(() => {
-    if (!user) return;
-    const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    if (!user || !profile) return;
+    let q;
+    if (profile.role === "customer") {
+      q = query(
+        collection(db, "orders"),
+        where("customerPhone", "==", profile.phone),
+        orderBy("createdAt", "desc")
+      );
+    } else {
+      q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+    }
     const unsub = onSnapshot(q, (s) => {
       const oList = s.docs.map(d => ({ id: d.id, ...d.data() }));
       setOrders(oList);
     }, (err) => console.error(err));
     return unsub;
-  }, [user]);
+  }, [user, profile]);
 
   // Sync Users Directory (for staff roles)
   useEffect(() => {
@@ -1070,16 +1098,22 @@ const App = () => {
   // Case C: Customer logged in on / (Customer view)
   if (!isPathAdmin && profile?.role === "customer") {
     return (
-      <CustomerScreen
-        products={products}
-        settings={settings}
-        bills={bills}
-        profile={profile}
-        orders={orders}
-        onLogout={logout}
-        onUpdateProfile={handleUpdateProfile}
-        onCreateOrder={handleCreateOrder}
-      />
+      <React.Suspense fallback={
+        <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg }}>
+          <div style={{ width: 40, height: 40, border: `4px solid ${C.bg}`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+        </div>
+      }>
+        <CustomerScreen
+          products={products}
+          settings={settings}
+          bills={bills}
+          profile={profile}
+          orders={orders}
+          onLogout={logout}
+          onUpdateProfile={handleUpdateProfile}
+          onCreateOrder={handleCreateOrder}
+        />
+      </React.Suspense>
     );
   }
 
@@ -1127,9 +1161,15 @@ const App = () => {
         {/* Main Content Area */}
         <main style={{ flex: 1, height: "100vh", overflowY: "auto", padding: "40px" }} id="main-content-scroll">
           <div style={{ maxWidth: 1200, margin: "0 auto", width: "100%" }}>
-            <AnimatePresence mode="wait">
-              {renderScreen()}
-            </AnimatePresence>
+            <React.Suspense fallback={
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
+                <div style={{ width: 40, height: 40, border: `4px solid ${C.bg}`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+              </div>
+            }>
+              <AnimatePresence mode="wait">
+                {renderScreen()}
+              </AnimatePresence>
+            </React.Suspense>
           </div>
         </main>
       </div>
@@ -1143,9 +1183,15 @@ const App = () => {
       <Drawer open={drawer} onClose={() => setDrawer(false)} settings={settings} onNav={handleNav} user={profile} onLogout={logout} />
       
       <main style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}>
-        <AnimatePresence mode="wait">
-          {renderScreen()}
-        </AnimatePresence>
+        <React.Suspense fallback={
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh" }}>
+            <div style={{ width: 40, height: 40, border: `4px solid ${C.bg}`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+          </div>
+        }>
+          <AnimatePresence mode="wait">
+            {renderScreen()}
+          </AnimatePresence>
+        </React.Suspense>
       </main>
 
       {tab !== "invoice" && <BottomNav active={tab} onChange={handleNav} role={profile?.role} />}
