@@ -232,12 +232,12 @@ export const CustomerScreen = ({
 
   const menuItems = [
     { id: "home", label: "Home", icon: "🏠" },
-    { id: "products", label: "Products Catalog", icon: "🛍️" },
-    { id: "offers", label: "Special Offers", icon: "🏷️" },
-    { id: "wishlist", label: "My Wishlist", icon: "❤️" },
+    { id: "products", label: "Products", icon: "🛍️" },
+    { id: "offers", label: "Offers", icon: "🏷️" },
+    { id: "profile", label: "My Profile", icon: "👤" },
     { id: "bills", label: "My Bills", icon: "📄" },
     { id: "history", label: "Purchase History", icon: "🕒" },
-    { id: "profile", label: "My Profile & Club", icon: "👤" }
+    { id: "wishlist", label: "Wishlist", icon: "❤️" }
   ];
 
   const renderProductDetails = (product: any) => {
@@ -1015,10 +1015,10 @@ export const CustomerScreen = ({
         <div style={{ display: window.innerWidth >= 768 ? "none" : "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
           {[
             { id: "home", icon: "🏠", label: "Home" },
-            { id: "products", icon: "🛍️", label: "Catalog" },
+            { id: "products", icon: "🛍️", label: "Products" },
             { id: "wishlist", icon: "❤️", label: "Wishlist" },
-            { id: "bills", icon: "📄", label: "Bills" },
-            { id: "profile", icon: "👤", label: "Profile" }
+            { id: "bills", icon: "📄", label: "My Bills" },
+            { id: "profile", icon: "👤", label: "My Profile" }
           ].map(nav => (
             <button
               key={nav.id}
