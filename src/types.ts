@@ -35,7 +35,7 @@ export interface Bill {
   createdBy?: string; // UID of the user who created the bill
 }
 
-export type Role = "admin" | "staff";
+export type Role = "admin" | "staff" | "owner" | "customer" | "manager";
 
 export interface UserProfile {
   uid: string;
@@ -66,5 +66,11 @@ export interface CatalogProduct {
   sku: string;
   price: number;
   createdAt: number;
+  brand?: string;
+  category?: string;
+  image?: string;
+  sellingPrice?: number;
+  stock?: number;
+  size?: string;
 }
 

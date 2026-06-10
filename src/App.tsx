@@ -28,8 +28,21 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
-  // Portal Mode (Customer vs Staff/Admin)
-  const [portalMode, setPortalMode] = useState<"customer" | "admin">("customer");
+  // Path-Based Routing States
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  const navigateTo = (newPath: string) => {
+    window.history.pushState({}, "", newPath);
+    setCurrentPath(newPath);
+  };
   
   // Customer Login/Register states
   const [custPhone, setCustPhone] = useState("");
@@ -404,7 +417,7 @@ const App = () => {
     try {
       const virtualEmail = `${cleanPhone}@customer.shivwestern.com`;
       await loginWithEmail(virtualEmail, custPassword);
-      setPortalMode("customer");
+      navigateTo("/");
     } catch (err: any) {
       console.error("Customer Login Error:", err);
       if (err.code === "auth/user-not-found" || err.code === "auth/wrong-password") {
@@ -462,7 +475,7 @@ const App = () => {
       await setDoc(doc(db, "customers", u.uid), customerDetails);
 
       setProfile({ ...newProfile, ...customerDetails });
-      setPortalMode("customer");
+      navigateTo("/");
       alert("🎉 Account created successfully! Welcome to Shiv Western Club.");
     } catch (err: any) {
       console.error("Customer Register Error:", err);
@@ -652,6 +665,7 @@ const App = () => {
   }
 
   if (!user) {
+    const isAdminPath = currentPath.startsWith("/admin");
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
         <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)", border: `1px solid ${C.border}` }}>
@@ -663,27 +677,11 @@ const App = () => {
             </div>
           )}
           <h1 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings?.shopName || "Shiv Western Club"}</h1>
-          <p style={{ fontSize: 11, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>BillDesk & Customer Club</p>
+          <p style={{ fontSize: 11, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>
+            {isAdminPath ? "Admin & Staff Portal" : "Customer Club Portal"}
+          </p>
 
-          {/* Portal Switcher Tabs */}
-          <div style={{ display: "flex", background: C.bg, borderRadius: 12, padding: 4, marginBottom: 24 }}>
-            <button 
-              type="button" 
-              onClick={() => { setPortalMode("customer"); setCustRegister(false); setCustReset(false); }} 
-              style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", background: portalMode === "customer" ? C.dark : "transparent", color: portalMode === "customer" ? C.accent : C.muted, transition: "0.2s" }}
-            >
-              🛍️ Customer Portal
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setPortalMode("admin")} 
-              style={{ flex: 1, padding: "8px", borderRadius: 8, fontSize: 11, fontWeight: 800, border: "none", cursor: "pointer", background: portalMode === "admin" ? C.dark : "transparent", color: portalMode === "admin" ? C.accent : C.muted, transition: "0.2s" }}
-            >
-              💼 Staff / Admin
-            </button>
-          </div>
-
-          {portalMode === "customer" ? (
+          {!isAdminPath ? (
             /* CUSTOMER PORTAL VIEWS */
             custReset ? (
               <form onSubmit={handleCustomerResetPassword} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
@@ -802,198 +800,213 @@ const App = () => {
                     Forgot Password?
                   </button>
                 </div>
+                <button 
+                  type="button"
+                  onClick={() => navigateTo("/admin")}
+                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 14, textDecoration: "underline" }}
+                >
+                  Are you Staff? Go to Admin Portal →
+                </button>
               </form>
             )
           ) : (
             /* STAFF / ADMIN VIEW */
             loginMode === "direct" ? (
-            <>
-              <button 
-                onClick={handleDirectLogin} 
-                disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "18px", 
-                  borderRadius: 20, 
-                  fontSize: 16, 
-                  fontWeight: 800, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  gap: 12, 
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
-                  opacity: isLoggingIn ? 0.7 : 1,
-                  cursor: isLoggingIn ? "not-allowed" : "pointer",
-                  border: `2px solid ${C.accent}`,
-                  textTransform: "uppercase",
-                  letterSpacing: "1px"
-                }}
-              >
-                {isLoggingIn ? (
-                  <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                ) : "Enter App Directly"}
-              </button>
-              <button 
-                onClick={() => setLoginMode("google")}
-                style={{ marginTop: 20, background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-              >
-                Staff Login (Google/Email/Phone)
-              </button>
-            </>
-          ) : loginMode === "google" ? (
-            <>
-              <button 
-                onClick={handleLogin} 
-                disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: isLoggingIn ? C.muted : C.dark, 
-                  color: isLoggingIn ? "#fff" : C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  gap: 12, 
-                  boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
-                  opacity: isLoggingIn ? 0.7 : 1,
-                  cursor: isLoggingIn ? "not-allowed" : "pointer",
-                  border: `2px solid ${C.accent}`
-                }}
-              >
-                {isLoggingIn ? (
-                  <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
-                ) : (
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google" />
-                )}
-                {isLoggingIn ? "Signing in..." : "Sign in with Google"}
-              </button>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+              <>
                 <button 
-                  onClick={() => setLoginMode("email")}
-                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  onClick={handleDirectLogin} 
+                  disabled={isLoggingIn}
+                  style={{ 
+                    width: "100%", 
+                    background: C.dark, 
+                    color: C.accent, 
+                    padding: "18px", 
+                    borderRadius: 20, 
+                    fontSize: 16, 
+                    fontWeight: 800, 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    gap: 12, 
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.15)",
+                    opacity: isLoggingIn ? 0.7 : 1,
+                    cursor: isLoggingIn ? "not-allowed" : "pointer",
+                    border: `2px solid ${C.accent}`,
+                    textTransform: "uppercase",
+                    letterSpacing: "1px"
+                  }}
                 >
-                  Login with Email/Password
+                  {isLoggingIn ? (
+                    <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  ) : "Enter App Directly"}
                 </button>
                 <button 
-                  onClick={() => setLoginMode("phone")}
-                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
-                >
-                  Login with Phone Number
-                </button>
-                <button 
-                  onClick={() => setLoginMode("direct")}
-                  style={{ background: "transparent", border: "none", color: C.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", marginTop: 8 }}
-                >
-                  Back to Direct Entry
-                </button>
-              </div>
-            </>
-          ) : loginMode === "email" ? (
-            <form onSubmit={handleEmailLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <input 
-                type="email" 
-                placeholder="Email Address" 
-                value={email} 
-                onChange={e => setEmail(e.target.value)}
-                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-              />
-              <input 
-                type="password" 
-                placeholder="Password" 
-                value={password} 
-                onChange={e => setPassword(e.target.value)}
-                style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-              />
-              <button 
-                type="submit"
-                disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  marginTop: 8,
-                  border: `2px solid ${C.accent}`,
-                  opacity: isLoggingIn ? 0.7 : 1
-                }}
-              >
-                {isLoggingIn ? "Processing..." : (isRegistering ? "Create Account" : "Login")}
-              </button>
-              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
-                <button 
-                  type="button"
-                  onClick={() => setIsRegistering(!isRegistering)}
-                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 600 }}
-                >
-                  {isRegistering ? "Already have an account? Login" : "New Staff? Register"}
-                </button>
-                <button 
-                  type="button"
                   onClick={() => setLoginMode("google")}
-                  style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700 }}
+                  style={{ marginTop: 20, background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                >
+                  Staff Login (Google/Email/Phone)
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => navigateTo("/")}
+                  style={{ background: "transparent", border: "none", color: C.muted, fontSize: 11, fontWeight: 600, cursor: "pointer", marginTop: 16, textDecoration: "underline", display: "block", width: "100%" }}
+                >
+                  Are you a Customer? Go to Customer Portal →
+                </button>
+              </>
+            ) : loginMode === "google" ? (
+              <>
+                <button 
+                  onClick={handleLogin} 
+                  disabled={isLoggingIn}
+                  style={{ 
+                    width: "100%", 
+                    background: isLoggingIn ? C.muted : C.dark, 
+                    color: isLoggingIn ? "#fff" : C.accent, 
+                    padding: "16px", 
+                    borderRadius: 16, 
+                    fontSize: 15, 
+                    fontWeight: 700, 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    gap: 12, 
+                    boxShadow: "0 10px 20px rgba(0,0,0,0.1)",
+                    opacity: isLoggingIn ? 0.7 : 1,
+                    cursor: isLoggingIn ? "not-allowed" : "pointer",
+                    border: `2px solid ${C.accent}`
+                  }}
+                >
+                  {isLoggingIn ? (
+                    <div style={{ width: 20, height: 20, border: "2px solid #fff", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 1s linear infinite" }} />
+                  ) : (
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20" alt="Google" />
+                  )}
+                  {isLoggingIn ? "Signing in..." : "Sign in with Google"}
+                </button>
+                <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 16 }}>
+                  <button 
+                    onClick={() => setLoginMode("email")}
+                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Login with Email/Password
+                  </button>
+                  <button 
+                    onClick={() => setLoginMode("phone")}
+                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+                  >
+                    Login with Phone Number
+                  </button>
+                  <button 
+                    onClick={() => setLoginMode("direct")}
+                    style={{ background: "transparent", border: "none", color: C.accent, fontSize: 13, fontWeight: 700, cursor: "pointer", marginTop: 8 }}
+                  >
+                    Back to Direct Entry
+                  </button>
+                </div>
+              </>
+            ) : loginMode === "email" ? (
+              <form onSubmit={handleEmailLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                <input 
+                  type="email" 
+                  placeholder="Email Address" 
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)}
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                />
+                <input 
+                  type="password" 
+                  placeholder="Password" 
+                  value={password} 
+                  onChange={e => setPassword(e.target.value)}
+                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                />
+                <button 
+                  type="submit"
+                  disabled={isLoggingIn}
+                  style={{ 
+                    width: "100%", 
+                    background: C.dark, 
+                    color: C.accent, 
+                    padding: "16px", 
+                    borderRadius: 16, 
+                    fontSize: 15, 
+                    fontWeight: 700, 
+                    marginTop: 8,
+                    border: `2px solid ${C.accent}`,
+                    opacity: isLoggingIn ? 0.7 : 1
+                  }}
+                >
+                  {isLoggingIn ? "Processing..." : (isRegistering ? "Create Account" : "Login")}
+                </button>
+                <div style={{ display: "flex", justifyContent: "space-between", marginTop: 8 }}>
+                  <button 
+                    type="button"
+                    onClick={() => setIsRegistering(!isRegistering)}
+                    style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 600 }}
+                  >
+                    {isRegistering ? "Already have an account? Login" : "New Staff? Register"}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setLoginMode("google")}
+                    style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700 }}
+                  >
+                    Back to Google
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <form onSubmit={confirmationResult ? handleVerifyOtp : handlePhoneLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {!confirmationResult ? (
+                  <>
+                    <input 
+                      type="tel" 
+                      placeholder="Mobile Number (e.g. 9876543210)" 
+                      value={phone} 
+                      onChange={e => setPhone(e.target.value)}
+                      style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
+                    />
+                    <p style={{ fontSize: 10, color: C.muted, marginTop: -8, marginLeft: 4 }}>* Include +91 if outside India</p>
+                  </>
+                ) : (
+                  <input 
+                    type="text" 
+                    placeholder="Enter 6-digit OTP" 
+                    value={otp} 
+                    onChange={e => setOtp(e.target.value)}
+                    style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14, textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
+                  />
+                )}
+                <div id="recaptcha-container"></div>
+                <button 
+                  type="submit"
+                  disabled={isLoggingIn}
+                  style={{ 
+                    width: "100%", 
+                    background: C.dark, 
+                    color: C.accent, 
+                    padding: "16px", 
+                    borderRadius: 16, 
+                    fontSize: 15, 
+                    fontWeight: 700, 
+                    marginTop: 8,
+                    border: `2px solid ${C.accent}`,
+                    opacity: isLoggingIn ? 0.7 : 1
+                  }}
+                >
+                  {isLoggingIn ? "Processing..." : (confirmationResult ? "Verify OTP" : "Send OTP")}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setLoginMode("google"); setConfirmationResult(null); }}
+                  style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700, marginTop: 12 }}
                 >
                   Back to Google
                 </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={confirmationResult ? handleVerifyOtp : handlePhoneLogin} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {!confirmationResult ? (
-                <>
-                  <input 
-                    type="tel" 
-                    placeholder="Mobile Number (e.g. 9876543210)" 
-                    value={phone} 
-                    onChange={e => setPhone(e.target.value)}
-                    style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14 }}
-                  />
-                  <p style={{ fontSize: 10, color: C.muted, marginTop: -8, marginLeft: 4 }}>* Include +91 if outside India</p>
-                </>
-              ) : (
-                <input 
-                  type="text" 
-                  placeholder="Enter 6-digit OTP" 
-                  value={otp} 
-                  onChange={e => setOtp(e.target.value)}
-                  style={{ padding: "14px", borderRadius: 12, border: `1px solid ${C.border}`, fontSize: 14, textAlign: "center", letterSpacing: "4px", fontWeight: 700 }}
-                />
-              )}
-              <div id="recaptcha-container"></div>
-              <button 
-                type="submit"
-                disabled={isLoggingIn}
-                style={{ 
-                  width: "100%", 
-                  background: C.dark, 
-                  color: C.accent, 
-                  padding: "16px", 
-                  borderRadius: 16, 
-                  fontSize: 15, 
-                  fontWeight: 700, 
-                  marginTop: 8,
-                  border: `2px solid ${C.accent}`,
-                  opacity: isLoggingIn ? 0.7 : 1
-                }}
-              >
-                {isLoggingIn ? "Processing..." : (confirmationResult ? "Verify OTP" : "Send OTP")}
-              </button>
-              <button 
-                type="button"
-                onClick={() => { setLoginMode("google"); setConfirmationResult(null); }}
-                style={{ background: "transparent", border: "none", color: C.accent, fontSize: 12, fontWeight: 700, marginTop: 12 }}
-              >
-                Back to Google
-              </button>
-            </form>
-          ))}
+              </form>
+            )
+          )}
           
           <p style={{ fontSize: 11, color: C.muted, marginTop: 24 }}>Authorized access only. Contact owner for staff access.</p>
         </div>
@@ -1001,8 +1014,61 @@ const App = () => {
     );
   }
 
-  // Redirect Customer to Customer Portal Screen
-  if (profile?.role === "customer") {
+  // REDIRECT AND ENFORCE PATH-BASED AUTHENTICATION ROLES
+  const isPathAdmin = currentPath.startsWith("/admin");
+
+  // Case A: Customer logged in, but tries to access /admin
+  if (isPathAdmin && profile?.role === "customer") {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
+        <div style={{ width: "100%", maxWidth: 380, background: C.card, borderRadius: 28, padding: 32, textAlign: "center", border: `1.5px solid ${C.red}`, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
+          <span style={{ fontSize: 44 }}>🚫</span>
+          <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.red, marginTop: 16, marginBottom: 8 }}>Access Denied</h3>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24 }}>You do not have staff/admin privileges. This account is registered in the Customer Club.</p>
+          <button 
+            onClick={() => navigateTo("/")}
+            style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
+          >
+            Go to Customer Portal →
+          </button>
+          <button 
+            onClick={logout}
+            style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 16 }}
+          >
+            Log Out from Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Case B: Staff/Admin logged in, but tries to access / (Customer Portal)
+  if (!isPathAdmin && profile?.role && profile.role !== "customer") {
+    return (
+      <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
+        <div style={{ width: "100%", maxWidth: 380, background: C.card, borderRadius: 28, padding: 32, textAlign: "center", border: `1.5px solid ${C.accent}`, boxShadow: "0 20px 40px rgba(0,0,0,0.1)" }}>
+          <span style={{ fontSize: 44 }}>💼</span>
+          <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginTop: 16, marginBottom: 8 }}>Staff Session Active</h3>
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 24 }}>You are signed in with an Admin/Staff account. Admin panels are accessed on the dedicated `/admin` path.</p>
+          <button 
+            onClick={() => navigateTo("/admin")}
+            style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
+          >
+            Go to Admin Panel →
+          </button>
+          <button 
+            onClick={logout}
+            style={{ background: "transparent", border: "none", color: C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", marginTop: 16 }}
+          >
+            Log Out from Staff
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Case C: Customer logged in on / (Customer view)
+  if (!isPathAdmin && profile?.role === "customer") {
     return (
       <CustomerScreen
         products={products}

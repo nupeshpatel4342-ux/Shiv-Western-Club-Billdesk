@@ -7,11 +7,24 @@
     <link rel="manifest" href="/manifest.json" />
     <title>Shiv Western Club BillDesk</title>
     <script>
+      // Automatically unregister any cached service workers to prevent dev reload blocks
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW Registered!', reg))
-            .catch(err => console.error('SW Registration Failed!', err));
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          if (registrations.length > 0) {
+            for (let registration of registrations) {
+              registration.unregister().then(() => {
+                console.log('Service Worker unregistered successfully.');
+              });
+            }
+            if ('caches' in window) {
+              caches.keys().then(keys => {
+                keys.forEach(key => caches.delete(key));
+              }).then(() => {
+                console.log('Cache cleared.');
+                window.location.reload();
+              });
+            }
+          }
         });
       }
     </script>

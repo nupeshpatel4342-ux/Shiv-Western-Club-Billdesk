@@ -1,23 +1,17 @@
-const CACHE_NAME = 'swc-billdesk-v1';
-const ASSETS = [
-  '/',
-  '/index.html'
-];
-
 self.addEventListener('install', (e) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS).catch(() => {});
+    caches.keys().then((keys) => {
+      return Promise.all(keys.map((key) => caches.delete(key)));
+    }).then(() => {
+      return self.clients.claim();
     })
   );
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request).catch(() => {
-        return caches.match('/index.html');
-      });
-    })
-  );
+  e.respondWith(fetch(e.request));
 });

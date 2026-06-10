@@ -122,7 +122,7 @@ export const BottomNav = ({ active, onChange, role }: { active: string, onChange
     <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
       {displayLinks.map(t => (
         <motion.button 
-          key={t.id || t.tab} 
+          key={t.tab} 
           onClick={() => onChange(t.tab)}
           whileTap={{ scale: 0.9 }}
           style={{ flex: 1, padding: "10px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
