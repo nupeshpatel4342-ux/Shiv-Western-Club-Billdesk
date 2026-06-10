@@ -12,6 +12,15 @@ View your app in AI Studio: https://ai.studio/apps/550b4257-5844-4142-b54e-8fc0a
 
 **Prerequisites:**  Node.js
 
+### Windows quick start
+
+Double-click `Open-App.cmd`. It installs dependencies if needed, starts the app, and opens:
+
+`http://localhost:3000`
+
+If you use PowerShell and `npm run dev` is blocked by execution policy, run:
+
+`npm.cmd run dev`
 
 1. Install dependencies:
    `npm install`
