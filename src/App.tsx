@@ -88,7 +88,7 @@ const App = () => {
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [banners, setBanners] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[] | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentBill, setCurrentBill] = useState<Bill | null>(null);
   const [billToEdit, setBillToEdit] = useState<Bill | null>(null);
@@ -328,40 +328,11 @@ const App = () => {
       if (s.empty) {
         const defaults = [
           {
-            tag: "Urban Menswear",
-            headline: "Oversized\nT-Shirts",
-            sub: "Gen-Z Approved Drop-Shoulder Tees — Starting at ₹349",
-            cta: "Shop Now",
-            ctaLink: "T-Shirt",
-            bg: "linear-gradient(135deg, #0e1e38 0%, #1a365d 50%, #0e1e38 100%)",
-            accent: "#F4C430",
-            imgEmoji: "👕",
-            badge: "Trending",
-            createdAt: Date.now()
-          },
-          {
-            tag: "Printed & Casuals",
-            headline: "Premium\nCasual Shirts",
-            sub: "100% Breathable Cotton & Linen Shirts — Flat 25% Off",
-            cta: "Shop Now",
-            ctaLink: "Shirt",
-            bg: "linear-gradient(135deg, #1b0c2a 0%, #351a4f 50%, #1b0c2a 100%)",
-            accent: "#E5A93C",
-            imgEmoji: "👔",
-            badge: "Hot Deal",
-            createdAt: Date.now() + 1
-          },
-          {
-            tag: "Bottomwear Specials",
-            headline: "Chinos &\nCargo Pants",
-            sub: "Comfort Fit Trousers & Jeans — Halvad's Finest In Stock",
-            cta: "Shop Now",
-            ctaLink: "Trouser",
-            bg: "linear-gradient(135deg, #181c15 0%, #2e3629 50%, #181c15 100%)",
-            accent: "#C2A649",
-            imgEmoji: "👖",
-            badge: "New In",
-            createdAt: Date.now() + 2
+            name: "Summer Vacation Shirts",
+            imageUrl: "/hero_fashion_banner.png",
+            isActive: true,
+            createdAt: Date.now(),
+            ctaLink: "Shirt"
           }
         ];
         defaults.forEach(async (b) => {
@@ -1132,7 +1103,7 @@ const App = () => {
       case "orders": return wrapScreen(<OrdersScreen orders={orders} onUpdateStatus={handleUpdateOrderStatus} />, "orders");
       case "reports": return wrapScreen(<ReportsScreen bills={bills} products={products} />, "reports");
       case "categories": return wrapScreen(<CategoriesScreen categories={categories} isAdmin={isAdmin} />, "categories");
-      case "banners": return wrapScreen(<BannersScreen banners={banners} isAdmin={isAdmin} />, "banners");
+      case "banners": return wrapScreen(<BannersScreen banners={banners || []} isAdmin={isAdmin} />, "banners");
       case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} users={users} onUpdateUserRole={handleUpdateUserRole} />, "settings");
       default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "default");
     }

@@ -265,22 +265,36 @@ export const CustomerScreen = ({
   const [slidePaused, setSlidePaused] = useState(false);
 
   const activeBanners = useMemo(() => {
-    return banners && banners.length > 0 ? banners : SLIDES;
+    if (banners === null) return null;
+    const dbActive = banners.filter((b: any) => b.isActive);
+    if (dbActive.length > 0) return dbActive;
+    return [
+      {
+        id: "default-1",
+        name: "Summer Vacation Shirts",
+        imageUrl: "/hero_fashion_banner.png",
+        isActive: true,
+        createdAt: Date.now(),
+        ctaLink: "Shirt"
+      }
+    ];
   }, [banners]);
 
   const nextSlide = useCallback(() => {
+    if (!activeBanners || activeBanners.length === 0) return;
     setCurrentSlide((c) => (c + 1) % activeBanners.length);
-  }, [activeBanners.length]);
+  }, [activeBanners]);
 
   const prevSlide = useCallback(() => {
+    if (!activeBanners || activeBanners.length === 0) return;
     setCurrentSlide((c) => (c - 1 + activeBanners.length) % activeBanners.length);
-  }, [activeBanners.length]);
+  }, [activeBanners]);
 
   React.useEffect(() => {
-    if (slidePaused) return;
+    if (slidePaused || !activeBanners || activeBanners.length <= 1) return;
     const t = setInterval(nextSlide, 5000);
     return () => clearInterval(t);
-  }, [slidePaused, nextSlide]);
+  }, [slidePaused, nextSlide, activeBanners]);
 
   const handleCtaClick = (ctaLink: string) => {
     setActiveTab("products");
@@ -1340,48 +1354,63 @@ export const CustomerScreen = ({
       {/* ----------------- MAIN CONTENT BODY ----------------- */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         
-
-
-        {/* Tab Display Body */}
-        <main style={{ flex: 1, padding: "24px 20px 100px", overflowY: "auto", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
-          <AnimatePresence mode="wait">
-            
-            {/* TABS COMPONENT SWITCHER */}
-
-            {/* 1. HOME TAB */}
-            {activeTab === "home" && (
-              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
-                
-                {/* Premium Carousel Hero Banner */}
-                <div
-                  style={{
-                    position: "relative",
-                    height: isDesktop ? 520 : 420,
-                    borderRadius: 24,
-                    overflow: "hidden",
-                    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
-                  }}
-                  onMouseEnter={() => setSlidePaused(true)}
-                  onMouseLeave={() => setSlidePaused(false)}
-                >
-                  {activeBanners.map((slide, i) => {
-                    const active = i === currentSlide;
-                    return (
+        {/* Full-width Hero Banner carousel rendered edge-to-edge */}
+        {activeTab === "home" && (() => {
+          if (activeBanners === null) {
+            return (
+              <div className="w-full h-[250px] md:h-[400px] lg:h-[600px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
+                Loading promotional banners...
+              </div>
+            );
+          }
+          return (
+            <div
+              className="w-full h-[250px] md:h-[400px] lg:h-[600px] relative overflow-hidden"
+              onMouseEnter={() => setSlidePaused(true)}
+              onMouseLeave={() => setSlidePaused(false)}
+            >
+              {activeBanners.map((slide, i) => {
+                const active = i === currentSlide;
+                return (
+                  <div
+                    key={slide.id || i}
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      opacity: active ? 1 : 0,
+                      transition: "opacity 0.7s ease",
+                      pointerEvents: active ? "auto" : "none",
+                      zIndex: active ? 10 : 0
+                    }}
+                  >
+                    {slide.imageUrl ? (
+                      <div 
+                        onClick={() => slide.ctaLink && handleCtaClick(slide.ctaLink)}
+                        style={{ 
+                          width: "100%", 
+                          height: "100%", 
+                          cursor: slide.ctaLink ? "pointer" : "default"
+                        }}
+                      >
+                        <img 
+                          src={slide.imageUrl} 
+                          alt={slide.name || "Promotion Banner"} 
+                          className="w-full h-full object-cover object-center"
+                        />
+                      </div>
+                    ) : (
+                      // Fallback for old seeder / gradient banners
                       <div
-                        key={slide.id || i}
                         style={{
-                          position: "absolute",
-                          inset: 0,
-                          opacity: active ? 1 : 0,
-                          transition: "opacity 0.7s ease",
+                          width: "100%",
+                          height: "100%",
                           background: slide.bg.startsWith("data:") || slide.bg.startsWith("http") ? `url(${slide.bg}) center center / cover no-repeat` : slide.bg,
                           display: "flex",
                           alignItems: "center",
                           overflow: "hidden",
-                          pointerEvents: active ? "auto" : "none",
+                          position: "relative"
                         }}
                       >
-                        {/* Fabric texture overlay */}
                         <div style={{
                           position: "absolute",
                           inset: 0,
@@ -1394,8 +1423,6 @@ export const CustomerScreen = ({
                           )`,
                           pointerEvents: "none",
                         }} />
-
-                        {/* Gold accent lines */}
                         <div style={{
                           position: "absolute",
                           left: 0,
@@ -1404,8 +1431,6 @@ export const CustomerScreen = ({
                           width: 4,
                           background: `linear-gradient(to bottom, transparent, ${slide.accent}, transparent)`,
                         }} />
-
-                        {/* Big decorative emoji/product illustration or custom uploaded image */}
                         {slide.imgEmoji && (slide.imgEmoji.startsWith("data:") || slide.imgEmoji.startsWith("http")) ? (
                           <div style={{
                             position: "absolute",
@@ -1447,8 +1472,6 @@ export const CustomerScreen = ({
                             {slide.imgEmoji}
                           </div>
                         )}
-
-                        {/* Circular glow */}
                         <div style={{
                           position: "absolute",
                           right: isDesktop ? "15%" : "10%",
@@ -1460,10 +1483,7 @@ export const CustomerScreen = ({
                           background: `radial-gradient(circle, ${slide.accent}18 0%, transparent 70%)`,
                           pointerEvents: "none",
                         }} />
-
-                        {/* Content */}
                         <div style={{ position: "relative", zIndex: 2, padding: isDesktop ? "0 64px" : "0 24px", maxWidth: 620 }}>
-                          {/* Badge */}
                           <div style={{
                             display: "inline-flex",
                             alignItems: "center",
@@ -1472,9 +1492,6 @@ export const CustomerScreen = ({
                             borderRadius: 20,
                             padding: "4px 14px",
                             marginBottom: 20,
-                            opacity: active ? 1 : 0,
-                            transform: active ? "translateY(0)" : "translateY(10px)",
-                            transition: "all 0.6s ease 0.2s",
                           }}>
                             <div style={{
                               width: 6,
@@ -1487,8 +1504,6 @@ export const CustomerScreen = ({
                               {slide.tag}
                             </span>
                           </div>
-
-                          {/* Headline */}
                           <h2 className="pf" style={{
                             color: "#fff",
                             fontSize: isDesktop ? 68 : 38,
@@ -1497,12 +1512,9 @@ export const CustomerScreen = ({
                             letterSpacing: -1,
                             margin: "0 0 16px",
                             whiteSpace: "pre-line",
-                            opacity: active ? 1 : 0,
-                            transform: active ? "translateY(0)" : "translateY(20px)",
-                            transition: "all 0.6s ease 0.35s",
                             textTransform: "uppercase"
                           }}>
-                            {slide.headline.split("\n").map((line, idx) => (
+                            {(slide.headline || "").split("\n").map((line: string, idx: number) => (
                               <span key={idx} style={{ display: "block" }}>
                                 {idx === 1 ? (
                                   <span style={{ color: slide.accent }}>{line}</span>
@@ -1510,30 +1522,16 @@ export const CustomerScreen = ({
                               </span>
                             ))}
                           </h2>
-
-                          {/* Subtext */}
                           <p style={{
                             color: "rgba(255,255,255,0.65)",
                             fontSize: isDesktop ? 15 : 13,
                             lineHeight: 1.6,
                             margin: "0 0 32px",
                             maxWidth: 440,
-                            opacity: active ? 1 : 0,
-                            transform: active ? "translateY(0)" : "translateY(10px)",
-                            transition: "all 0.6s ease 0.45s",
                           }}>
                             {slide.sub}
                           </p>
-
-                          {/* CTAs */}
-                          <div style={{
-                            display: "flex",
-                            gap: 12,
-                            alignItems: "center",
-                            opacity: active ? 1 : 0,
-                            transform: active ? "translateY(0)" : "translateY(10px)",
-                            transition: "all 0.6s ease 0.55s",
-                          }}>
+                          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
                             <button
                               onClick={() => handleCtaClick(slide.ctaLink)}
                               style={{
@@ -1553,124 +1551,125 @@ export const CustomerScreen = ({
                               }}
                               className="zoom-effect"
                             >
-                              {slide.cta}
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActiveTab("products");
-                                setSelectedCategory("All");
-                                setSelectedGender("All");
-                              }}
-                              style={{
-                                color: "rgba(255,255,255,0.75)",
-                                fontSize: isDesktop ? 14 : 12,
-                                background: "none",
-                                border: "none",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 6,
-                                borderBottom: "1px solid rgba(255,255,255,0.3)",
-                                paddingBottom: 2,
-                              }}
-                            >
-                              View All Products
+                              {slide.cta || "Shop Now"}
                             </button>
                           </div>
                         </div>
                       </div>
-                    );
-                  })}
-
-                  {/* Prev/Next arrows */}
-                  {[{ dir: "prev", action: prevSlide, x: 20 }, { dir: "next", action: nextSlide, x: null }].map(({ dir, action, x }) => (
-                    <button
-                      key={dir}
-                      onClick={action}
-                      style={{
-                        position: "absolute",
-                        ...(x !== null ? { left: 20 } : { right: 20 }),
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "rgba(255,255,255,0.08)",
-                        border: "1px solid rgba(255,255,255,0.15)",
-                        borderRadius: "50%",
-                        width: isDesktop ? 44 : 36,
-                        height: isDesktop ? 44 : 36,
-                        color: "rgba(255,255,255,0.8)",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "background 0.2s",
-                        zIndex: 10,
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.3)"}
-                      onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
-                    >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        {dir === "prev"
-                          ? <path d="M15 18l-6-6 6-6"/>
-                          : <path d="M9 18l6-6-6-6"/>}
-                      </svg>
-                    </button>
-                  ))}
-
-                  {/* Dot indicators */}
-                  <div style={{
-                    position: "absolute",
-                    bottom: 20,
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    display: "flex",
-                    gap: 8,
-                    zIndex: 10,
-                  }}>
-                    {activeBanners.map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentSlide(i)}
-                        style={{
-                          width: i === currentSlide ? 28 : 8,
-                          height: 8,
-                          borderRadius: 4,
-                          background: i === currentSlide
-                            ? (activeBanners[currentSlide] ? activeBanners[currentSlide].accent : C.accent)
-                            : "rgba(255,255,255,0.3)",
-                          border: "none",
-                          cursor: "pointer",
-                          transition: "all 0.4s ease",
-                          padding: 0,
-                        }}
-                      />
-                    ))}
+                    )}
                   </div>
+                );
+              })}
 
-                  {/* Progress bar */}
-                  <div style={{
+              {/* Prev/Next arrows */}
+              {activeBanners.length > 1 && [
+                { dir: "prev", action: prevSlide, style: { left: 24 } },
+                { dir: "next", action: nextSlide, style: { right: 24 } }
+              ].map(({ dir, action, style: arrowStyle }) => (
+                <button
+                  key={dir}
+                  onClick={action}
+                  style={{
                     position: "absolute",
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 2,
-                    background: "rgba(255,255,255,0.1)",
-                    zIndex: 10,
-                  }}>
-                    <div
-                      key={currentSlide}
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(0,0,0,0.3)",
+                    border: "1px solid rgba(255,255,255,0.2)",
+                    borderRadius: "50%",
+                    width: 44,
+                    height: 44,
+                    color: "#FFFFFF",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    transition: "all 0.2s",
+                    zIndex: 30,
+                    ...arrowStyle
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "rgba(0,0,0,0.6)";
+                    e.currentTarget.style.transform = "translateY(-50%) scale(1.05)";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "rgba(0,0,0,0.3)";
+                    e.currentTarget.style.transform = "translateY(-50%) scale(1)";
+                  }}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    {dir === "prev" ? <path d="M15 18l-6-6 6-6"/> : <path d="M9 18l6-6-6-6"/>}
+                  </svg>
+                </button>
+              ))}
+
+              {/* Dot indicators */}
+              {activeBanners.length > 1 && (
+                <div style={{
+                  position: "absolute",
+                  bottom: 24,
+                  left: "50%",
+                  transform: "translateX(-50%)",
+                  display: "flex",
+                  gap: 8,
+                  zIndex: 30,
+                }}>
+                  {activeBanners.map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentSlide(i)}
                       style={{
-                        height: "100%",
-                        background: (activeBanners[currentSlide] ? activeBanners[currentSlide].accent : C.accent),
-                        animation: slidePaused ? "none" : "progress 5s linear",
-                        width: "100%",
-                        transformOrigin: "left",
+                        width: i === currentSlide ? 24 : 8,
+                        height: 8,
+                        borderRadius: 4,
+                        background: i === currentSlide ? "#FFFFFF" : "rgba(255,255,255,0.4)",
+                        border: "none",
+                        cursor: "pointer",
+                        transition: "all 0.3s ease",
+                        padding: 0,
                       }}
                     />
-                  </div>
+                  ))}
                 </div>
+              )}
+
+              {/* Progress bar */}
+              {activeBanners.length > 1 && (
+                <div style={{
+                  position: "absolute",
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: 3,
+                  background: "rgba(255,255,255,0.2)",
+                  zIndex: 30,
+                }}>
+                  <div
+                    key={currentSlide}
+                    style={{
+                      height: "100%",
+                      background: "#FFFFFF",
+                      animation: slidePaused ? "none" : "progress 5s linear",
+                      width: "100%",
+                      transformOrigin: "left",
+                    }}
+                  />
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* Tab Display Body */}
+        <main style={{ flex: 1, padding: "24px 20px 100px", overflowY: "auto", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
+          <AnimatePresence mode="wait">
+            
+            {/* TABS COMPONENT SWITCHER */}
+
+            {/* 1. HOME TAB */}
+            {activeTab === "home" && (
+              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                
+
 
                 {/* Account Points & Loyalty Metrics */}
                 {!profile.isGuest && (
