@@ -118,6 +118,10 @@ export const CustomerScreen = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"home" | "products" | "offers" | "profile" | "bills" | "history" | "wishlist" | "cart">("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [selectedGender, setSelectedGender] = useState<"All" | "Men" | "Women">("All");
+  const [sortBy, setSortBy] = useState<"default" | "newest">("default");
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
   const [selectedSize, setSelectedSize] = useState("");
@@ -129,8 +133,13 @@ export const CustomerScreen = ({
   
   React.useEffect(() => {
     const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    const handleScroll = () => setIsScrolled(window.scrollY > 30);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
 
   const getProductPriceInfo = (p: any) => {
@@ -245,18 +254,41 @@ export const CustomerScreen = ({
 
   // Filter products
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    let result = products.filter(p => {
       if (!p) return false;
       const nameVal = String(p.name || '');
       const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+      
+      let matchesGender = true;
+      if (selectedGender === "Men") {
+        matchesGender = !["Saree", "Ladies Wear"].includes(p.category || "") &&
+                        !String(p.name).toLowerCase().includes("women") &&
+                        !String(p.name).toLowerCase().includes("girl") &&
+                        !String(p.name).toLowerCase().includes("ladies");
+      } else if (selectedGender === "Women") {
+        matchesGender = ["Saree", "Ladies Wear"].includes(p.category || "") ||
+                        String(p.name).toLowerCase().includes("women") ||
+                        String(p.name).toLowerCase().includes("girl") ||
+                        String(p.name).toLowerCase().includes("ladies") ||
+                        String(p.name).toLowerCase().includes("sari") ||
+                        String(p.name).toLowerCase().includes("kurti") ||
+                        String(p.name).toLowerCase().includes("saree");
+      }
+
       const q = String(searchQuery || '').toLowerCase();
       const matchesSearch = nameVal.toLowerCase().includes(q) || 
                             (p.brand && String(p.brand).toLowerCase().includes(q)) ||
                             (p.category && String(p.category).toLowerCase().includes(q)) ||
                             (p.sku && String(p.sku).toLowerCase().includes(q));
-      return matchesCategory && matchesSearch;
+      return matchesCategory && matchesGender && matchesSearch;
     });
-  }, [products, selectedCategory, searchQuery]);
+
+    if (sortBy === "newest") {
+      result = [...result].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    }
+
+    return result;
+  }, [products, selectedCategory, selectedGender, searchQuery, sortBy]);
 
   // Wishlisted products full objects
   const wishlistedProducts = useMemo(() => {
@@ -478,16 +510,95 @@ export const CustomerScreen = ({
     doWhatsApp(bill, settings, () => {});
   };
 
-  const menuItems = [
+  const headerNavItems = [
+    { id: "men", label: "Men" },
+    { id: "women", label: "Women" },
+    { id: "t-shirts", label: "T-Shirts" },
+    { id: "shirts", label: "Shirts" },
+    { id: "jeans", label: "Jeans" },
+    { id: "new-arrivals", label: "New Arrivals" },
+    { id: "offers", label: "Offers" }
+  ];
+
+  const mobileDrawerItems = [
     { id: "home", label: "Home", icon: "🏠" },
-    { id: "products", label: "Products", icon: "🛍️" },
-    { id: "cart", label: `My Cart ${cart.length > 0 ? `(${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, icon: "🛒" },
+    { id: "men", label: "Men", icon: "🤵" },
+    { id: "women", label: "Women", icon: "💃" },
+    { id: "t-shirts", label: "T-Shirts", icon: "👕" },
+    { id: "shirts", label: "Shirts", icon: "👔" },
+    { id: "jeans", label: "Jeans", icon: "👖" },
+    { id: "new-arrivals", label: "New Arrivals", icon: "🔥" },
     { id: "offers", label: "Offers", icon: "🏷️" },
+    { id: "wishlist", label: "Wishlist", icon: "❤️" },
+    { id: "cart", label: `My Cart ${cart.length > 0 ? `(${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, icon: "🛒" },
     { id: "profile", label: "My Profile", icon: "👤" },
     { id: "bills", label: "My Bills", icon: "📄" },
-    { id: "history", label: "Purchase History", icon: "🕒" },
-    { id: "wishlist", label: "Wishlist", icon: "❤️" }
+    { id: "history", label: "Purchase History", icon: "🕒" }
   ];
+
+  const handleNavClick = (menuId: string) => {
+    if (menuId === "men") {
+      setActiveTab("products");
+      setSelectedCategory("All");
+      setSelectedGender("Men");
+      setSortBy("default");
+    } else if (menuId === "women") {
+      setActiveTab("products");
+      setSelectedCategory("All");
+      setSelectedGender("Women");
+      setSortBy("default");
+    } else if (menuId === "t-shirts") {
+      setActiveTab("products");
+      setSelectedCategory("T-Shirt");
+      setSelectedGender("All");
+      setSortBy("default");
+    } else if (menuId === "shirts") {
+      setActiveTab("products");
+      setSelectedCategory("Shirt");
+      setSelectedGender("All");
+      setSortBy("default");
+    } else if (menuId === "jeans") {
+      setActiveTab("products");
+      setSelectedCategory("Jeans");
+      setSelectedGender("All");
+      setSortBy("default");
+    } else if (menuId === "new-arrivals") {
+      setActiveTab("products");
+      setSelectedCategory("All");
+      setSelectedGender("All");
+      setSortBy("newest");
+    } else if (menuId === "offers") {
+      setActiveTab("offers");
+      setSelectedCategory("All");
+      setSelectedGender("All");
+      setSortBy("default");
+    }
+  };
+
+  const isNavActive = (menuId: string) => {
+    if (menuId === "men") return activeTab === "products" && selectedGender === "Men" && selectedCategory === "All" && sortBy === "default";
+    if (menuId === "women") return activeTab === "products" && selectedGender === "Women" && selectedCategory === "All" && sortBy === "default";
+    if (menuId === "t-shirts") return activeTab === "products" && selectedCategory === "T-Shirt";
+    if (menuId === "shirts") return activeTab === "products" && selectedCategory === "Shirt";
+    if (menuId === "jeans") return activeTab === "products" && selectedCategory === "Jeans";
+    if (menuId === "new-arrivals") return activeTab === "products" && sortBy === "newest" && selectedCategory === "All" && selectedGender === "All";
+    if (menuId === "offers") return activeTab === "offers";
+    return false;
+  };
+
+  const handleMobileDrawerClick = (itemId: string) => {
+    setDrawerOpen(false);
+    if (["men", "women", "t-shirts", "shirts", "jeans", "new-arrivals"].includes(itemId)) {
+      handleNavClick(itemId);
+    } else {
+      if (itemId === "home") {
+        setSelectedCategory("All");
+        setSelectedGender("All");
+        setSortBy("default");
+      }
+      setActiveTab(itemId as any);
+    }
+  };
 
   const renderProductDetails = (product: any) => {
     const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["S", "M", "L", "XL"];
@@ -611,14 +722,17 @@ export const CustomerScreen = ({
 
       {/* ----------------- STICKY TOP HEADER ----------------- */}
       <header style={{ 
-        position: "sticky", 
+        position: (activeTab === "home" && !isScrolled) ? "absolute" : "sticky", 
         top: 0, 
+        left: 0,
+        right: 0,
         zIndex: 100, 
-        background: "rgba(255, 255, 255, 0.85)", 
-        backdropFilter: "blur(20px)", 
-        WebkitBackdropFilter: "blur(20px)", 
-        borderBottom: "1px solid rgba(0,0,0,0.06)", 
-        boxShadow: "0 4px 30px rgba(0,0,0,0.01)" 
+        background: (activeTab === "home" && !isScrolled) ? "transparent" : "#FFFFFF", 
+        backdropFilter: (activeTab === "home" && !isScrolled) ? "none" : "blur(20px)", 
+        WebkitBackdropFilter: (activeTab === "home" && !isScrolled) ? "none" : "blur(20px)", 
+        borderBottom: (activeTab === "home" && !isScrolled) ? "none" : "1px solid rgba(0,0,0,0.06)", 
+        boxShadow: (activeTab === "home" && !isScrolled) ? "none" : "0 4px 30px rgba(0,0,0,0.02)",
+        transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
       }}>
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
           
@@ -633,7 +747,13 @@ export const CustomerScreen = ({
               </button>
             )}
             <div 
-              onClick={() => setActiveTab("home")} 
+              onClick={() => {
+                setActiveTab("home");
+                setSelectedCategory("All");
+                setSelectedGender("All");
+                setSortBy("default");
+                setSearchQuery("");
+              }} 
               style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
             >
               <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -647,29 +767,31 @@ export const CustomerScreen = ({
 
           {/* Center: Navigation Links (Desktop only) */}
           {isDesktop && (
-            <nav style={{ display: "flex", gap: 28 }}>
-              {menuItems.filter(item => ["home", "products", "offers", "wishlist"].includes(item.id)).map(item => {
-                const isActive = activeTab === item.id;
+            <nav style={{ display: "flex", gap: 24 }}>
+              {headerNavItems.map(item => {
+                const isActive = isNavActive(item.id);
                 return (
                   <button
                     key={item.id}
-                    onClick={() => setActiveTab(item.id as any)}
+                    onClick={() => handleNavClick(item.id)}
                     style={{
                       background: "none",
                       border: "none",
                       color: isActive ? "#000000" : "#666666",
                       fontWeight: isActive ? 800 : 600,
-                      fontSize: 14,
+                      fontSize: 13,
                       cursor: "pointer",
                       padding: "8px 0",
                       position: "relative",
-                      transition: "color 0.2s"
+                      transition: "color 0.2s",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px"
                     }}
                   >
                     {item.label}
                     {isActive && (
                       <motion.div 
-                        layoutId="activeTabUnderline" 
+                        layoutId="activeNavUnderline" 
                         style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#000000" }} 
                       />
                     )}
@@ -679,51 +801,172 @@ export const CustomerScreen = ({
             </nav>
           )}
 
-          {/* Right: Cart, Search (Desktop), Account */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            {/* Search Input (Desktop only) */}
-            {isDesktop && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#F3F4F6", padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}>
-                <Search size={16} color="#666" />
-                <input 
-                  value={searchQuery}
-                  onChange={e => {
-                    setSearchQuery(e.target.value);
-                    if (activeTab !== "products") setActiveTab("products");
-                  }}
-                  placeholder="Search products..." 
-                  style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: 150, color: "#111", fontWeight: 600 }}
-                />
-              </div>
-            )}
+          {/* Right: Search, Account, Wishlist, Cart */}
+          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            
+            {/* Search toggler/input */}
+            <div style={{ display: "flex", alignItems: "center" }}>
+              {searchOpen ? (
+                <motion.div 
+                  initial={{ width: 0, opacity: 0 }}
+                  animate={{ width: isDesktop ? 200 : 150, opacity: 1 }}
+                  exit={{ width: 0, opacity: 0 }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.04)", padding: "6px 12px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}
+                >
+                  <Search size={14} color="#666" />
+                  <input 
+                    value={searchQuery}
+                    onChange={e => {
+                      setSearchQuery(e.target.value);
+                      if (activeTab !== "products") setActiveTab("products");
+                    }}
+                    placeholder="Search..." 
+                    autoFocus
+                    style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: isDesktop ? 120 : 80, color: "#111", fontWeight: 600 }}
+                  />
+                  <button 
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchQuery("");
+                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#666", fontSize: 11, fontWeight: 700 }}
+                  >
+                    ✕
+                  </button>
+                </motion.div>
+              ) : (
+                <button 
+                  onClick={() => setSearchOpen(true)}
+                  style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+                >
+                  <Search size={22} />
+                </button>
+              )}
+            </div>
 
-            {/* Wishlist Button (Mobile only) */}
-            {!isDesktop && (
-              <button 
-                onClick={() => setActiveTab("wishlist")}
-                style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 0 }}
+            {/* Account dropdown/button */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={() => {
+                  if (profile?.isGuest) {
+                    onLogout(); // Directly open sign in screen
+                  } else {
+                    setShowAccountDropdown(!showAccountDropdown);
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#111",
+                  cursor: "pointer",
+                  padding: 4,
+                  display: "flex",
+                  alignItems: "center"
+                }}
+                title={profile?.isGuest ? "Sign In" : "My Account"}
               >
-                <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : "#111"} />
+                <User size={22} />
               </button>
-            )}
+              
+              {!profile?.isGuest && showAccountDropdown && (
+                <>
+                  <div 
+                    style={{ position: "fixed", inset: 0, zIndex: 90 }} 
+                    onClick={() => setShowAccountDropdown(false)} 
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      top: "120%",
+                      width: 180,
+                      background: "#FFFFFF",
+                      border: "1px solid rgba(0,0,0,0.08)",
+                      borderRadius: 12,
+                      boxShadow: "0 10px 35px rgba(0,0,0,0.08)",
+                      zIndex: 100,
+                      padding: "6px 0",
+                      display: "flex",
+                      flexDirection: "column"
+                    }}
+                  >
+                    <button
+                      onClick={() => { setActiveTab("profile"); setShowAccountDropdown(false); }}
+                      style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      👤 Profile
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("bills"); setShowAccountDropdown(false); }}
+                      style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      📄 My Bills
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("history"); setShowAccountDropdown(false); }}
+                      style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                    >
+                      📋 Order History
+                    </button>
+                    <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
+                    <button
+                      onClick={() => { onLogout(); setShowAccountDropdown(false); }}
+                      style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#E63946", fontWeight: 700, cursor: "pointer" }}
+                    >
+                      🚪 Logout
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </div>
+
+            {/* Wishlist Button */}
+            <button 
+              onClick={() => setActiveTab("wishlist")}
+              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+            >
+              <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : "#111"} />
+              {wishlist.length > 0 && (
+                <span style={{ 
+                  position: "absolute", 
+                  top: -6, 
+                  right: -6, 
+                  background: "#000000", 
+                  color: "#fff", 
+                  borderRadius: "50%", 
+                  width: 14, 
+                  height: 14, 
+                  fontSize: 8, 
+                  fontWeight: 800, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center" 
+                }}>
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
 
             {/* Cart Button */}
             <button 
               onClick={() => setActiveTab("cart")}
-              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 0, position: "relative", display: "flex", alignItems: "center" }}
+              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
             >
               <ShoppingCart size={22} />
               {cart.reduce((sum, item) => sum + item.qty, 0) > 0 && (
                 <span style={{ 
                   position: "absolute", 
-                  top: -8, 
-                  right: -8, 
+                  top: -6, 
+                  right: -6, 
                   background: "#E63946", 
                   color: "#fff", 
                   borderRadius: "50%", 
-                  width: 16, 
-                  height: 16, 
-                  fontSize: 9, 
+                  width: 14, 
+                  height: 14, 
+                  fontSize: 8, 
                   fontWeight: 800, 
                   display: "flex", 
                   alignItems: "center", 
@@ -733,106 +976,6 @@ export const CustomerScreen = ({
                 </span>
               )}
             </button>
-
-            {/* Account / Dropdown (Desktop only) */}
-            {isDesktop && (
-              <div style={{ position: "relative" }}>
-                {!profile?.isGuest ? (
-                  <>
-                    <button
-                      onClick={() => setShowAccountDropdown(!showAccountDropdown)}
-                      style={{
-                        background: activeTab === "profile" || activeTab === "bills" || activeTab === "history" ? "rgba(0,0,0,0.05)" : "none",
-                        border: "1px solid rgba(0,0,0,0.1)",
-                        borderRadius: 100,
-                        padding: "8px 16px",
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "#111",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 6
-                      }}
-                    >
-                      <User size={14} /> My Account
-                    </button>
-                    <AnimatePresence>
-                      {showAccountDropdown && (
-                        <>
-                          <div 
-                            style={{ position: "fixed", inset: 0, zIndex: 90 }} 
-                            onClick={() => setShowAccountDropdown(false)} 
-                          />
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 10 }}
-                            style={{
-                              position: "absolute",
-                              right: 0,
-                              top: "120%",
-                              width: 180,
-                              background: "#FFFFFF",
-                              border: "1px solid rgba(0,0,0,0.08)",
-                              borderRadius: 12,
-                              boxShadow: "0 10px 35px rgba(0,0,0,0.08)",
-                              zIndex: 100,
-                              padding: "6px 0",
-                              display: "flex",
-                              flexDirection: "column"
-                            }}
-                          >
-                            <button
-                              onClick={() => { setActiveTab("profile"); setShowAccountDropdown(false); }}
-                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
-                            >
-                              👤 Profile
-                            </button>
-                            <button
-                              onClick={() => { setActiveTab("bills"); setShowAccountDropdown(false); }}
-                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
-                            >
-                              📄 My Bills
-                            </button>
-                            <button
-                              onClick={() => { setActiveTab("history"); setShowAccountDropdown(false); }}
-                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
-                            >
-                              📋 Order History
-                            </button>
-                            <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
-                            <button
-                              onClick={() => { onLogout(); setShowAccountDropdown(false); }}
-                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#E63946", fontWeight: 700, cursor: "pointer" }}
-                            >
-                              🚪 Logout
-                            </button>
-                          </motion.div>
-                        </>
-                      )}
-                    </AnimatePresence>
-                  </>
-                ) : (
-                  <button
-                    onClick={onLogout}
-                    style={{
-                      background: "#000000",
-                      color: "#FFFFFF",
-                      border: "none",
-                      borderRadius: 100,
-                      padding: "8px 18px",
-                      fontSize: 12,
-                      fontWeight: 800,
-                      cursor: "pointer",
-                      transition: "0.2s"
-                    }}
-                  >
-                    Login / Sign Up
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -870,30 +1013,37 @@ export const CustomerScreen = ({
               </div>
               
               <div style={{ padding: "14px 10px", flex: 1, overflowY: "auto" }}>
-                {menuItems.map(item => (
-                  <button 
-                    key={item.id} 
-                    onClick={() => { setActiveTab(item.id as any); setDrawerOpen(false); }}
-                    style={{ 
-                      width: "100%", 
-                      display: "flex", 
-                      alignItems: "center", 
-                      gap: 12, 
-                      padding: "12px 14px", 
-                      borderRadius: 12, 
-                      marginBottom: 4, 
-                      textAlign: "left", 
-                      color: activeTab === item.id ? "#000000" : "#555555", 
-                      fontWeight: activeTab === item.id ? 800 : 600, 
-                      fontSize: 14, 
-                      border: "none", 
-                      background: activeTab === item.id ? "#F3F4F6" : "transparent", 
-                      cursor: "pointer" 
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
-                  </button>
-                ))}
+                {mobileDrawerItems.map(item => {
+                  const isActive = item.id === "home" 
+                    ? activeTab === "home"
+                    : ["men", "women", "t-shirts", "shirts", "jeans", "new-arrivals"].includes(item.id)
+                      ? isNavActive(item.id)
+                      : activeTab === item.id;
+                  return (
+                    <button 
+                      key={item.id} 
+                      onClick={() => handleMobileDrawerClick(item.id)}
+                      style={{ 
+                        width: "100%", 
+                        display: "flex", 
+                        alignItems: "center", 
+                        gap: 12, 
+                        padding: "12px 14px", 
+                        borderRadius: 12, 
+                        marginBottom: 4, 
+                        textAlign: "left", 
+                        color: isActive ? "#000000" : "#555555", 
+                        fontWeight: isActive ? 800 : 600, 
+                        fontSize: 14, 
+                        border: "none", 
+                        background: isActive ? "#F3F4F6" : "transparent", 
+                        cursor: "pointer" 
+                      }}
+                    >
+                      <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {!profile?.isGuest && (
