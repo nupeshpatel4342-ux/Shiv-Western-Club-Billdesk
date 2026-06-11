@@ -1077,60 +1077,127 @@ export const CustomerScreen = ({
                 
                 {/* Premium D2C Hero Banner */}
                 <div style={{ 
-                  background: "linear-gradient(135deg, #FDFBF7 0%, #EAE5D9 100%)", 
+                  background: isDesktop 
+                    ? "linear-gradient(to right, rgba(255, 255, 255, 0.95) 45%, rgba(255, 255, 255, 0.2) 100%), url(/hero_fashion_banner.png)"
+                    : "linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 60%, rgba(255, 255, 255, 0.7) 100%), url(/hero_fashion_banner.png)",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
                   borderRadius: 28, 
-                  padding: isDesktop ? "80px 60px" : "40px 24px", 
+                  padding: isDesktop ? "90px 70px" : "50px 24px", 
                   position: "relative", 
                   overflow: "hidden", 
-                  boxShadow: "0 10px 40px rgba(0,0,0,0.02)",
-                  border: "1px solid rgba(0,0,0,0.04)",
+                  boxShadow: "0 20px 50px rgba(0,0,0,0.05)",
+                  border: "1px solid rgba(0,0,0,0.06)",
                   display: "flex",
-                  alignItems: "center"
+                  alignItems: "center",
+                  minHeight: isDesktop ? 480 : 380
                 }}>
-                  <div style={{ position: "relative", zIndex: 2, maxWidth: 520 }}>
-                    <span style={{ color: "#8B7355", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2.5px", display: "block", marginBottom: 12 }}>
-                      Summer Drops 2026
-                    </span>
+                  <motion.div 
+                    initial={{ opacity: 0, x: -30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
+                    style={{ position: "relative", zIndex: 2, maxWidth: 540 }}
+                  >
+                    {/* Discount Badge */}
+                    <div style={{ 
+                      background: "rgba(139,115,85,0.08)",
+                      border: "1px solid rgba(139,115,85,0.2)",
+                      color: "#8B7355",
+                      padding: "6px 14px",
+                      borderRadius: 100,
+                      fontSize: 10,
+                      fontWeight: 900,
+                      letterSpacing: "1.5px",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginBottom: 16,
+                      textTransform: "uppercase"
+                    }}>
+                      🏷️ FLASH OFFER • FLAT 50% OFF
+                    </div>
+
                     <h2 className="pf" style={{ 
-                      fontSize: isDesktop ? 46 : 30, 
+                      fontSize: isDesktop ? 48 : 32, 
                       fontWeight: 900, 
                       color: "#111111", 
                       lineHeight: 1.1,
                       letterSpacing: "-1px",
-                      margin: "0 0 14px",
+                      margin: "0 0 12px",
                       textTransform: "uppercase"
                     }}>
-                      ESSENTIALS FOR<br />THE MODERN YOUTH
+                      Upgrade Your<br />Everyday Style
                     </h2>
-                    <p style={{ color: "#555555", fontSize: 14, lineHeight: 1.6, margin: "0 0 28px" }}>
-                      Affordable. Trendy. Premium Quality. Discover the curated drops made for everyday comfort and street style.
+                    
+                    <p style={{ color: "#444444", fontSize: 15, lineHeight: 1.6, margin: "0 0 20px", fontWeight: 500 }}>
+                      Trendy fashion at affordable prices
                     </p>
-                    <button 
-                      onClick={() => setActiveTab("products")} 
-                      style={{ 
-                        background: "#000000", 
-                        color: "#FFFFFF", 
-                        border: "none", 
-                        padding: "14px 32px", 
-                        borderRadius: 100, 
-                        fontSize: 13, 
-                        fontWeight: 800, 
-                        cursor: "pointer", 
-                        textTransform: "uppercase", 
-                        letterSpacing: "1px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                        transition: "all 0.2s"
-                      }}
-                      className="shadow-hover"
-                    >
-                      Shop Collection →
-                    </button>
-                  </div>
-                  {isDesktop && (
-                    <div style={{ position: "absolute", right: 60, top: "50%", transform: "translateY(-50%)", opacity: 0.8 }}>
-                      <Shirt size={280} color="rgba(139,115,85,0.06)" strokeWidth={1} />
+
+                    {/* Limited Time Offer */}
+                    <div style={{ 
+                      fontSize: 10,
+                      color: "#E63946",
+                      fontWeight: 800,
+                      textTransform: "uppercase",
+                      letterSpacing: "1px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      marginBottom: 28
+                    }}>
+                      <span className="pulse-dot" style={{ 
+                        width: 6, 
+                        height: 6, 
+                        borderRadius: "50%", 
+                        background: "#E63946", 
+                        display: "inline-block"
+                      }} />
+                      Limited Time Offer: Sale Ends in 2 Hours!
                     </div>
-                  )}
+
+                    {/* Dual Action Buttons */}
+                    <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                      <button 
+                        onClick={() => handleNavClick("men")} 
+                        style={{ 
+                          background: "#000000", 
+                          color: "#FFFFFF", 
+                          border: "none", 
+                          padding: "14px 32px", 
+                          borderRadius: 100, 
+                          fontSize: 13, 
+                          fontWeight: 800, 
+                          cursor: "pointer", 
+                          textTransform: "uppercase", 
+                          letterSpacing: "1px",
+                          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
+                          transition: "all 0.2s"
+                        }}
+                        className="zoom-effect"
+                      >
+                        Shop Men
+                      </button>
+                      <button 
+                        onClick={() => handleNavClick("women")} 
+                        style={{ 
+                          background: "transparent", 
+                          color: "#000000", 
+                          border: "2px solid #000000", 
+                          padding: "12px 30px", 
+                          borderRadius: 100, 
+                          fontSize: 13, 
+                          fontWeight: 800, 
+                          cursor: "pointer", 
+                          textTransform: "uppercase", 
+                          letterSpacing: "1px",
+                          transition: "all 0.2s"
+                        }}
+                        className="zoom-effect"
+                      >
+                        Shop Women
+                      </button>
+                    </div>
+                  </motion.div>
                 </div>
 
                 {/* Account Points & Loyalty Metrics */}

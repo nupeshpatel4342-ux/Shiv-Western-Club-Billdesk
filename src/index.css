@@ -135,4 +135,20 @@ body {
   transform: translateY(-4px) !important;
 }
 
+@keyframes pulseDot {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.2); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.5; }
+}
+.pulse-dot {
+  animation: pulseDot 1.5s infinite ease-in-out;
+}
+
+.zoom-effect {
+  transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, background-color 0.2s ease !important;
+}
+.zoom-effect:hover {
+  transform: translateY(-2px) scale(1.03) !important;
+}
+
 
