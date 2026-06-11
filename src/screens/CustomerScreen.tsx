@@ -217,6 +217,13 @@ export const CustomerScreen = ({
     };
   }, []);
 
+  React.useEffect(() => {
+    if (activeTab === "cart") {
+      setIsCartOpen(true);
+      setActiveTab("home");
+    }
+  }, [activeTab]);
+
   const getProductPriceInfo = (p: any) => {
     const finalPrice = p.sellingPrice || p.price || 0;
     // If sellingPrice exists and price is higher, price is MRP.
@@ -250,6 +257,7 @@ export const CustomerScreen = ({
   const [guestPhone, setGuestPhone] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   // Sync cart to localStorage
   React.useEffect(() => {
@@ -430,11 +438,6 @@ export const CustomerScreen = ({
   };
 
   const addToCart = (product: any) => {
-    if (profile.isGuest) {
-      onLogout(true);
-      return;
-    }
-
     if (!selectedSize) {
       alert("Please select a size!");
       return;
@@ -467,22 +470,11 @@ export const CustomerScreen = ({
     setSelectedProduct(null);
     setSelectedSize("");
     setSelectedColor("");
-
-    if (profile.isGuest) {
-      // Trigger conversion popup prompt for guest
-      setShowConversionModal(true);
-    } else {
-      // Direct notification/alert for registered customer
-      alert("🎉 Product added to your cart!");
-    }
+    setIsCartOpen(true);
   };
 
   const handleQuickAddToCart = (e: React.MouseEvent, product: any) => {
     e.stopPropagation();
-    if (profile.isGuest) {
-      onLogout(true);
-      return;
-    }
     
     const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["M"];
     const defaultSize = sizes[0] || "M";
@@ -512,7 +504,7 @@ export const CustomerScreen = ({
     }
 
     setCart(updatedCart);
-    alert(`🎉 Added "${product.name}" (Size: ${defaultSize}) to your cart!`);
+    setIsCartOpen(true);
   };
 
   const updateCartQty = (productId: string, size: string, color: string, delta: number) => {
@@ -583,6 +575,7 @@ export const CustomerScreen = ({
       setGuestName("");
       setGuestPhone("");
       setGuestAddress("");
+      setIsCartOpen(false);
 
       if (!profile.isGuest) {
         setActiveTab("profile"); // Switch to profile to check reservations
@@ -1158,7 +1151,7 @@ export const CustomerScreen = ({
 
             {/* Cart Button with badge */}
             <button 
-              onClick={() => setActiveTab("cart")}
+              onClick={() => setIsCartOpen(true)}
               style={{ background: "none", border: "none", color: "#333333", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
               title="Cart"
             >
@@ -2515,7 +2508,13 @@ export const CustomerScreen = ({
           ].map(nav => (
             <button
               key={nav.id}
-              onClick={() => setActiveTab(nav.id as any)}
+              onClick={() => {
+                if (nav.id === "cart") {
+                  setIsCartOpen(true);
+                } else {
+                  setActiveTab(nav.id as any);
+                }
+              }}
               style={{
                 flex: 1,
                 padding: "12px 0",
@@ -2637,6 +2636,215 @@ export const CustomerScreen = ({
                   Continue as Guest
                 </button>
               </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ----------------- CART SIDEBAR DRAWER ----------------- */}
+      <AnimatePresence>
+        {isCartOpen && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 1000, display: "flex", justifyContent: "flex-end" }}>
+            {/* Backdrop Overlay */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setIsCartOpen(false); setCheckoutMode(false); }}
+              style={{
+                position: "absolute",
+                inset: 0,
+                background: "rgba(0, 0, 0, 0.4)",
+                backdropFilter: "blur(2px)",
+                WebkitBackdropFilter: "blur(2px)",
+                cursor: "pointer"
+              }}
+            />
+
+            {/* Sidebar Pane */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              style={{
+                position: "relative",
+                width: "100%",
+                maxWidth: 450,
+                height: "100%",
+                background: "#FFFFFF",
+                boxShadow: "-10px 0 30px rgba(0,0,0,0.15)",
+                display: "flex",
+                flexDirection: "column",
+                zIndex: 1001,
+                color: "#111111"
+              }}
+            >
+              {/* Header */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                <div>
+                  <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", margin: 0, textTransform: "uppercase", letterSpacing: "0.5px" }}>Shopping Cart</h3>
+                  <span style={{ fontSize: 11, color: "#777777", fontWeight: 700 }}>({cart.reduce((sum, item) => sum + item.qty, 0)} items)</span>
+                </div>
+                <button
+                  onClick={() => { setIsCartOpen(false); setCheckoutMode(false); }}
+                  style={{ background: "#F3F4F6", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#111111", fontWeight: 700 }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Items List */}
+              <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }} className="no-scrollbar">
+                {cart.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+                    <div style={{ width: 64, height: 64, borderRadius: "50%", background: "#F3F4F6", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <ShoppingCart size={28} color="#999999" />
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: "#111111" }}>Your cart is empty</h4>
+                      <p style={{ fontSize: 12, color: "#777777", margin: "4px 0 0" }}>Add products to your cart to see them here.</p>
+                    </div>
+                    <button
+                      onClick={() => { setIsCartOpen(false); setActiveTab("products"); }}
+                      style={{ background: "#000000", color: "#FFFFFF", border: "none", padding: "12px 24px", borderRadius: 100, fontSize: 12, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 8 }}
+                    >
+                      Shop Collection
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                    {cart.map(item => (
+                      <div key={`${item.id}-${item.size}-${item.color}`} style={{ display: "flex", gap: 14, paddingBottom: 16, borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                        {/* Image */}
+                        <div style={{ width: 70, height: 75, borderRadius: 10, background: "#F5F5F3", display: "flex", alignItems: "center", justifyContent: "center", border: "1px solid rgba(0,0,0,0.05)", overflow: "hidden", flexShrink: 0 }}>
+                          {item.image ? (
+                            <img src={item.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={item.name} />
+                          ) : (
+                            <Shirt size={28} color="#aaaaaa" />
+                          )}
+                        </div>
+                        {/* Details */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <span style={{ fontSize: 9, color: "#8B7355", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>{item.brand || "Shiv Western"}</span>
+                          <h5 style={{ fontSize: 13, fontWeight: 700, color: "#111111", margin: "2px 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</h5>
+                          <p style={{ fontSize: 10, color: "#666666", margin: 0 }}>Size: {item.size} | Color: {item.color}</p>
+                          
+                          {/* Price in list */}
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", border: "1px solid rgba(0,0,0,0.08)", borderRadius: 6, background: "#F9F9FB" }}>
+                              <button 
+                                onClick={() => updateCartQty(item.id, item.size, item.color, -1)}
+                                style={{ padding: "3px 6px", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: "#111111" }}
+                              >
+                                <Minus size={10} />
+                              </button>
+                              <span style={{ fontSize: 11, fontWeight: 700, minWidth: 16, textAlign: "center", color: "#111111" }}>{item.qty}</span>
+                              <button 
+                                onClick={() => updateCartQty(item.id, item.size, item.color, 1)}
+                                style={{ padding: "3px 6px", background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", color: "#111111" }}
+                              >
+                                <Plus size={10} />
+                              </button>
+                            </div>
+                            <span className="pf" style={{ fontSize: 13, fontWeight: 800, color: "#111111" }}>₹{(item.price * item.qty).toLocaleString("en-IN")}</span>
+                          </div>
+                        </div>
+                        {/* Remove */}
+                        <button 
+                          onClick={() => removeFromCart(item.id, item.size, item.color)}
+                          style={{ background: "none", border: "none", color: "#DC2626", cursor: "pointer", alignSelf: "flex-start", padding: 4 }}
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer / Summary / Checkout form */}
+              {cart.length > 0 && (
+                <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", padding: "20px 24px", background: "#F9F9FB" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                    <span style={{ color: "#666666", fontSize: 13, fontWeight: 500 }}>Subtotal</span>
+                    <span className="pf" style={{ fontWeight: 700, color: "#111111", fontSize: 15 }}>₹{cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toLocaleString("en-IN")}</span>
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
+                    <span style={{ color: "#666666", fontSize: 13, fontWeight: 500 }}>Delivery / Reservation</span>
+                    <span style={{ color: "#16A34A", fontSize: 12, fontWeight: 700 }}>FREE</span>
+                  </div>
+                  <div style={{ borderTop: "1px solid rgba(0,0,0,0.06)", paddingTop: 12, display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                    <span style={{ color: "#111111", fontWeight: 700, fontSize: 14 }}>Total</span>
+                    <span className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#111111" }}>₹{cart.reduce((sum, item) => sum + (item.price * item.qty), 0).toLocaleString("en-IN")}</span>
+                  </div>
+
+                  {!checkoutMode ? (
+                    <button 
+                      onClick={() => setCheckoutMode(true)}
+                      style={{ width: "100%", background: "#000000", color: "#FFFFFF", border: "none", padding: "14px", borderRadius: 100, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
+                    >
+                      Proceed to Checkout
+                    </button>
+                  ) : (
+                    <form onSubmit={handleCartCheckout} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                      <h4 className="pf" style={{ fontSize: 13, fontWeight: 900, color: "#111111", margin: "4px 0 2px" }}>
+                        {profile.isGuest ? "GUEST CHECKOUT DETAILS" : "CONFIRM BILLING DETAILS"}
+                      </h4>
+
+                      {profile.isGuest ? (
+                        <>
+                          <input 
+                            value={guestName}
+                            onChange={e => setGuestName(e.target.value)}
+                            placeholder="Full Name *"
+                            required
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(0,0,0,0.15)", fontSize: 12, color: "#111111", background: "#FFFFFF" }}
+                          />
+                          <input 
+                            value={guestPhone}
+                            onChange={e => setGuestPhone(e.target.value)}
+                            placeholder="10-digit Mobile Number *"
+                            required
+                            type="tel"
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(0,0,0,0.15)", fontSize: 12, color: "#111111", background: "#FFFFFF" }}
+                          />
+                          <input 
+                            value={guestAddress}
+                            onChange={e => setGuestAddress(e.target.value)}
+                            placeholder="Delivery / Shipping Address *"
+                            required
+                            style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid rgba(0,0,0,0.15)", fontSize: 12, color: "#111111", background: "#FFFFFF" }}
+                          />
+                        </>
+                      ) : (
+                        <div style={{ background: "#FFFFFF", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 10, padding: 12, fontSize: 11, display: "flex", flexDirection: "column", gap: 6 }}>
+                          <p style={{ margin: 0, color: "#111111" }}><strong>Name:</strong> {profile.displayName || profile.name}</p>
+                          <p style={{ margin: 0, color: "#111111" }}><strong>Phone:</strong> {profile.phone}</p>
+                          <p style={{ margin: 0, color: "#111111" }}><strong>Address:</strong> {profile.address || "Not set (Please edit in Profile)"}</p>
+                        </div>
+                      )}
+
+                      <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                        <button 
+                          type="button"
+                          onClick={() => setCheckoutMode(false)}
+                          style={{ flex: 1, background: "transparent", color: "#666666", border: "1px solid rgba(0,0,0,0.15)", padding: "10px", borderRadius: 100, fontSize: 11, fontWeight: 700, cursor: "pointer" }}
+                        >
+                          Back
+                        </button>
+                        <button 
+                          type="submit"
+                          disabled={isPlacingOrder}
+                          style={{ flex: 2, background: "#000000", color: "#FFFFFF", border: "none", padding: "10px", borderRadius: 100, fontSize: 11, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 10px rgba(0,0,0,0.1)" }}
+                        >
+                          {isPlacingOrder ? "Placing..." : "Confirm Order"}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              )}
             </motion.div>
           </div>
         )}
