@@ -28,6 +28,18 @@ service cloud.firestore {
       allow write: if isAuthenticated();
     }
     
+    // Categories Collection
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+
+    // Banners Collection
+    match /banners/{bannerId} {
+      allow read: if true;
+      allow write: if isAuthenticated();
+    }
+    
     // Products Collection
     match /products/{prodId} {
       allow read: if true;
