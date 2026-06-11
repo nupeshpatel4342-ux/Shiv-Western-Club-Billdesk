@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { doWhatsApp, doPDF } from "../utils/exportUtils";
+import { ProductCard } from "../components/ProductCard";
 
 interface Order {
   id: string;
@@ -792,95 +793,7 @@ export const CustomerScreen = ({
     }
   };
 
-  const renderProductCard = (p: CatalogProduct) => {
-    const isWish = isProductWishlisted(p.id);
-    const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
-    
-    return (
-      <div 
-        key={p.id} 
-        style={{ 
-          background: "#FFFFFF", 
-          borderRadius: 22, 
-          padding: 14, 
-          border: "1px solid rgba(0,0,0,0.05)", 
-          position: "relative",
-          cursor: "pointer"
-        }}
-        className="prod-card shadow-hover shadow-soft"
-        onClick={() => setSelectedProduct(p)}
-      >
-        {/* Wishlist Button */}
-        <button 
-          onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
-          style={{ 
-            position: "absolute", 
-            top: 22, 
-            right: 22, 
-            background: "#FFFFFF", 
-            border: "none", 
-            borderRadius: "50%", 
-            width: 32, 
-            height: 32, 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            cursor: "pointer", 
-            zIndex: 10, 
-            boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
-          }}
-        >
-          <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
-        </button>
 
-        {/* Image Container with Add to Cart Overlay */}
-        <div 
-          style={{ 
-            width: "100%", 
-            height: isDesktop ? 220 : 170, 
-            borderRadius: 16, 
-            background: "#F5F5F3", 
-            display: "flex", 
-            alignItems: "center", 
-            justifyContent: "center", 
-            overflow: "hidden", 
-            marginBottom: 12, 
-            border: "1px solid rgba(0,0,0,0.02)",
-            position: "relative"
-          }}
-        >
-          {p.image ? (
-            <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
-          ) : (
-            <Shirt size={44} color="#888888" strokeWidth={1.5} />
-          )}
-
-          {/* Quick Add to Cart Hover Button */}
-          <button 
-            className="prod-add-to-cart-btn"
-            onClick={(e) => handleQuickAddToCart(e, p)}
-          >
-            {profile.isGuest ? "🔑 Join to Buy" : "🛒 Add to Cart"}
-          </button>
-        </div>
-
-        {/* Content details */}
-        <div>
-          <span style={{ fontSize: 9, color: "#888888", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
-          <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111111", margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
-            <span className="pf" style={{ fontSize: 15, fontWeight: 900, color: "#111111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
-            {mrp > finalPrice && (
-              <>
-                <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999999" }}>₹{mrp.toLocaleString("en-IN")}</span>
-                <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   const renderProductDetails = (product: any) => {
     const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["S", "M", "L", "XL"];
@@ -1932,12 +1845,16 @@ export const CustomerScreen = ({
                       <p style={{ color: "#777777", fontSize: 13, margin: 0 }}>No items in stock.</p>
                     </div>
                   ) : (
-                    <div style={{ 
-                      display: "grid", 
-                      gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", 
-                      gap: isDesktop ? "24px" : "12px" 
-                    }}>
-                      {products.slice(0, 8).map(p => renderProductCard(p))}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                      {products.slice(0, 8).map(p => (
+                        <ProductCard
+                          key={p.id}
+                          product={p}
+                          isWishlisted={isProductWishlisted(p.id)}
+                          onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+                          onClick={() => setSelectedProduct(p)}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1967,12 +1884,16 @@ export const CustomerScreen = ({
                       <p style={{ color: "#777777", fontSize: 13, margin: 0 }}>No items in stock.</p>
                     </div>
                   ) : (
-                    <div style={{ 
-                      display: "grid", 
-                      gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", 
-                      gap: isDesktop ? "24px" : "12px" 
-                    }}>
-                      {products.slice().reverse().slice(0, 8).map(p => renderProductCard(p))}
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                      {products.slice().reverse().slice(0, 8).map(p => (
+                        <ProductCard
+                          key={p.id}
+                          product={p}
+                          isWishlisted={isProductWishlisted(p.id)}
+                          onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+                          onClick={() => setSelectedProduct(p)}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -1997,30 +1918,53 @@ export const CustomerScreen = ({
                 </div>
 
                 {/* Categories */}
-                <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6 }} className="no-scrollbar">
-                  {categoryFilters.map(cat => (
-                    <button
-                      key={cat}
-                      onClick={() => {
-                        setSelectedCategory(cat);
-                        setMaxPrice(null);
-                      }}
-                      style={{
-                        padding: "10px 18px",
-                        borderRadius: 100,
-                        border: `1px solid ${selectedCategory === cat ? C.dark : C.border}`,
-                        background: selectedCategory === cat ? C.dark : C.card,
-                        color: selectedCategory === cat ? C.accent : C.dark,
-                        fontWeight: 700,
-                        fontSize: 12,
-                        cursor: "pointer",
-                        whiteSpace: "nowrap",
-                        transition: "all 0.2s"
-                      }}
-                    >
-                      {cat}
-                    </button>
-                  ))}
+                <div className="flex gap-2.5 overflow-x-auto pb-2.5 no-scrollbar">
+                  {["View All", "Shirts", "Polo T-shirts", "T-shirts", "Trousers"].map(tabName => {
+                    let isActive = false;
+                    if (tabName === "View All") {
+                      isActive = selectedCategory === "All" && !searchQuery;
+                    } else if (tabName === "Shirts") {
+                      isActive = selectedCategory === "Shirt" && !searchQuery;
+                    } else if (tabName === "Polo T-shirts") {
+                      isActive = selectedCategory === "T-Shirt" && searchQuery === "polo";
+                    } else if (tabName === "T-shirts") {
+                      isActive = selectedCategory === "T-Shirt" && searchQuery === "";
+                    } else if (tabName === "Trousers") {
+                      isActive = selectedCategory === "Trouser" && !searchQuery;
+                    }
+
+                    return (
+                      <button
+                        key={tabName}
+                        onClick={() => {
+                          if (tabName === "View All") {
+                            setSelectedCategory("All");
+                            setSearchQuery("");
+                          } else if (tabName === "Shirts") {
+                            setSelectedCategory("Shirt");
+                            setSearchQuery("");
+                          } else if (tabName === "Polo T-shirts") {
+                            setSelectedCategory("T-Shirt");
+                            setSearchQuery("polo");
+                          } else if (tabName === "T-shirts") {
+                            setSelectedCategory("T-Shirt");
+                            setSearchQuery("");
+                          } else if (tabName === "Trousers") {
+                            setSelectedCategory("Trouser");
+                            setSearchQuery("");
+                          }
+                          setMaxPrice(null);
+                        }}
+                        className={`px-5 py-2 rounded-full font-bold text-xs cursor-pointer whitespace-nowrap transition-all duration-200 border ${
+                          isActive 
+                            ? "bg-black text-[#D4AF37] border-black" 
+                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
+                        }`}
+                      >
+                        {tabName}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Catalog Grid */}
@@ -2031,153 +1975,16 @@ export const CustomerScreen = ({
                     <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Try clearing search queries or checking other categories.</p>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(210px, 1fr))", gap: 20 }}>
-                    {filteredProducts.map(p => {
-                      const isWish = isProductWishlisted(p.id);
-                      const stockVal = p.stock !== undefined ? p.stock : 0;
-                      const hasStock = stockVal > 0;
-                      const isLowStock = hasStock && stockVal < 5;
-
-                      return (
-                        <div 
-                          key={p.id}
-                          style={{ 
-                            background: "#FFFFFF", 
-                            borderRadius: 22, 
-                            padding: 14, 
-                            border: "1px solid rgba(0,0,0,0.05)", 
-                            position: "relative", 
-                            display: "flex", 
-                            flexDirection: "column", 
-                            justifyContent: "space-between",
-                            cursor: "pointer"
-                          }}
-                          className="product-card-hover shadow-hover shadow-soft"
-                          onClick={() => setSelectedProduct(p)}
-                        >
-                          <div>
-                            {/* Wishlist Heart Button */}
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id, e); }}
-                              style={{ 
-                                position: "absolute", 
-                                top: 22, 
-                                right: 22, 
-                                background: "#FFFFFF", 
-                                border: "none", 
-                                borderRadius: "50%", 
-                                width: 32, 
-                                height: 32, 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                cursor: "pointer", 
-                                zIndex: 10, 
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
-                              }}
-                            >
-                              <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
-                            </button>
-
-                            {/* Product Image Wrapper */}
-                            <div 
-                              style={{ 
-                                width: "100%", 
-                                height: 180, 
-                                borderRadius: 16, 
-                                background: "#F5F5F3", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                overflow: "hidden", 
-                                border: "1px solid rgba(0,0,0,0.02)", 
-                                marginBottom: 12, 
-                                position: "relative" 
-                              }}
-                            >
-                              {p.image ? (
-                                <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
-                              ) : (
-                                <Shirt size={44} color="#888888" strokeWidth={1.5} />
-                              )}
-                              
-                              {/* Stock status badge overlay */}
-                              <div style={{ position: "absolute", bottom: 10, left: 10, zIndex: 5 }}>
-                                {!hasStock ? (
-                                  <span style={{ background: "#FEE2E2", color: "#DC2626", fontSize: 9, padding: "4px 8px", borderRadius: 100, fontWeight: 800 }}>
-                                    Out of Stock
-                                  </span>
-                                ) : isLowStock ? (
-                                  <span style={{ background: "#FEF3C7", color: "#D97706", fontSize: 9, padding: "4px 8px", borderRadius: 100, fontWeight: 800 }}>
-                                    Only {stockVal} left!
-                                  </span>
-                                ) : null}
-                              </div>
-                            </div>
-
-                            {/* Brand & Category */}
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                              <span style={{ fontSize: 9, color: "#8B7355", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
-                              <span style={{ background: "#F3F4F6", color: "#666", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{p.category || "General"}</span>
-                            </div>
-
-                            {/* Product Name */}
-                            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: "0 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-
-                            {/* Sizes */}
-                            {p.size && (
-                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 12 }}>
-                                {p.size.split(",").map((s: string) => (
-                                  <span key={s} style={{ fontSize: 8, padding: "1px 5px", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 4, color: "#777", fontWeight: 750 }}>
-                                    {s.trim()}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-
-                          <div>
-                            {/* Price details */}
-                            {(() => {
-                              const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
-                              return (
-                                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
-                                  <span className="pf" style={{ fontSize: 16, fontWeight: 900, color: "#111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
-                                  {mrp > finalPrice && (
-                                    <>
-                                      <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999" }}>₹{mrp.toLocaleString("en-IN")}</span>
-                                      <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
-                                    </>
-                                  )}
-                                </div>
-                              );
-                            })()}
-
-                            {/* Primary Button */}
-                            <button 
-                              style={{ 
-                                width: "100%", 
-                                background: "#000000", 
-                                color: "#FFFFFF", 
-                                border: "none", 
-                                padding: "10px", 
-                                borderRadius: 100, 
-                                fontSize: 12, 
-                                fontWeight: 800, 
-                                cursor: "pointer", 
-                                transition: "all 0.2s", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                gap: 6 
-                              }}
-                            >
-                              View Details & Buy
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                    {filteredProducts.map(p => (
+                      <ProductCard
+                        key={p.id}
+                        product={p}
+                        isWishlisted={isProductWishlisted(p.id)}
+                        onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+                        onClick={() => setSelectedProduct(p)}
+                      />
+                    ))}
                   </div>
                 )}
               </motion.div>
@@ -2258,40 +2065,15 @@ export const CustomerScreen = ({
                     </button>
                   </div>
                 ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(145px, 1fr))", gap: 16 }}>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     {wishlistedProducts.map(p => (
-                      <div 
+                      <ProductCard
                         key={p.id}
-                        style={{ background: C.card, borderRadius: 20, padding: 12, border: `1px solid ${C.border}`, position: "relative" }}
-                      >
-                        <button 
-                          onClick={() => toggleWishlist(p.id)}
-                          style={{ position: "absolute", top: 18, right: 18, background: "rgba(255,255,255,0.8)", border: "none", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10 }}
-                        >
-                          <Heart size={15} fill={C.red} color={C.red} />
-                        </button>
-                        <div 
-                          onClick={() => setSelectedProduct(p)}
-                          style={{ width: "100%", height: 130, borderRadius: 12, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: 10, cursor: "pointer" }}
-                        >
-                          {p.image ? (
-                            <img src={p.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
-                          ) : (
-                            <Shirt size={36} color={C.muted} />
-                          )}
-                        </div>
-                        <span style={{ fontSize: 9, color: C.accent, fontWeight: 800, textTransform: "uppercase" }}>{p.brand || "Shiv Western"}</span>
-                        <h4 style={{ fontSize: 13, fontWeight: 700, color: C.dark, margin: "2px 0 4px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-                          <p className="pf" style={{ fontSize: 14, fontWeight: 900, color: C.dark, margin: 0 }}>₹{(p.price || p.sellingPrice || 0).toLocaleString("en-IN")}</p>
-                          <button 
-                            onClick={(e) => { e.stopPropagation(); setSelectedProduct(p); }}
-                            style={{ background: C.dark, border: `1px solid ${C.accent}`, color: C.accent, fontSize: 10, fontWeight: 700, padding: "4px 8px", borderRadius: 6, cursor: "pointer" }}
-                          >
-                            View
-                          </button>
-                        </div>
-                      </div>
+                        product={p}
+                        isWishlisted={true}
+                        onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+                        onClick={() => setSelectedProduct(p)}
+                      />
                     ))}
                   </div>
                 )}
