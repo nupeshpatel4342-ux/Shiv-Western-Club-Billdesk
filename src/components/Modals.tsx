@@ -87,7 +87,7 @@ export const AddItemModal = ({ onAdd, onClose, products = [] }: { onAdd: (item: 
                     onClick={() => {
                       setName(p.name);
                       setSku(p.sku);
-                      setPrice(String(p.price));
+                      setPrice(String(p.sellingPrice || p.price));
                       setShowSuggestions(false);
                     }}
                     style={{ 
