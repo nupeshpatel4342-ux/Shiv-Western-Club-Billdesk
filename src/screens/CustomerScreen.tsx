@@ -142,6 +142,8 @@ export const CustomerScreen = ({
   bills,
   profile,
   orders = [],
+  categories: syncedCategories = [],
+  banners = [],
   onLogout,
   onUpdateProfile,
   onCreateOrder
@@ -151,6 +153,8 @@ export const CustomerScreen = ({
   bills: Bill[],
   profile: any,
   orders?: Order[],
+  categories?: any[],
+  banners?: any[],
   onLogout: (startRegister?: boolean) => void,
   onUpdateProfile: (p: any) => void,
   onCreateOrder: (order: any) => Promise<void>
@@ -169,13 +173,17 @@ export const CustomerScreen = ({
   const [currentSlide, setCurrentSlide] = useState(0);
   const [slidePaused, setSlidePaused] = useState(false);
 
+  const activeBanners = useMemo(() => {
+    return banners && banners.length > 0 ? banners : SLIDES;
+  }, [banners]);
+
   const nextSlide = useCallback(() => {
-    setCurrentSlide((c) => (c + 1) % SLIDES.length);
-  }, []);
+    setCurrentSlide((c) => (c + 1) % activeBanners.length);
+  }, [activeBanners.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentSlide((c) => (c - 1 + SLIDES.length) % SLIDES.length);
-  }, []);
+    setCurrentSlide((c) => (c - 1 + activeBanners.length) % activeBanners.length);
+  }, [activeBanners.length]);
 
   React.useEffect(() => {
     if (slidePaused) return;
@@ -264,7 +272,12 @@ export const CustomerScreen = ({
     localStorage.setItem("customer_cart", JSON.stringify(cart));
   }, [cart]);
 
-  const categories = ["All", "Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+  const categoryFilters = useMemo(() => {
+    if (!syncedCategories || syncedCategories.length === 0) {
+      return ["All", "Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+    }
+    return ["All", ...Array.from(new Set(syncedCategories.map(c => c.name)))];
+  }, [syncedCategories]);
 
   // Filter bills for this customer
   const customerBills = useMemo(() => {
@@ -1339,11 +1352,11 @@ export const CustomerScreen = ({
                   onMouseEnter={() => setSlidePaused(true)}
                   onMouseLeave={() => setSlidePaused(false)}
                 >
-                  {SLIDES.map((slide, i) => {
+                  {activeBanners.map((slide, i) => {
                     const active = i === currentSlide;
                     return (
                       <div
-                        key={slide.id}
+                        key={slide.id || i}
                         style={{
                           position: "absolute",
                           inset: 0,
@@ -1576,7 +1589,7 @@ export const CustomerScreen = ({
                     gap: 8,
                     zIndex: 10,
                   }}>
-                    {SLIDES.map((_, i) => (
+                    {activeBanners.map((_, i) => (
                       <button
                         key={i}
                         onClick={() => setCurrentSlide(i)}
@@ -1585,7 +1598,7 @@ export const CustomerScreen = ({
                           height: 8,
                           borderRadius: 4,
                           background: i === currentSlide
-                            ? SLIDES[currentSlide].accent
+                            ? (activeBanners[currentSlide] ? activeBanners[currentSlide].accent : C.accent)
                             : "rgba(255,255,255,0.3)",
                           border: "none",
                           cursor: "pointer",
@@ -1610,7 +1623,7 @@ export const CustomerScreen = ({
                       key={currentSlide}
                       style={{
                         height: "100%",
-                        background: SLIDES[currentSlide].accent,
+                        background: (activeBanners[currentSlide] ? activeBanners[currentSlide].accent : C.accent),
                         animation: slidePaused ? "none" : "progress 5s linear",
                         width: "100%",
                         transformOrigin: "left",
@@ -1647,41 +1660,52 @@ export const CustomerScreen = ({
                 <div>
                   <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginBottom: 16 }}>Shop by Category</h3>
                   <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 16 }}>
-                    {[
-                      { name: "Casual Shirts", category: "Shirt", search: "casual", tag: "From ₹399", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "👔", border: "rgba(139,115,85,0.15)" },
-                      { name: "Printed T-Shirts", category: "T-Shirt", search: "printed", tag: "Hot Trend", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "👕", border: "rgba(70,130,180,0.15)" },
-                      { name: "Formal Trousers", category: "Trouser", search: "formal", tag: "Chinos & Cargos", bg: "linear-gradient(135deg, #F5F8FA 0%, #E3EDF3 100%)", icon: "👖", border: "rgba(95,158,160,0.15)" },
-                      { name: "Oversized Tees", category: "T-Shirt", search: "oversized", tag: "Gen-Z Fits", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "👕", border: "rgba(188,143,143,0.15)" }
-                    ].map(cat => (
-                      <div
-                        key={cat.name}
-                        onClick={() => { 
-                          setSelectedCategory(cat.category); 
-                          setSearchQuery(cat.search);
-                          setActiveTab("products"); 
-                        }}
-                        style={{
-                          background: cat.bg,
-                          borderRadius: 24,
-                          padding: "28px 20px",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          gap: 10,
-                          cursor: "pointer",
-                          border: `1px solid ${cat.border}`,
-                          transition: "all 0.2s"
-                        }}
-                        className="shadow-hover"
-                      >
-                        <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{cat.icon}</span>
-                        <div style={{ textAlign: "center" }}>
-                          <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.name}</span>
-                          <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#666666", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{cat.tag}</span>
+                    {(syncedCategories && syncedCategories.length > 0 ? syncedCategories.slice(0, 4) : [
+                      { displayName: "Casual Shirts", name: "Shirt", search: "casual", tag: "From ₹399", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "👔", border: "rgba(139,115,85,0.15)" },
+                      { displayName: "Printed T-Shirts", name: "T-Shirt", search: "printed", tag: "Hot Trend", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "👕", border: "rgba(70,130,180,0.15)" },
+                      { displayName: "Formal Trousers", name: "Trouser", search: "formal", tag: "Chinos & Cargos", bg: "linear-gradient(135deg, #F5F8FA 0%, #E3EDF3 100%)", icon: "👖", border: "rgba(95,158,160,0.15)" },
+                      { displayName: "Oversized Tees", name: "T-Shirt", search: "oversized", tag: "Gen-Z Fits", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "👕", border: "rgba(188,143,143,0.15)" }
+                    ]).map(cat => {
+                      const displayLabel = cat.displayName || cat.name;
+                      const filterCategory = cat.category || cat.name;
+                      const icon = cat.icon || "👕";
+                      const bg = cat.bg || "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)";
+                      const tag = cat.tag || "";
+                      const border = cat.border || "rgba(0,0,0,0.05)";
+                      const search = cat.search || "";
+                      const isDarkBg = bg.includes("#0e1e38") || bg.includes("#2A1B40") || bg.includes("#182015") || bg.includes("#1a1a1a") || bg.includes("#2b080c");
+
+                      return (
+                        <div
+                          key={displayLabel}
+                          onClick={() => { 
+                            setSelectedCategory(filterCategory); 
+                            setSearchQuery(search);
+                            setActiveTab("products"); 
+                          }}
+                          style={{
+                            background: bg,
+                            borderRadius: 24,
+                            padding: "28px 20px",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 10,
+                            cursor: "pointer",
+                            border: `1px solid ${border}`,
+                            transition: "all 0.2s"
+                          }}
+                          className="shadow-hover"
+                        >
+                          <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{icon}</span>
+                          <div style={{ textAlign: "center" }}>
+                            <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: isDarkBg ? "#ffffff" : "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{displayLabel}</span>
+                            {tag && <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: isDarkBg ? "rgba(255,255,255,0.7)" : "#666666", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{tag}</span>}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -1800,7 +1824,7 @@ export const CustomerScreen = ({
 
                 {/* Categories */}
                 <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 6 }} className="no-scrollbar">
-                  {categories.map(cat => (
+                  {categoryFilters.map(cat => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}

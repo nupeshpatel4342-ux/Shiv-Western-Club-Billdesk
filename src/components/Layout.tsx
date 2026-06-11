@@ -1,7 +1,7 @@
 import React from "react";
 import { C } from "../constants";
 import { Settings, UserProfile } from "../types";
-import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard, Boxes, Users, ClipboardList, TrendingUp } from "lucide-react";
+import { Shirt, Menu, ShoppingBag, Plus, History, Settings as SettingsIcon, CheckCircle2, LayoutDashboard, Boxes, Users, ClipboardList, TrendingUp, Tag, Image } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { children: React.ReactNode, color?: string, bg?: string, small?: boolean }) => (
@@ -17,12 +17,10 @@ const getNavLinks = (role?: string) => {
   return [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isOwner || isManager },
     { icon: <Plus size={20} />, label: "Billing", tab: "bill", show: true },
-    { icon: <History size={20} />, label: "Bill History", tab: "history", show: true },
-    { icon: <ShoppingBag size={20} />, label: "Products Catalog", tab: "products", show: true },
-    { icon: <Boxes size={20} />, label: "Stock Inventory", tab: "inventory", show: isOwner || isManager },
-    { icon: <Users size={20} />, label: "Customers", tab: "customers", show: isOwner || isManager },
-    { icon: <ClipboardList size={20} />, label: "Orders Queue", tab: "orders", show: true },
-    { icon: <TrendingUp size={20} />, label: "Analytics Reports", tab: "reports", show: isOwner || isManager },
+    { icon: <ShoppingBag size={20} />, label: "Products", tab: "products", show: true },
+    { icon: <ClipboardList size={20} />, label: "Orders", tab: "orders", show: true },
+    { icon: <Tag size={20} />, label: "Categories", tab: "categories", show: isOwner || isManager },
+    { icon: <Image size={20} />, label: "Banners", tab: "banners", show: isOwner || isManager },
     { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: isOwner }
   ].filter(l => l.show);
 };
@@ -114,9 +112,10 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
 export const BottomNav = ({ active, onChange, role }: { active: string, onChange: (id: string) => void, role?: string }) => {
   const links = getNavLinks(role);
   // Pick a subset for mobile bottom nav to avoid clutter (e.g. Dashboard, Billing, History, Products, Orders)
-  const mobileSubset = links.filter(l => ["dashboard", "bill", "history", "orders", "inventory"].includes(l.tab)).slice(0, 5);
+  const mobileSubset = links.filter(l => ["dashboard", "bill", "products", "orders", "settings"].includes(l.tab)).slice(0, 5);
   // Fallback to whatever is available
   const displayLinks = mobileSubset.length > 0 ? mobileSubset : links.slice(0, 5);
+
 
   return (
     <div style={{ display: "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "sticky", bottom: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>

@@ -9,10 +9,12 @@ import { motion, AnimatePresence } from "motion/react";
 
 export const ProductsScreen = ({ 
   products, 
+  categories: syncedCategories = [],
   settings,
   isAdmin 
 }: { 
   products: CatalogProduct[], 
+  categories?: any[],
   settings: Settings,
   isAdmin: boolean 
 }) => {
@@ -36,7 +38,9 @@ export const ProductsScreen = ({
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["M", "L", "XL"]);
   const availableSizes = ["S", "M", "L", "XL", "XXL", "Free Size"];
 
-  const categories = ["Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+  const categories = syncedCategories && syncedCategories.length > 0
+    ? Array.from(new Set(syncedCategories.map((c: any) => c.name)))
+    : ["Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
 
   const filtered = products.filter(p => {
     const s = search.toLowerCase().trim();

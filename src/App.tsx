@@ -14,6 +14,8 @@ const InventoryScreen = React.lazy(() => import("./screens/InventoryScreen").the
 const CustomersScreen = React.lazy(() => import("./screens/CustomersScreen").then(m => ({ default: m.CustomersScreen })));
 const OrdersScreen = React.lazy(() => import("./screens/OrdersScreen").then(m => ({ default: m.OrdersScreen })));
 const ReportsScreen = React.lazy(() => import("./screens/ReportsScreen").then(m => ({ default: m.ReportsScreen })));
+const CategoriesScreen = React.lazy(() => import("./screens/CategoriesScreen").then(m => ({ default: m.CategoriesScreen })));
+const BannersScreen = React.lazy(() => import("./screens/BannersScreen").then(m => ({ default: m.BannersScreen })));
 import { auth, db, loginWithGoogle, loginWithEmail, registerWithEmail, logout, handleFirestoreError, OperationType, RecaptchaVerifier, signInWithPhoneNumber, ConfirmationResult, loginAnonymously } from "./firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy, serverTimestamp, where, getDocs, addDoc, updateDoc } from "firebase/firestore";
@@ -85,6 +87,8 @@ const App = () => {
   const [bills, setBills] = useState<Bill[]>([]);
   const [products, setProducts] = useState<CatalogProduct[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [banners, setBanners] = useState<any[]>([]);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentBill, setCurrentBill] = useState<Bill | null>(null);
   const [billToEdit, setBillToEdit] = useState<Bill | null>(null);
@@ -287,6 +291,94 @@ const App = () => {
     }, (err) => console.error(err));
     return unsub;
   }, [user, profile]);
+
+  // Sync Categories with Seeder fallback
+  useEffect(() => {
+    if (!user && !isGuestMode) return;
+    const unsub = onSnapshot(collection(db, "categories"), (s) => {
+      if (s.empty) {
+        const defaults = [
+          { name: "Shirt", displayName: "Casual Shirts", search: "casual", tag: "From ₹399", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "👔", border: "rgba(139,115,85,0.15)", createdAt: Date.now() },
+          { name: "T-Shirt", displayName: "Printed T-Shirts", search: "printed", tag: "Hot Trend", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "👕", border: "rgba(70,130,180,0.15)", createdAt: Date.now() + 1 },
+          { name: "Trouser", displayName: "Formal Trousers", search: "formal", tag: "Chinos & Cargos", bg: "linear-gradient(135deg, #F5F8FA 0%, #E3EDF3 100%)", icon: "👖", border: "rgba(95,158,160,0.15)", createdAt: Date.now() + 2 },
+          { name: "T-Shirt", displayName: "Oversized Tees", search: "oversized", tag: "Gen-Z Fits", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "👕", border: "rgba(188,143,143,0.15)", createdAt: Date.now() + 3 },
+          { name: "Jeans", displayName: "Denims", search: "jeans", tag: "Premium Denim", bg: "linear-gradient(135deg, #EAECEF 0%, #DCE1E7 100%)", icon: "👖", border: "rgba(0,0,0,0.05)", createdAt: Date.now() + 4 },
+          { name: "Winterwear", displayName: "Winter Wear", search: "winter", tag: "Jackets & Hoodies", bg: "linear-gradient(135deg, #F0F4F8 0%, #D9E2EC 100%)", icon: "🧥", border: "rgba(0,0,0,0.05)", createdAt: Date.now() + 5 }
+        ];
+        defaults.forEach(async (c) => {
+          try {
+            await addDoc(collection(db, "categories"), c);
+          } catch (e) {
+            console.error("Seeding category error:", e);
+          }
+        });
+      } else {
+        const list = s.docs.map(d => ({ id: d.id, ...d.data() }));
+        const sorted = list.sort((a: any, b: any) => (a.createdAt || 0) - (b.createdAt || 0));
+        setCategories(sorted);
+      }
+    }, (err) => console.error("Sync categories error:", err));
+    return unsub;
+  }, [user, isGuestMode]);
+
+  // Sync Banners with Seeder fallback
+  useEffect(() => {
+    if (!user && !isGuestMode) return;
+    const unsub = onSnapshot(collection(db, "banners"), (s) => {
+      if (s.empty) {
+        const defaults = [
+          {
+            tag: "Urban Menswear",
+            headline: "Oversized\nT-Shirts",
+            sub: "Gen-Z Approved Drop-Shoulder Tees — Starting at ₹349",
+            cta: "Shop Now",
+            ctaLink: "T-Shirt",
+            bg: "linear-gradient(135deg, #0e1e38 0%, #1a365d 50%, #0e1e38 100%)",
+            accent: "#F4C430",
+            imgEmoji: "👕",
+            badge: "Trending",
+            createdAt: Date.now()
+          },
+          {
+            tag: "Printed & Casuals",
+            headline: "Premium\nCasual Shirts",
+            sub: "100% Breathable Cotton & Linen Shirts — Flat 25% Off",
+            cta: "Shop Now",
+            ctaLink: "Shirt",
+            bg: "linear-gradient(135deg, #1b0c2a 0%, #351a4f 50%, #1b0c2a 100%)",
+            accent: "#E5A93C",
+            imgEmoji: "👔",
+            badge: "Hot Deal",
+            createdAt: Date.now() + 1
+          },
+          {
+            tag: "Bottomwear Specials",
+            headline: "Chinos &\nCargo Pants",
+            sub: "Comfort Fit Trousers & Jeans — Halvad's Finest In Stock",
+            cta: "Shop Now",
+            ctaLink: "Trouser",
+            bg: "linear-gradient(135deg, #181c15 0%, #2e3629 50%, #181c15 100%)",
+            accent: "#C2A649",
+            imgEmoji: "👖",
+            badge: "New In",
+            createdAt: Date.now() + 2
+          }
+        ];
+        defaults.forEach(async (b) => {
+          try {
+            await addDoc(collection(db, "banners"), b);
+          } catch (e) {
+            console.error("Seeding banner error:", e);
+          }
+        });
+      } else {
+        const list = s.docs.map(d => ({ id: d.id, ...d.data() }));
+        const sorted = list.sort((a: any, b: any) => (a.createdAt || 0) - (b.createdAt || 0));
+        setBanners(sorted);
+      }
+    }, (err) => console.error("Sync banners error:", err));
+    return unsub;
+  }, [user, isGuestMode]);
 
 
   const updateCustomerLedgerAndStock = async (bill: Bill) => {
@@ -998,6 +1090,8 @@ const App = () => {
           bills={bills}
           profile={activeProfile}
           orders={orders}
+          categories={categories}
+          banners={banners}
           onLogout={(startRegister?: boolean) => {
             if (isGuestMode) {
               setIsGuestMode(false);
@@ -1040,12 +1134,14 @@ const App = () => {
       case "bill": return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} initialBill={billToEdit} onCancel={() => setBillToEdit(null)} />, "bill");
       case "invoice": return wrapScreen(currentBill ? <InvoiceScreen bill={currentBill} settings={settings} onBack={() => setTab("history")} onNew={() => { setBillToEdit(null); setTab("bill"); }} /> : <NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "invoice");
       case "history": return wrapScreen(<HistoryScreen bills={bills} onView={handleView} onEdit={handleEdit} onUpdateBill={handleUpdateBill} onDeleteBill={handleDeleteBill} onDeleteAllBills={handleDeleteAllBills} settings={settings} isAdmin={isAdmin} isDesktop={isDesktop} />, "history");
-      case "products": return wrapScreen(<ProductsScreen products={products} settings={settings} isAdmin={isAdmin} />, "products");
-      case "dashboard": return wrapScreen(<DashboardScreen bills={bills} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />, "dashboard");
+      case "products": return wrapScreen(<ProductsScreen products={products} categories={categories} settings={settings} isAdmin={isAdmin} />, "products");
+      case "dashboard": return wrapScreen(<DashboardScreen bills={bills} orders={orders} products={products} settings={settings} onResetAllData={handleResetAllData} onCreateBill={() => setTab("bill")} isAdmin={isAdmin} />, "dashboard");
       case "inventory": return wrapScreen(<InventoryScreen products={products} settings={settings} isAdmin={isAdmin} userProfile={profile} />, "inventory");
       case "customers": return wrapScreen(<CustomersScreen bills={bills} />, "customers");
       case "orders": return wrapScreen(<OrdersScreen orders={orders} onUpdateStatus={handleUpdateOrderStatus} />, "orders");
       case "reports": return wrapScreen(<ReportsScreen bills={bills} products={products} />, "reports");
+      case "categories": return wrapScreen(<CategoriesScreen categories={categories} isAdmin={isAdmin} />, "categories");
+      case "banners": return wrapScreen(<BannersScreen banners={banners} isAdmin={isAdmin} />, "banners");
       case "settings": return wrapScreen(<SettingsScreen settings={settings} onSave={handleSaveSettings} profile={profile} onUpdateProfile={handleUpdateProfile} darkMode={darkMode} onToggleDarkMode={() => setDarkMode(!darkMode)} users={users} onUpdateUserRole={handleUpdateUserRole} />, "settings");
       default: return wrapScreen(<NewBillScreen onGenerate={handleGenerate} settings={settings} bills={bills} products={products} />, "default");
     }
