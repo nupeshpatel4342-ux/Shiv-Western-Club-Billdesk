@@ -323,6 +323,11 @@ export const CustomerScreen = ({
   };
 
   const addToCart = (product: any) => {
+    if (profile.isGuest) {
+      onLogout(true);
+      return;
+    }
+
     if (!selectedSize) {
       alert("Please select a size!");
       return;

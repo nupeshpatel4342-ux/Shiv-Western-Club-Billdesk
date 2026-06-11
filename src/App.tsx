@@ -20,6 +20,13 @@ import { doc, getDoc, setDoc, deleteDoc, collection, onSnapshot, query, orderBy,
 import { AnimatePresence, motion } from "motion/react";
 
 
+// Hash & Path-Based Portal Routing (/admin or #admin for admin, else customer)
+const checkIsAdmin = () => {
+  const path = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '').toLowerCase();
+  const hash = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
+  return path === 'admin' || hash === 'admin';
+};
+
 const App = () => {
   const [tab, setTab] = useState("dashboard"); // Default to dashboard for admin
   const [drawer, setDrawer] = useState(false);
@@ -28,14 +35,7 @@ const App = () => {
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isGuestMode, setIsGuestMode] = useState(false);
-  
-  // Hash & Path-Based Portal Routing (/admin or #admin for admin, else customer)
-  const checkIsAdmin = () => {
-    const path = window.location.pathname.replace(/^\/+/g, '').replace(/\/+$/g, '').toLowerCase();
-    const hash = window.location.hash.replace('#', '').replace('/', '').toLowerCase();
-    return path === 'admin' || hash === 'admin';
-  };
+  const [isGuestMode, setIsGuestMode] = useState(!checkIsAdmin());
 
   const [isAdminPortal, setIsAdminPortal] = useState(checkIsAdmin);
 
