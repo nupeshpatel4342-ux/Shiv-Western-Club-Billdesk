@@ -136,6 +136,66 @@ const SLIDES = [
   },
 ];
 
+const CATEGORY_CARDS = [
+  { 
+    title: "SHIRTS", 
+    image: "/categories/shirts.png", 
+    category: "Shirt", 
+    search: "", 
+    align: "right" 
+  },
+  { 
+    title: "TROUSERS", 
+    image: "/categories/trousers.png", 
+    category: "Trouser", 
+    search: "", 
+    align: "left" 
+  },
+  { 
+    title: "EVERYTHING UNDER ₹799", 
+    image: "/categories/promo_799.png", 
+    category: "All", 
+    search: "", 
+    maxPrice: 799, 
+    align: "center" 
+  },
+  { 
+    title: "POLOS", 
+    image: "/categories/polos.png", 
+    category: "T-Shirt", 
+    search: "polo", 
+    align: "right" 
+  },
+  { 
+    title: "CARGOS", 
+    image: "/categories/cargos.png", 
+    category: "Trouser", 
+    search: "cargo", 
+    align: "right" 
+  },
+  { 
+    title: "JEANS", 
+    image: "/categories/jeans.png", 
+    category: "Jeans", 
+    search: "", 
+    align: "left" 
+  },
+  { 
+    title: "T-SHIRTS", 
+    image: "/categories/t_shirts.png", 
+    category: "T-Shirt", 
+    search: "", 
+    align: "right" 
+  },
+  { 
+    title: "PRINTED", 
+    image: "/categories/printed.png", 
+    category: "T-Shirt", 
+    search: "printed", 
+    align: "left" 
+  }
+];
+
 export const CustomerScreen = ({
   products,
   settings,
@@ -161,6 +221,7 @@ export const CustomerScreen = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"home" | "products" | "offers" | "profile" | "bills" | "history" | "wishlist" | "cart">("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [selectedGender, setSelectedGender] = useState<"All" | "Men" | "Women">("All");
   const [sortBy, setSortBy] = useState<"default" | "newest">("default");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -195,6 +256,7 @@ export const CustomerScreen = ({
     setActiveTab("products");
     setSelectedGender("All");
     setSortBy("default");
+    setMaxPrice(null);
 
     if (ctaLink === "/oversized-tees") {
       setSelectedCategory("T-Shirt");
@@ -376,7 +438,10 @@ export const CustomerScreen = ({
                             (p.brand && String(p.brand).toLowerCase().includes(q)) ||
                             (p.category && String(p.category).toLowerCase().includes(q)) ||
                             (p.sku && String(p.sku).toLowerCase().includes(q));
-      return matchesCategory && matchesGender && matchesSearch;
+      
+      const matchesMaxPrice = maxPrice === null || (p.sellingPrice || p.price || 0) <= maxPrice;
+      
+      return matchesCategory && matchesGender && matchesSearch && matchesMaxPrice;
     });
 
     if (sortBy === "newest") {
@@ -384,7 +449,7 @@ export const CustomerScreen = ({
     }
 
     return result;
-  }, [products, selectedCategory, selectedGender, searchQuery, sortBy]);
+  }, [products, selectedCategory, selectedGender, searchQuery, sortBy, maxPrice]);
 
   // Wishlisted products full objects
   const wishlistedProducts = useMemo(() => {
@@ -659,6 +724,7 @@ export const CustomerScreen = ({
     setActiveTab("products");
     setSelectedGender("All");
     setSortBy("default");
+    setMaxPrice(null);
 
     if (menuId === "shirts") {
       setSelectedCategory("Shirt");
@@ -1690,56 +1756,95 @@ export const CustomerScreen = ({
 
                 {/* Category Spotlight Grid */}
                 <div>
-                  <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginBottom: 16 }}>Shop by Category</h3>
+                  <div style={{ textAlign: "center", marginBottom: 24 }}>
+                    <h2 className="pf" style={{ fontSize: isDesktop ? 20 : 16, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
+                      Loved by all, selling out fast
+                    </h2>
+                    <div style={{ width: 48, height: 3, background: C.accent, margin: "10px auto 0", borderRadius: 4 }} />
+                  </div>
+                  
                   <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 16 }}>
-                    {(syncedCategories && syncedCategories.length > 0 ? syncedCategories.slice(0, 4) : [
-                      { displayName: "Casual Shirts", name: "Shirt", search: "casual", tag: "From ₹399", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "👔", border: "rgba(139,115,85,0.15)" },
-                      { displayName: "Printed T-Shirts", name: "T-Shirt", search: "printed", tag: "Hot Trend", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "👕", border: "rgba(70,130,180,0.15)" },
-                      { displayName: "Formal Trousers", name: "Trouser", search: "formal", tag: "Chinos & Cargos", bg: "linear-gradient(135deg, #F5F8FA 0%, #E3EDF3 100%)", icon: "👖", border: "rgba(95,158,160,0.15)" },
-                      { displayName: "Oversized Tees", name: "T-Shirt", search: "oversized", tag: "Gen-Z Fits", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "👕", border: "rgba(188,143,143,0.15)" }
-                    ]).map(cat => {
-                      const displayLabel = cat.displayName || cat.name;
-                      const filterCategory = cat.category || cat.name;
-                      const icon = cat.icon || "👕";
-                      const bg = cat.bg || "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)";
-                      const tag = cat.tag || "";
-                      const border = cat.border || "rgba(0,0,0,0.05)";
-                      const search = cat.search || "";
-                      const isDarkBg = bg.includes("#0e1e38") || bg.includes("#2A1B40") || bg.includes("#182015") || bg.includes("#1a1a1a") || bg.includes("#2b080c");
-
+                    {CATEGORY_CARDS.map(card => {
                       return (
                         <div
-                          key={displayLabel}
-                          onClick={() => { 
-                            setSelectedCategory(filterCategory); 
-                            setSearchQuery(search);
-                            setActiveTab("products"); 
+                          key={card.title}
+                          onClick={() => {
+                            setActiveTab("products");
+                            setSelectedGender("All");
+                            setSortBy("default");
+                            if (card.category === "All") {
+                              setSelectedCategory("All");
+                              setSearchQuery("");
+                              if (card.maxPrice) {
+                                setMaxPrice(card.maxPrice);
+                              } else {
+                                setMaxPrice(null);
+                              }
+                            } else {
+                              setSelectedCategory(card.category);
+                              setSearchQuery(card.search);
+                              setMaxPrice(null);
+                            }
                           }}
                           style={{
-                            background: bg,
+                            position: "relative",
+                            aspectRatio: "4/5",
                             borderRadius: 24,
-                            padding: "28px 20px",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 10,
+                            overflow: "hidden",
                             cursor: "pointer",
-                            border: `1px solid ${border}`,
-                            transition: "all 0.2s"
+                            boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
                           }}
-                          className="shadow-hover"
+                          className="prod-card"
                         >
-                          {icon.startsWith("data:") || icon.startsWith("http") ? (
-                            <div style={{ width: 44, height: 44, borderRadius: 12, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
-                              <img src={icon} alt={displayLabel} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                            </div>
-                          ) : (
-                            <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{icon}</span>
-                          )}
-                          <div style={{ textAlign: "center" }}>
-                            <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: isDarkBg ? "#ffffff" : "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{displayLabel}</span>
-                            {tag && <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: isDarkBg ? "rgba(255,255,255,0.7)" : "#666666", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{tag}</span>}
+                          <img 
+                            src={card.image} 
+                            alt={card.title} 
+                            style={{ 
+                              width: "100%", 
+                              height: "100%", 
+                              objectFit: "cover",
+                            }} 
+                            className="product-image-zoom"
+                          />
+                          
+                          {/* Dark bottom gradient overlay */}
+                          <div 
+                            style={{ 
+                              position: "absolute", 
+                              inset: 0, 
+                              background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
+                              pointerEvents: "none"
+                            }} 
+                          />
+                          
+                          {/* Text overlay */}
+                          <div 
+                            style={{ 
+                              position: "absolute", 
+                              bottom: isDesktop ? 22 : 16, 
+                              left: card.align === "center" ? "50%" : (card.align === "right" ? "auto" : (isDesktop ? 22 : 16)),
+                              right: card.align === "center" ? "auto" : (card.align === "left" ? "auto" : (isDesktop ? 22 : 16)),
+                              transform: card.align === "center" ? "translateX(-50%)" : "none",
+                              width: card.align === "center" ? "90%" : "auto",
+                              textAlign: card.align === "center" ? "center" : "left",
+                              color: "#FFFFFF",
+                              zIndex: 2,
+                            }}
+                          >
+                            <span 
+                              className="pf" 
+                              style={{ 
+                                display: "block", 
+                                fontSize: isDesktop ? 18 : 13, 
+                                fontWeight: 900, 
+                                textTransform: "uppercase", 
+                                letterSpacing: "1px",
+                                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                                whiteSpace: card.align === "center" ? "normal" : "nowrap"
+                              }}
+                            >
+                              {card.title}
+                            </span>
                           </div>
                         </div>
                       );
@@ -1865,7 +1970,10 @@ export const CustomerScreen = ({
                   {categoryFilters.map(cat => (
                     <button
                       key={cat}
-                      onClick={() => setSelectedCategory(cat)}
+                      onClick={() => {
+                        setSelectedCategory(cat);
+                        setMaxPrice(null);
+                      }}
                       style={{
                         padding: "10px 18px",
                         borderRadius: 100,
