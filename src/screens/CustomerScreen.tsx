@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { C } from "../constants";
 import { CatalogProduct, Settings, Bill } from "../types";
 import { 
@@ -97,6 +97,45 @@ const GuestGatingPrompt = ({ tabName, onLogout }: GuestGatingProps) => (
   </motion.div>
 );
 
+const SLIDES = [
+  {
+    id: 1,
+    tag: "New Arrivals 2025",
+    headline: "Summer\nCollection",
+    sub: "Premium Cotton & Linen — Halvad's Finest",
+    cta: "Shop Now",
+    ctaLink: "/new-arrivals",
+    bg: "linear-gradient(135deg, #0a1628 0%, #1a2d4f 50%, #0f2040 100%)",
+    accent: "#D4A843",
+    imgEmoji: "👔",
+    badge: "New In",
+  },
+  {
+    id: 2,
+    tag: "Best Sellers",
+    headline: "Wedding\nSpecials",
+    sub: "Sherwani, Kurta Pyjama & Indo-Western — In Stock Now",
+    cta: "Explore Collection",
+    ctaLink: "/wedding",
+    bg: "linear-gradient(135deg, #1a0a2e 0%, #2d1547 50%, #1a0a2e 100%)",
+    accent: "#E8B84B",
+    imgEmoji: "🤵",
+    badge: "Trending",
+  },
+  {
+    id: 3,
+    tag: "Limited Offer",
+    headline: "Flat 20%\nOff Shirts",
+    sub: "Formal, Casual & Party Wear — All Sizes Available",
+    cta: "Grab the Deal",
+    ctaLink: "/sale",
+    bg: "linear-gradient(135deg, #1a1a0a 0%, #2d2a0f 50%, #1a1800 100%)",
+    accent: "#F0C050",
+    imgEmoji: "🎽",
+    badge: "Sale",
+  },
+];
+
 export const CustomerScreen = ({
   products,
   settings,
@@ -127,6 +166,43 @@ export const CustomerScreen = ({
   const [selectedSize, setSelectedSize] = useState("");
   const [selectedColor, setSelectedColor] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [slidePaused, setSlidePaused] = useState(false);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((c) => (c + 1) % SLIDES.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((c) => (c - 1 + SLIDES.length) % SLIDES.length);
+  }, []);
+
+  React.useEffect(() => {
+    if (slidePaused) return;
+    const t = setInterval(nextSlide, 5000);
+    return () => clearInterval(t);
+  }, [slidePaused, nextSlide]);
+
+  const handleCtaClick = (ctaLink: string) => {
+    if (ctaLink === "/new-arrivals") {
+      setActiveTab("products");
+      setSelectedCategory("All");
+      setSelectedGender("All");
+      setSortBy("newest");
+    } else if (ctaLink === "/wedding") {
+      setActiveTab("products");
+      setSelectedCategory("Kurta");
+      setSelectedGender("All");
+      setSortBy("default");
+    } else if (ctaLink === "/sale") {
+      setActiveTab("offers");
+      setSelectedCategory("All");
+      setSelectedGender("All");
+      setSortBy("default");
+    } else {
+      setActiveTab("products");
+    }
+  };
   
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
   const [showAccountDropdown, setShowAccountDropdown] = useState(false);
@@ -702,6 +778,8 @@ export const CustomerScreen = ({
     );
   };
 
+  const headerColor = (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#111111";
+
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FFFFFF", color: "#111111" }}>
       
@@ -741,7 +819,7 @@ export const CustomerScreen = ({
             {!isDesktop && (
               <button 
                 onClick={() => setDrawerOpen(true)} 
-                style={{ background: "transparent", border: "none", color: "#111", cursor: "pointer", padding: 0 }}
+                style={{ background: "transparent", border: "none", color: headerColor, cursor: "pointer", padding: 0 }}
               >
                 <Menu size={24} />
               </button>
@@ -756,10 +834,10 @@ export const CustomerScreen = ({
               }} 
               style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
             >
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Shirt size={16} color="#FFFFFF" />
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Shirt size={16} color={(activeTab === "home" && !isScrolled) ? "#000000" : "#FFFFFF"} />
               </div>
-              <span className="pf" style={{ fontWeight: 900, fontSize: 18, color: "#000000", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+              <span className="pf" style={{ fontWeight: 900, fontSize: 18, color: headerColor, letterSpacing: "1.5px", textTransform: "uppercase" }}>
                 {settings.shopName}
               </span>
             </div>
@@ -777,7 +855,9 @@ export const CustomerScreen = ({
                     style={{
                       background: "none",
                       border: "none",
-                      color: isActive ? "#000000" : "#666666",
+                      color: isActive 
+                        ? (activeTab === "home" && !isScrolled ? "#FFFFFF" : "#000000") 
+                        : (activeTab === "home" && !isScrolled ? "rgba(255,255,255,0.7)" : "#666666"),
                       fontWeight: isActive ? 800 : 600,
                       fontSize: 13,
                       cursor: "pointer",
@@ -792,7 +872,7 @@ export const CustomerScreen = ({
                     {isActive && (
                       <motion.div 
                         layoutId="activeNavUnderline" 
-                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#000000" }} 
+                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000" }} 
                       />
                     )}
                   </button>
@@ -811,9 +891,9 @@ export const CustomerScreen = ({
                   initial={{ width: 0, opacity: 0 }}
                   animate={{ width: isDesktop ? 200 : 150, opacity: 1 }}
                   exit={{ width: 0, opacity: 0 }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(0,0,0,0.04)", padding: "6px 12px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}
+                  style={{ display: "flex", alignItems: "center", gap: 6, background: (activeTab === "home" && !isScrolled) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.04)", padding: "6px 12px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}
                 >
-                  <Search size={14} color="#666" />
+                  <Search size={14} color={(activeTab === "home" && !isScrolled) ? "rgba(255,255,255,0.8)" : "#666"} />
                   <input 
                     value={searchQuery}
                     onChange={e => {
@@ -822,14 +902,14 @@ export const CustomerScreen = ({
                     }}
                     placeholder="Search..." 
                     autoFocus
-                    style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: isDesktop ? 120 : 80, color: "#111", fontWeight: 600 }}
+                    style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: isDesktop ? 120 : 80, color: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#111", fontWeight: 600 }}
                   />
                   <button 
                     onClick={() => {
                       setSearchOpen(false);
                       setSearchQuery("");
                     }}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "#666", fontSize: 11, fontWeight: 700 }}
+                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#666", fontSize: 11, fontWeight: 700 }}
                   >
                     ✕
                   </button>
@@ -837,7 +917,7 @@ export const CustomerScreen = ({
               ) : (
                 <button 
                   onClick={() => setSearchOpen(true)}
-                  style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
+                  style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
                 >
                   <Search size={22} />
                 </button>
@@ -857,7 +937,7 @@ export const CustomerScreen = ({
                 style={{
                   background: "none",
                   border: "none",
-                  color: "#111",
+                  color: headerColor,
                   cursor: "pointer",
                   padding: 4,
                   display: "flex",
@@ -926,16 +1006,16 @@ export const CustomerScreen = ({
             {/* Wishlist Button */}
             <button 
               onClick={() => setActiveTab("wishlist")}
-              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+              style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
             >
-              <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : "#111"} />
+              <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : headerColor} />
               {wishlist.length > 0 && (
                 <span style={{ 
                   position: "absolute", 
                   top: -6, 
                   right: -6, 
-                  background: "#000000", 
-                  color: "#fff", 
+                  background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000", 
+                  color: (activeTab === "home" && !isScrolled) ? "#000000" : "#FFFFFF", 
                   borderRadius: "50%", 
                   width: 14, 
                   height: 14, 
@@ -953,9 +1033,9 @@ export const CustomerScreen = ({
             {/* Cart Button */}
             <button 
               onClick={() => setActiveTab("cart")}
-              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+              style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
             >
-              <ShoppingCart size={22} />
+              <ShoppingCart size={22} color={headerColor} />
               {cart.reduce((sum, item) => sum + item.qty, 0) > 0 && (
                 <span style={{ 
                   position: "absolute", 
@@ -1075,129 +1155,296 @@ export const CustomerScreen = ({
             {activeTab === "home" && (
               <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
                 
-                {/* Premium D2C Hero Banner */}
-                <div style={{ 
-                  background: isDesktop 
-                    ? "linear-gradient(to right, rgba(255, 255, 255, 0.95) 45%, rgba(255, 255, 255, 0.2) 100%), url(/hero_fashion_banner.png)"
-                    : "linear-gradient(to bottom, rgba(255, 255, 255, 0.95) 60%, rgba(255, 255, 255, 0.7) 100%), url(/hero_fashion_banner.png)",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center",
-                  borderRadius: 28, 
-                  padding: isDesktop ? "90px 70px" : "50px 24px", 
-                  position: "relative", 
-                  overflow: "hidden", 
-                  boxShadow: "0 20px 50px rgba(0,0,0,0.05)",
-                  border: "1px solid rgba(0,0,0,0.06)",
-                  display: "flex",
-                  alignItems: "center",
-                  minHeight: isDesktop ? 480 : 380
-                }}>
-                  <motion.div 
-                    initial={{ opacity: 0, x: -30 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, ease: [0.25, 1, 0.5, 1] }}
-                    style={{ position: "relative", zIndex: 2, maxWidth: 540 }}
-                  >
-                    {/* Discount Badge */}
-                    <div style={{ 
-                      background: "rgba(139,115,85,0.08)",
-                      border: "1px solid rgba(139,115,85,0.2)",
-                      color: "#8B7355",
-                      padding: "6px 14px",
-                      borderRadius: 100,
-                      fontSize: 10,
-                      fontWeight: 900,
-                      letterSpacing: "1.5px",
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 6,
-                      marginBottom: 16,
-                      textTransform: "uppercase"
-                    }}>
-                      🏷️ FLASH OFFER • FLAT 50% OFF
-                    </div>
-
-                    <h2 className="pf" style={{ 
-                      fontSize: isDesktop ? 48 : 32, 
-                      fontWeight: 900, 
-                      color: "#111111", 
-                      lineHeight: 1.1,
-                      letterSpacing: "-1px",
-                      margin: "0 0 12px",
-                      textTransform: "uppercase"
-                    }}>
-                      Upgrade Your<br />Everyday Style
-                    </h2>
-                    
-                    <p style={{ color: "#444444", fontSize: 15, lineHeight: 1.6, margin: "0 0 20px", fontWeight: 500 }}>
-                      Trendy fashion at affordable prices
-                    </p>
-
-                    {/* Limited Time Offer */}
-                    <div style={{ 
-                      fontSize: 10,
-                      color: "#E63946",
-                      fontWeight: 800,
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      marginBottom: 28
-                    }}>
-                      <span className="pulse-dot" style={{ 
-                        width: 6, 
-                        height: 6, 
-                        borderRadius: "50%", 
-                        background: "#E63946", 
-                        display: "inline-block"
-                      }} />
-                      Limited Time Offer: Sale Ends in 2 Hours!
-                    </div>
-
-                    {/* Dual Action Buttons */}
-                    <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-                      <button 
-                        onClick={() => handleNavClick("men")} 
-                        style={{ 
-                          background: "#000000", 
-                          color: "#FFFFFF", 
-                          border: "none", 
-                          padding: "14px 32px", 
-                          borderRadius: 100, 
-                          fontSize: 13, 
-                          fontWeight: 800, 
-                          cursor: "pointer", 
-                          textTransform: "uppercase", 
-                          letterSpacing: "1px",
-                          boxShadow: "0 10px 25px rgba(0,0,0,0.15)",
-                          transition: "all 0.2s"
+                {/* Premium Carousel Hero Banner */}
+                <div
+                  style={{
+                    position: "relative",
+                    height: isDesktop ? 520 : 420,
+                    borderRadius: 24,
+                    overflow: "hidden",
+                    boxShadow: "0 20px 50px rgba(0,0,0,0.15)",
+                  }}
+                  onMouseEnter={() => setSlidePaused(true)}
+                  onMouseLeave={() => setSlidePaused(false)}
+                >
+                  {SLIDES.map((slide, i) => {
+                    const active = i === currentSlide;
+                    return (
+                      <div
+                        key={slide.id}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          opacity: active ? 1 : 0,
+                          transition: "opacity 0.7s ease",
+                          background: slide.bg,
+                          display: "flex",
+                          alignItems: "center",
+                          overflow: "hidden",
+                          pointerEvents: active ? "auto" : "none",
                         }}
-                        className="zoom-effect"
                       >
-                        Shop Men
-                      </button>
-                      <button 
-                        onClick={() => handleNavClick("women")} 
-                        style={{ 
-                          background: "transparent", 
-                          color: "#000000", 
-                          border: "2px solid #000000", 
-                          padding: "12px 30px", 
-                          borderRadius: 100, 
-                          fontSize: 13, 
-                          fontWeight: 800, 
-                          cursor: "pointer", 
-                          textTransform: "uppercase", 
-                          letterSpacing: "1px",
-                          transition: "all 0.2s"
+                        {/* Fabric texture overlay */}
+                        <div style={{
+                          position: "absolute",
+                          inset: 0,
+                          backgroundImage: `repeating-linear-gradient(
+                            45deg,
+                            rgba(255,255,255,0.015) 0px,
+                            rgba(255,255,255,0.015) 1px,
+                            transparent 1px,
+                            transparent 8px
+                          )`,
+                          pointerEvents: "none",
+                        }} />
+
+                        {/* Gold accent lines */}
+                        <div style={{
+                          position: "absolute",
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: 4,
+                          background: `linear-gradient(to bottom, transparent, ${slide.accent}, transparent)`,
+                        }} />
+
+                        {/* Big decorative emoji/product illustration */}
+                        <div style={{
+                          position: "absolute",
+                          right: isDesktop ? "8%" : "5%",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          fontSize: isDesktop ? 200 : 120,
+                          opacity: 0.08,
+                          userSelect: "none",
+                          pointerEvents: "none",
+                          lineHeight: 1,
+                        }}>
+                          {slide.imgEmoji}
+                        </div>
+
+                        {/* Circular glow */}
+                        <div style={{
+                          position: "absolute",
+                          right: isDesktop ? "15%" : "10%",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          width: isDesktop ? 420 : 260,
+                          height: isDesktop ? 420 : 260,
+                          borderRadius: "50%",
+                          background: `radial-gradient(circle, ${slide.accent}18 0%, transparent 70%)`,
+                          pointerEvents: "none",
+                        }} />
+
+                        {/* Content */}
+                        <div style={{ position: "relative", zIndex: 2, padding: isDesktop ? "0 64px" : "0 24px", maxWidth: 620 }}>
+                          {/* Badge */}
+                          <div style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 8,
+                            border: `1px solid ${slide.accent}60`,
+                            borderRadius: 20,
+                            padding: "4px 14px",
+                            marginBottom: 20,
+                            opacity: active ? 1 : 0,
+                            transform: active ? "translateY(0)" : "translateY(10px)",
+                            transition: "all 0.6s ease 0.2s",
+                          }}>
+                            <div style={{
+                              width: 6,
+                              height: 6,
+                              borderRadius: "50%",
+                              background: slide.accent,
+                              boxShadow: `0 0 8px ${slide.accent}`,
+                            }} />
+                            <span style={{ color: slide.accent, fontSize: 11, fontWeight: 600, letterSpacing: 2, textTransform: "uppercase" }}>
+                              {slide.tag}
+                            </span>
+                          </div>
+
+                          {/* Headline */}
+                          <h2 className="pf" style={{
+                            color: "#fff",
+                            fontSize: isDesktop ? 68 : 38,
+                            fontWeight: 800,
+                            lineHeight: 1.05,
+                            letterSpacing: -1,
+                            margin: "0 0 16px",
+                            whiteSpace: "pre-line",
+                            opacity: active ? 1 : 0,
+                            transform: active ? "translateY(0)" : "translateY(20px)",
+                            transition: "all 0.6s ease 0.35s",
+                            textTransform: "uppercase"
+                          }}>
+                            {slide.headline.split("\n").map((line, idx) => (
+                              <span key={idx} style={{ display: "block" }}>
+                                {idx === 1 ? (
+                                  <span style={{ color: slide.accent }}>{line}</span>
+                                ) : line}
+                              </span>
+                            ))}
+                          </h2>
+
+                          {/* Subtext */}
+                          <p style={{
+                            color: "rgba(255,255,255,0.65)",
+                            fontSize: isDesktop ? 15 : 13,
+                            lineHeight: 1.6,
+                            margin: "0 0 32px",
+                            maxWidth: 440,
+                            opacity: active ? 1 : 0,
+                            transform: active ? "translateY(0)" : "translateY(10px)",
+                            transition: "all 0.6s ease 0.45s",
+                          }}>
+                            {slide.sub}
+                          </p>
+
+                          {/* CTAs */}
+                          <div style={{
+                            display: "flex",
+                            gap: 12,
+                            alignItems: "center",
+                            opacity: active ? 1 : 0,
+                            transform: active ? "translateY(0)" : "translateY(10px)",
+                            transition: "all 0.6s ease 0.55s",
+                          }}>
+                            <button
+                              onClick={() => handleCtaClick(slide.ctaLink)}
+                              style={{
+                                background: slide.accent,
+                                color: "#0a1628",
+                                padding: isDesktop ? "14px 28px" : "10px 20px",
+                                borderRadius: 8,
+                                fontWeight: 700,
+                                fontSize: isDesktop ? 14 : 12,
+                                border: "none",
+                                cursor: "pointer",
+                                letterSpacing: 0.5,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 8,
+                                boxShadow: `0 4px 20px ${slide.accent}40`,
+                              }}
+                              className="zoom-effect"
+                            >
+                              {slide.cta}
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                <path d="M5 12h14M12 5l7 7-7 7"/>
+                              </svg>
+                            </button>
+                            <button
+                              onClick={() => {
+                                setActiveTab("products");
+                                setSelectedCategory("All");
+                                setSelectedGender("All");
+                              }}
+                              style={{
+                                color: "rgba(255,255,255,0.75)",
+                                fontSize: isDesktop ? 14 : 12,
+                                background: "none",
+                                border: "none",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 6,
+                                borderBottom: "1px solid rgba(255,255,255,0.3)",
+                                paddingBottom: 2,
+                              }}
+                            >
+                              View All Products
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {/* Prev/Next arrows */}
+                  {[{ dir: "prev", action: prevSlide, x: 20 }, { dir: "next", action: nextSlide, x: null }].map(({ dir, action, x }) => (
+                    <button
+                      key={dir}
+                      onClick={action}
+                      style={{
+                        position: "absolute",
+                        ...(x !== null ? { left: 20 } : { right: 20 }),
+                        top: "50%",
+                        transform: "translateY(-50%)",
+                        background: "rgba(255,255,255,0.08)",
+                        border: "1px solid rgba(255,255,255,0.15)",
+                        borderRadius: "50%",
+                        width: isDesktop ? 44 : 36,
+                        height: isDesktop ? 44 : 36,
+                        color: "rgba(255,255,255,0.8)",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        transition: "background 0.2s",
+                        zIndex: 10,
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(212,168,67,0.3)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.08)"}
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        {dir === "prev"
+                          ? <path d="M15 18l-6-6 6-6"/>
+                          : <path d="M9 18l6-6-6-6"/>}
+                      </svg>
+                    </button>
+                  ))}
+
+                  {/* Dot indicators */}
+                  <div style={{
+                    position: "absolute",
+                    bottom: 20,
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    display: "flex",
+                    gap: 8,
+                    zIndex: 10,
+                  }}>
+                    {SLIDES.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentSlide(i)}
+                        style={{
+                          width: i === currentSlide ? 28 : 8,
+                          height: 8,
+                          borderRadius: 4,
+                          background: i === currentSlide
+                            ? SLIDES[currentSlide].accent
+                            : "rgba(255,255,255,0.3)",
+                          border: "none",
+                          cursor: "pointer",
+                          transition: "all 0.4s ease",
+                          padding: 0,
                         }}
-                        className="zoom-effect"
-                      >
-                        Shop Women
-                      </button>
-                    </div>
-                  </motion.div>
+                      />
+                    ))}
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{
+                    position: "absolute",
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 2,
+                    background: "rgba(255,255,255,0.1)",
+                    zIndex: 10,
+                  }}>
+                    <div
+                      key={currentSlide}
+                      style={{
+                        height: "100%",
+                        background: SLIDES[currentSlide].accent,
+                        animation: slidePaused ? "none" : "progress 5s linear",
+                        width: "100%",
+                        transformOrigin: "left",
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Account Points & Loyalty Metrics */}
