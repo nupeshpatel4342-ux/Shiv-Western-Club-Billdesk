@@ -36,7 +36,7 @@ export const ProductsScreen = ({
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["M", "L", "XL"]);
   const availableSizes = ["S", "M", "L", "XL", "XXL", "Free Size"];
 
-  const categories = ["Shirt", "T-Shirt", "Jeans", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+  const categories = ["Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
 
   const filtered = products.filter(p => {
     const s = search.toLowerCase().trim();

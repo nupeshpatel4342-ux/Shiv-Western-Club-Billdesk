@@ -100,39 +100,39 @@ const GuestGatingPrompt = ({ tabName, onLogout }: GuestGatingProps) => (
 const SLIDES = [
   {
     id: 1,
-    tag: "New Arrivals 2025",
-    headline: "Summer\nCollection",
-    sub: "Premium Cotton & Linen — Halvad's Finest",
+    tag: "Urban Menswear",
+    headline: "Oversized\nT-Shirts",
+    sub: "Gen-Z Approved Drop-Shoulder Tees — Starting at ₹349",
     cta: "Shop Now",
-    ctaLink: "/new-arrivals",
-    bg: "linear-gradient(135deg, #0a1628 0%, #1a2d4f 50%, #0f2040 100%)",
-    accent: "#D4A843",
-    imgEmoji: "👔",
-    badge: "New In",
-  },
-  {
-    id: 2,
-    tag: "Best Sellers",
-    headline: "Wedding\nSpecials",
-    sub: "Sherwani, Kurta Pyjama & Indo-Western — In Stock Now",
-    cta: "Explore Collection",
-    ctaLink: "/wedding",
-    bg: "linear-gradient(135deg, #1a0a2e 0%, #2d1547 50%, #1a0a2e 100%)",
-    accent: "#E8B84B",
-    imgEmoji: "🤵",
+    ctaLink: "/oversized-tees",
+    bg: "linear-gradient(135deg, #0e1e38 0%, #1a365d 50%, #0e1e38 100%)",
+    accent: "#F4C430",
+    imgEmoji: "👕",
     badge: "Trending",
   },
   {
+    id: 2,
+    tag: "Printed & Casuals",
+    headline: "Premium\nCasual Shirts",
+    sub: "100% Breathable Cotton & Linen Shirts — Flat 25% Off",
+    cta: "Shop Now",
+    ctaLink: "/casual-shirts",
+    bg: "linear-gradient(135deg, #1b0c2a 0%, #351a4f 50%, #1b0c2a 100%)",
+    accent: "#E5A93C",
+    imgEmoji: "👔",
+    badge: "Hot Deal",
+  },
+  {
     id: 3,
-    tag: "Limited Offer",
-    headline: "Flat 20%\nOff Shirts",
-    sub: "Formal, Casual & Party Wear — All Sizes Available",
-    cta: "Grab the Deal",
-    ctaLink: "/sale",
-    bg: "linear-gradient(135deg, #1a1a0a 0%, #2d2a0f 50%, #1a1800 100%)",
-    accent: "#F0C050",
-    imgEmoji: "🎽",
-    badge: "Sale",
+    tag: "Bottomwear Specials",
+    headline: "Chinos &\nCargo Pants",
+    sub: "Comfort Fit Trousers & Jeans — Halvad's Finest In Stock",
+    cta: "Shop Now",
+    ctaLink: "/formal-trousers",
+    bg: "linear-gradient(135deg, #181c15 0%, #2e3629 50%, #181c15 100%)",
+    accent: "#C2A649",
+    imgEmoji: "👖",
+    badge: "New In",
   },
 ];
 
@@ -184,23 +184,22 @@ export const CustomerScreen = ({
   }, [slidePaused, nextSlide]);
 
   const handleCtaClick = (ctaLink: string) => {
-    if (ctaLink === "/new-arrivals") {
-      setActiveTab("products");
-      setSelectedCategory("All");
-      setSelectedGender("All");
-      setSortBy("newest");
-    } else if (ctaLink === "/wedding") {
-      setActiveTab("products");
-      setSelectedCategory("Kurta");
-      setSelectedGender("All");
-      setSortBy("default");
-    } else if (ctaLink === "/sale") {
-      setActiveTab("offers");
-      setSelectedCategory("All");
-      setSelectedGender("All");
-      setSortBy("default");
+    setActiveTab("products");
+    setSelectedGender("All");
+    setSortBy("default");
+
+    if (ctaLink === "/oversized-tees") {
+      setSelectedCategory("T-Shirt");
+      setSearchQuery("oversized");
+    } else if (ctaLink === "/casual-shirts") {
+      setSelectedCategory("Shirt");
+      setSearchQuery("casual");
+    } else if (ctaLink === "/formal-trousers") {
+      setSelectedCategory("Trouser");
+      setSearchQuery("formal");
     } else {
-      setActiveTab("products");
+      setSelectedCategory("All");
+      setSearchQuery("");
     }
   };
   
@@ -257,7 +256,7 @@ export const CustomerScreen = ({
     localStorage.setItem("customer_cart", JSON.stringify(cart));
   }, [cart]);
 
-  const categories = ["All", "Shirt", "T-Shirt", "Jeans", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+  const categories = ["All", "Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
 
   // Filter bills for this customer
   const customerBills = useMemo(() => {
@@ -622,7 +621,7 @@ export const CustomerScreen = ({
     } else if (menuId === "trousers") {
       setSelectedCategory("Trouser");
     } else if (menuId === "winterwear") {
-      setSelectedCategory("Western Wear"); // Winterwear products are categorized under Western Wear or Winterwear
+      setSelectedCategory("Winterwear");
     }
   };
 
@@ -632,7 +631,7 @@ export const CustomerScreen = ({
     if (menuId === "t-shirts") return selectedCategory === "T-Shirt";
     if (menuId === "jeans") return selectedCategory === "Jeans";
     if (menuId === "trousers") return selectedCategory === "Trouser";
-    if (menuId === "winterwear") return selectedCategory === "Western Wear" || selectedCategory === "Winterwear";
+    if (menuId === "winterwear") return selectedCategory === "Winterwear";
     return false;
   };
 
@@ -1525,34 +1524,41 @@ export const CustomerScreen = ({
 
                 {/* Category Spotlight Grid */}
                 <div>
-                  <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111", marginBottom: 16 }}>Shop by Category</h3>
+                  <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginBottom: 16 }}>Shop by Category</h3>
                   <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 16 }}>
                     {[
-                      { name: "Shirts", category: "Shirt", bg: "#FAF8F5", icon: "👔" },
-                      { name: "T-Shirts", category: "T-Shirt", bg: "#F5F7FA", icon: "👕" },
-                      { name: "Jeans", category: "Jeans", bg: "#F5F8FA", icon: "👖" },
-                      { name: "Ethnic wear", category: "Kurta", bg: "#FAF5F6", icon: "🕌" }
+                      { name: "Casual Shirts", category: "Shirt", search: "casual", tag: "From ₹399", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "👔", border: "rgba(139,115,85,0.15)" },
+                      { name: "Printed T-Shirts", category: "T-Shirt", search: "printed", tag: "Hot Trend", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "👕", border: "rgba(70,130,180,0.15)" },
+                      { name: "Formal Trousers", category: "Trouser", search: "formal", tag: "Chinos & Cargos", bg: "linear-gradient(135deg, #F5F8FA 0%, #E3EDF3 100%)", icon: "👖", border: "rgba(95,158,160,0.15)" },
+                      { name: "Oversized Tees", category: "T-Shirt", search: "oversized", tag: "Gen-Z Fits", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "👕", border: "rgba(188,143,143,0.15)" }
                     ].map(cat => (
                       <div
                         key={cat.name}
-                        onClick={() => { setSelectedCategory(cat.category); setActiveTab("products"); }}
+                        onClick={() => { 
+                          setSelectedCategory(cat.category); 
+                          setSearchQuery(cat.search);
+                          setActiveTab("products"); 
+                        }}
                         style={{
                           background: cat.bg,
-                          borderRadius: 22,
-                          padding: "24px 20px",
+                          borderRadius: 24,
+                          padding: "28px 20px",
                           display: "flex",
                           flexDirection: "column",
                           alignItems: "center",
                           justifyContent: "center",
-                          gap: 12,
+                          gap: 10,
                           cursor: "pointer",
-                          border: "1px solid rgba(0,0,0,0.02)",
+                          border: `1px solid ${cat.border}`,
                           transition: "all 0.2s"
                         }}
                         className="shadow-hover"
                       >
-                        <span style={{ fontSize: 32 }}>{cat.icon}</span>
-                        <span style={{ fontSize: 13, fontWeight: 800, color: "#111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.name}</span>
+                        <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{cat.icon}</span>
+                        <div style={{ textAlign: "center" }}>
+                          <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.name}</span>
+                          <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: "#666666", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{cat.tag}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
