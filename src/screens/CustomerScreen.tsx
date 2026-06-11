@@ -429,11 +429,13 @@ export const CustomerScreen = ({
       customerId: profile.uid,
       customerName: profile.displayName || profile.name || "Customer",
       customerPhone: profile.phone,
+      customerAddress: profile.address || "",
       productId: product.id,
       productName: product.name,
       size: selectedSize,
       color: colorVal,
       price: product.price || product.sellingPrice,
+      qty: 1,
       status: "Reserved" as const,
       createdAt: Date.now()
     };
@@ -568,11 +570,13 @@ export const CustomerScreen = ({
           customerId: profile.uid,
           customerName: custName,
           customerPhone: custPhone,
+          customerAddress: custAddress || "",
           productId: item.id,
           productName: item.name,
           size: item.size,
           color: item.color,
           price: item.price,
+          qty: item.qty || 1,
           status: "Reserved" as const,
           createdAt: Date.now()
         };
