@@ -11,8 +11,9 @@ export const Pill = ({ children, color = "#fff", bg = C.accent, small }: { child
 export const Divider = ({ my = 12 }: { my?: number }) => <div style={{ height: 1, background: C.border, margin: `${my}px 0` }} />;
 
 const getNavLinks = (role?: string) => {
-  const isOwner = role === "owner" || role === "admin";
-  const isManager = role === "manager";
+  const r = role?.toLowerCase();
+  const isOwner = r === "owner" || r === "admin";
+  const isManager = r === "manager";
   
   return [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isOwner || isManager },
