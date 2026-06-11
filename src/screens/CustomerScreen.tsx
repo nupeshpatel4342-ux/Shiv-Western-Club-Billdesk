@@ -2495,6 +2495,85 @@ export const CustomerScreen = ({
             )}
 
           </AnimatePresence>
+        {/* ----------------- PROFESSIONAL FOOTER ----------------- */}
+        <footer style={{ 
+          background: "#111111", 
+          color: "#FFFFFF", 
+          padding: isDesktop ? "48px 32px 32px" : "32px 20px 24px", 
+          borderRadius: 24,
+          border: "1px solid rgba(255,255,255,0.08)",
+          marginTop: "40px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.05)"
+        }}>
+          <div style={{ 
+            display: "grid", 
+            gridTemplateColumns: isDesktop ? "repeat(3, 1fr)" : "1fr", 
+            gap: "32px",
+            marginBottom: "32px"
+          }}>
+            {/* Column 1: Brand Info */}
+            <div>
+              <h4 className="pf" style={{ fontSize: 16, fontWeight: 900, color: "#C2A649", letterSpacing: "1px", margin: "0 0 16px", textTransform: "uppercase" }}>SHIV WESTERN CLUB</h4>
+              <p style={{ fontSize: 13, color: "#CCCCCC", lineHeight: 1.6, margin: "0 0 16px" }}>
+                Discover premium quality menswear, casual shirts, printed tees, formal trousers, and classic winterwear crafted for modern everyday comfort.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8, fontSize: 12, color: "#999999" }}>
+                <span>📞 Support: +91 9724557728</span>
+                <span>📧 Email: contact@shivwestern.com</span>
+                <span>📍 Location: Ahmedabad, Gujarat</span>
+              </div>
+            </div>
+
+            {/* Column 2: Information Links */}
+            <div>
+              <h4 className="pf" style={{ fontSize: 14, fontWeight: 900, color: "#FFFFFF", letterSpacing: "0.5px", margin: "0 0 16px", textTransform: "uppercase" }}>Quick Links</h4>
+              <div style={{ display: "flex", flexDirection: "column", gap: 10, fontSize: 13 }}>
+                <span 
+                  onClick={() => alert("About Us:\n\nShiv Western Club is Halvad's finest premium menswear store, delivering modern clothing trends at affordable pricing since 2020.")} 
+                  style={{ color: "#CCCCCC", cursor: "pointer", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#C2A649"}
+                  onMouseLeave={e => e.currentTarget.style.color = "#CCCCCC"}
+                >
+                  About Us
+                </span>
+                <span 
+                  onClick={() => alert("Contact Details:\n\nPhone: +91 9724557728\nEmail: contact@shivwestern.com\nAddress: 123, Fashion Hub, Near Main Market, Ahmedabad, Gujarat - 380001")} 
+                  style={{ color: "#CCCCCC", cursor: "pointer", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#C2A649"}
+                  onMouseLeave={e => e.currentTarget.style.color = "#CCCCCC"}
+                >
+                  Contact Us
+                </span>
+                <span 
+                  onClick={() => alert("Return & Replacement Policy:\n\nWe offer a hassle-free 7-day exchange and replacement policy for all unworn clothes. Visit our store or contact support.")} 
+                  style={{ color: "#CCCCCC", cursor: "pointer", transition: "color 0.2s" }}
+                  onMouseEnter={e => e.currentTarget.style.color = "#C2A649"}
+                  onMouseLeave={e => e.currentTarget.style.color = "#CCCCCC"}
+                >
+                  Return Policy
+                </span>
+              </div>
+            </div>
+
+            {/* Column 3: Social & Trust */}
+            <div>
+              <h4 className="pf" style={{ fontSize: 14, fontWeight: 900, color: "#FFFFFF", letterSpacing: "0.5px", margin: "0 0 16px", textTransform: "uppercase" }}>Follow Us</h4>
+              <div style={{ display: "flex", gap: 14, fontSize: 20, marginBottom: 20 }}>
+                <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ color: "#CCCCCC", textDecoration: "none", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={e => { e.currentTarget.style.color = "#E1306C"; e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={e => { e.currentTarget.style.color = "#CCCCCC"; e.currentTarget.style.transform = "scale(1)"; }}>📸</a>
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" style={{ color: "#CCCCCC", textDecoration: "none", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={e => { e.currentTarget.style.color = "#1877F2"; e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={e => { e.currentTarget.style.color = "#CCCCCC"; e.currentTarget.style.transform = "scale(1)"; }}>👥</a>
+                <a href="https://twitter.com" target="_blank" rel="noreferrer" style={{ color: "#CCCCCC", textDecoration: "none", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={e => { e.currentTarget.style.color = "#1DA1F2"; e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={e => { e.currentTarget.style.color = "#CCCCCC"; e.currentTarget.style.transform = "scale(1)"; }}>🐦</a>
+                <a href="https://wa.me/919724557728" target="_blank" rel="noreferrer" style={{ color: "#CCCCCC", textDecoration: "none", cursor: "pointer", transition: "transform 0.2s" }} onMouseEnter={e => { e.currentTarget.style.color = "#25D366"; e.currentTarget.style.transform = "scale(1.1)"; }} onMouseLeave={e => { e.currentTarget.style.color = "#CCCCCC"; e.currentTarget.style.transform = "scale(1)"; }}>💬</a>
+              </div>
+              <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 12, fontSize: 11, color: "#999999" }}>
+                🔒 <strong>100% Secure Checkout</strong>. All transactions are encrypted and processed safely.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", paddingTop: 20, textAlign: "center", fontSize: 11, color: "#777777" }}>
+            © {new Date().getFullYear()} Shiv Western Club. All Rights Reserved. Crafted with ❤️ for premium style.
+          </div>
+        </footer>
         </main>
 
         {/* ----------------- MOBILE BOTTOM NAVIGATION ----------------- */}
@@ -2849,6 +2928,41 @@ export const CustomerScreen = ({
           </div>
         )}
       </AnimatePresence>
+      {/* ----------------- FLOATING WHATSAPP SUPPORT BUTTON ----------------- */}
+      <a
+        href="https://wa.me/919724557728?text=Hi!%20I'm%20visiting%20the%20Shiv%20Western%20Club%20online%20store%20and%20have%20an%20inquiry..."
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          position: "fixed",
+          bottom: isDesktop ? 24 : 84,
+          right: 20,
+          width: 52,
+          height: 52,
+          background: "#25D366",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxShadow: "0 6px 20px rgba(37, 211, 102, 0.4)",
+          cursor: "pointer",
+          zIndex: 400,
+          textDecoration: "none",
+          transition: "transform 0.2s"
+        }}
+        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.1)"}
+        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+        title="Chat on WhatsApp"
+      >
+        <svg 
+          viewBox="0 0 24 24" 
+          width="28" 
+          height="28" 
+          fill="#FFFFFF"
+        >
+          <path d="M12.031 2c-5.514 0-9.99 4.477-9.99 9.99 0 2.08.636 4.01 1.728 5.614l-1.129 4.12 4.225-1.107c1.54 1 3.36 1.583 5.323 1.583 5.514 0 10.01-4.487 10.01-10s-4.496-10-10.01-10zm5.99 14.394c-.245.696-1.22 1.277-1.688 1.344-.457.067-.98.12-2.924-.654-2.484-.99-4.066-3.52-4.19-3.687-.122-.167-1.002-1.332-1.002-2.54 0-1.21.636-1.804.862-2.04.223-.235.485-.295.646-.295s.323.004.463.01c.143.007.337-.054.527.404.195.474.67 1.632.728 1.75.06.12.097.26.017.414-.08.156-.12.257-.24.398-.12.14-.253.315-.36.424-.122.12-.25.253-.108.497.143.245.637 1.05 1.367 1.702.94.84 1.73 1.1 1.974 1.22.245.122.387.102.53-.06.143-.167.613-.715.777-.96.162-.24.328-.203.554-.12.223.085 1.417.67 1.662.793.245.123.407.18.468.286.06.104.06.607-.184 1.303z"/>
+        </svg>
+      </a>
     </div>
   );
 };
