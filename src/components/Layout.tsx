@@ -12,17 +12,16 @@ export const Divider = ({ my = 12 }: { my?: number }) => <div style={{ height: 1
 
 const getNavLinks = (role?: string) => {
   const r = role?.toLowerCase();
-  const isOwner = r === "owner" || r === "admin";
-  const isManager = r === "manager";
+  const isAuthorized = r === "owner" || r === "admin" || r === "manager" || r === "staff";
   
   return [
-    { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isOwner || isManager },
+    { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isAuthorized },
     { icon: <Plus size={20} />, label: "Billing", tab: "bill", show: true },
     { icon: <ShoppingBag size={20} />, label: "Products", tab: "products", show: true },
     { icon: <ClipboardList size={20} />, label: "Orders", tab: "orders", show: true },
-    { icon: <Tag size={20} />, label: "Categories", tab: "categories", show: isOwner || isManager },
-    { icon: <Image size={20} />, label: "Banners", tab: "banners", show: isOwner || isManager },
-    { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: isOwner }
+    { icon: <Tag size={20} />, label: "Categories", tab: "categories", show: isAuthorized },
+    { icon: <Image size={20} />, label: "Banners", tab: "banners", show: isAuthorized },
+    { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: isAuthorized }
   ].filter(l => l.show);
 };
 
