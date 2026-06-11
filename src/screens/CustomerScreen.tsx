@@ -1698,11 +1698,14 @@ export const CustomerScreen = ({
 
                 {/* Category Spotlight Grid */}
                 <div>
-                  <div style={{ textAlign: "center", marginBottom: 24 }}>
-                    <h2 className="pf" style={{ fontSize: isDesktop ? 20 : 16, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "1px", margin: 0 }}>
-                      Loved by all, selling out fast
+                  <div style={{ textAlign: "center", marginBottom: 28, marginTop: 12 }}>
+                    <h2 className="pf" style={{ fontSize: isDesktop ? 28 : 20, fontWeight: 900, color: "#111111", textTransform: "uppercase", letterSpacing: "1.5px", margin: 0 }}>
+                      MOST-WANTED CATEGORIES
                     </h2>
-                    <div style={{ width: 48, height: 3, background: C.accent, margin: "10px auto 0", borderRadius: 4 }} />
+                    <p style={{ fontSize: isDesktop ? 13 : 11, color: "#666666", margin: "6px 0 0", fontWeight: 500 }}>
+                      Loved by all, selling out fast
+                    </p>
+                    <div style={{ width: 60, height: 3, background: "#000000", margin: "12px auto 0", borderRadius: 2 }} />
                   </div>
                   
                   <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(6, 1fr)" : "repeat(3, 1fr)", gap: isDesktop ? 16 : 10 }}>

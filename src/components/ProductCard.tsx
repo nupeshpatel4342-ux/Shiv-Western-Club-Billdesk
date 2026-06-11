@@ -49,13 +49,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <div 
       onClick={onClick}
-      className="group cursor-pointer flex flex-col justify-between w-full h-full bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-lg border border-gray-100 p-3"
+      className="group cursor-pointer flex flex-col justify-between w-full h-full bg-white transition-all duration-300 p-0"
     >
       <div className="flex flex-col">
         {/* Image Container */}
         <div 
           style={{ aspectRatio: "3/4" }}
-          className="w-full relative bg-gray-50 flex items-center justify-center overflow-hidden rounded-lg mb-3 border border-gray-100/50"
+          className="w-full relative bg-gray-100 flex items-center justify-center overflow-hidden rounded-lg mb-2 border border-gray-100"
         >
           {product.image ? (
             <img 
@@ -92,13 +92,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </button>
         </div>
 
-        {/* Product Brand */}
-        <span className="text-[9px] text-gray-400 font-extrabold uppercase tracking-widest block mb-0.5">
-          {product.brand || "SHIV WESTERN"}
-        </span>
-
         {/* Product Title */}
-        <h4 className="text-sm font-semibold text-gray-900 truncate block group-hover:text-black">
+        <h4 className="text-sm font-medium text-gray-800 truncate block group-hover:text-black">
           {product.name}
         </h4>
 
@@ -109,8 +104,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       </div>
 
       {/* Pricing Row */}
-      <div className="flex items-baseline gap-2 mt-2 pt-1.5 border-t border-gray-50">
-        <span className="text-sm font-black text-gray-900">
+      <div className="flex items-baseline gap-1.5 mt-1.5">
+        <span className="text-sm font-bold text-gray-950">
           ₹{finalPrice.toLocaleString("en-IN")}
         </span>
         {mrp > finalPrice && (
@@ -118,7 +113,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span className="text-xs text-gray-400 line-through">
               ₹{mrp.toLocaleString("en-IN")}
             </span>
-            <span className="text-[10px] font-extrabold text-[#2D6A4F]">
+            <span className="text-xs font-bold text-[#37bc6c] ml-0.5">
               ({discountPct}% off)
             </span>
           </>
