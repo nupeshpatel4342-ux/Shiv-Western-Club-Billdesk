@@ -10,11 +10,9 @@ export const StandardTemplate = ({ bill, settings, invRef }: { bill: Bill, setti
     
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, gap: 12, flexWrap: "wrap" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-        {settings.logo && (
-          <div style={{ width: 48, height: 48, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
-            <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          </div>
-        )}
+        <div style={{ width: 48, height: 48, borderRadius: 10, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+          <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
         <div>
           <h1 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
           <p style={{ fontSize: 11, fontWeight: 500, color: C.muted, maxWidth: 200, lineHeight: 1.4 }}>{settings.address}</p>
@@ -112,11 +110,9 @@ export const MinimalTemplate = ({ bill, settings, invRef }: { bill: Bill, settin
   <div ref={invRef} style={{ width: "100%", maxWidth: 800, margin: "0 auto", background: C.card, padding: "24px 16px", marginBottom: 32, position: "relative", overflow: "hidden", border: `1px solid ${C.border}` }}>
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 32, borderBottom: `2px solid ${C.dark}`, paddingBottom: 24, gap: 12, flexWrap: "wrap" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        {settings.logo && (
-          <div style={{ width: 40, height: 40 }}>
-            <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          </div>
-        )}
+        <div style={{ width: 40, height: 40, borderRadius: 8, overflow: "hidden", border: `1px solid ${C.border}`, background: "#fff", flexShrink: 0 }}>
+          <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
         <div>
           <h1 style={{ fontSize: 18, fontWeight: 700, color: C.dark, marginBottom: 4, textTransform: "uppercase", letterSpacing: "1px" }}>{settings.shopName}</h1>
           <p style={{ fontSize: 10, color: C.muted, maxWidth: 180 }}>{settings.address}</p>
@@ -210,11 +206,9 @@ export const ModernTemplate = ({ bill, settings, invRef }: { bill: Bill, setting
     {/* Header */}
     <div style={{ background: C.dark, color: C.card, padding: "32px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-        {settings.logo && (
-          <div style={{ width: 56, height: 56, borderRadius: 10, background: "#fff", padding: 4 }}>
-            <img src={settings.logo} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
-          </div>
-        )}
+        <div style={{ width: 56, height: 56, borderRadius: 10, background: "#fff", padding: 4, overflow: "hidden", border: `1px solid ${C.border}`, flexShrink: 0 }}>
+          <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+        </div>
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 800, margin: 0, letterSpacing: "-0.5px" }}>{settings.shopName}</h1>
           <p style={{ fontSize: 11, opacity: 0.8, marginTop: 4, maxWidth: 200 }}>{settings.address}</p>

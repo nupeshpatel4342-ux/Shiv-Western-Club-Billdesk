@@ -751,11 +751,8 @@ const App = () => {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg }}>
         <div style={{ textAlign: "center" }}>
-          {settings?.logo ? (
-            <img src={settings.logo} alt="Logo" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 20 }} />
-          ) : (
-            <div style={{ width: 40, height: 40, border: `4px solid ${C.bg}`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
-          )}
+          <img src={settings?.logo || "/logo.svg"} alt="Logo" style={{ width: 80, height: 80, objectFit: "contain", marginBottom: 20 }} />
+          <div style={{ width: 32, height: 32, border: `3px solid ${C.bg}`, borderTopColor: C.accent, borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
           <p style={{ fontSize: 14, color: C.muted, fontWeight: 600 }}>{settings?.shopName || "Shiv Western Club"} loading...</p>
         </div>
       </div>
@@ -767,13 +764,7 @@ const App = () => {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: C.bg, padding: 20 }}>
         <div className="fade" style={{ width: "100%", maxWidth: 360, background: C.card, borderRadius: 32, padding: 32, textAlign: "center", boxShadow: "0 20px 50px rgba(0,0,0,0.1)", border: `1px solid ${C.border}` }}>
-          {settings?.logo ? (
-            <img src={settings.logo} alt="Logo" style={{ width: 100, height: 100, objectFit: "contain", margin: "0 auto 20px" }} />
-          ) : (
-            <div style={{ width: 60, height: 60, borderRadius: 20, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px", boxShadow: `0 10px 20px rgba(0,0,0,0.2)`, border: `2px solid ${C.accent}` }}>
-              <Shirt color={C.accent} size={30} strokeWidth={2.5} />
-            </div>
-          )}
+          <img src={settings?.logo || "/logo.svg"} alt="Logo" style={{ width: 100, height: 100, objectFit: "contain", margin: "0 auto 20px" }} />
           <h1 className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, marginBottom: 4, letterSpacing: "-0.5px" }}>{settings?.shopName || "Shiv Western Club"}</h1>
           <p style={{ fontSize: 11, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px", marginBottom: 20 }}>
             {isAdminPath ? "Admin & Staff Portal" : "Customer Club Portal"}

@@ -55,12 +55,8 @@ export const Drawer = ({ open, onClose, settings, onNav, user, onLogout }: { ope
               <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 18 }}>
                 {user?.photoURL ? (
                   <img src={user.photoURL} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}` }} alt="User" referrerPolicy="no-referrer" />
-                ) : settings.logo ? (
-                  <img src={settings.logo} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}`, background: "#fff", objectFit: "contain" }} alt="Logo" />
                 ) : (
-                  <div style={{ width: 56, height: 56, borderRadius: 16, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(212, 175, 55, 0.3)" }}>
-                    <Shirt color={C.bg} size={30} strokeWidth={2.5} />
-                  </div>
+                  <img src={settings.logo || "/logo.svg"} style={{ width: 56, height: 56, borderRadius: 16, border: `2px solid ${C.accent}`, background: "#fff", objectFit: "contain" }} alt="Logo" />
                 )}
                 <div>
                   <p className="pf" style={{ color: C.bg, fontWeight: 800, fontSize: 20, marginBottom: 4, letterSpacing: "-0.5px" }}>{user?.displayName}</p>
@@ -100,13 +96,7 @@ export const Header = ({ onMenu, settings }: { onMenu: () => void, settings: Set
       <Menu size={22} />
     </button>
     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      {settings.logo ? (
-        <img src={settings.logo} alt="Logo" style={{ width: 34, height: 34, borderRadius: 10, objectFit: "contain" }} />
-      ) : (
-        <div style={{ width: 34, height: 34, borderRadius: 10, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Shirt size={20} color={C.accent} />
-        </div>
-      )}
+      <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: 34, height: 34, borderRadius: 10, objectFit: "contain", background: "#fff", border: `1px solid ${C.border}` }} />
       <span className="pf" style={{ fontWeight: 800, fontSize: 20, color: C.dark, letterSpacing: "-0.8px" }}>{settings.shopName}</span>
     </div>
     <div style={{ width: 42 }} />
@@ -152,13 +142,7 @@ export const Sidebar = ({ active, onNav, settings, user, onLogout }: { active: s
     <div style={{ width: 260, background: C.card, height: "100vh", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.border}`, position: "sticky", top: 0, flexShrink: 0 }}>
       {/* Shop Info */}
       <div style={{ padding: "28px 24px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${C.border}` }}>
-        {settings.logo ? (
-          <img src={settings.logo} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain", background: "#fff", border: `1px solid ${C.border}` }} alt="Logo" />
-        ) : (
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: C.dark, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Shirt size={22} color={C.accent} />
-          </div>
-        )}
+        <img src={settings.logo || "/logo.svg"} style={{ width: 40, height: 40, borderRadius: 10, objectFit: "contain", background: "#fff", border: `1px solid ${C.border}` }} alt="Logo" />
         <div style={{ minWidth: 0 }}>
           <h1 className="pf" style={{ fontSize: 17, fontWeight: 900, color: C.dark, letterSpacing: "-0.5px", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{settings.shopName}</h1>
           <p style={{ fontSize: 9, color: C.muted, fontWeight: 800, margin: 0 }}>BILLING DESK</p>
