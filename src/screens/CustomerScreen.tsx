@@ -1788,11 +1788,11 @@ export const CustomerScreen = ({
                           }}
                           style={{
                             position: "relative",
-                            aspectRatio: "4/5",
-                            borderRadius: 24,
+                            aspectRatio: "1.25/1",
+                            borderRadius: 16,
                             overflow: "hidden",
                             cursor: "pointer",
-                            boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                            boxShadow: "0 6px 15px rgba(0,0,0,0.05)",
                           }}
                           className="prod-card"
                         >
@@ -1812,7 +1812,7 @@ export const CustomerScreen = ({
                             style={{ 
                               position: "absolute", 
                               inset: 0, 
-                              background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
+                              background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
                               pointerEvents: "none"
                             }} 
                           />
@@ -1821,9 +1821,9 @@ export const CustomerScreen = ({
                           <div 
                             style={{ 
                               position: "absolute", 
-                              bottom: isDesktop ? 22 : 16, 
-                              left: card.align === "center" ? "50%" : (card.align === "right" ? "auto" : (isDesktop ? 22 : 16)),
-                              right: card.align === "center" ? "auto" : (card.align === "left" ? "auto" : (isDesktop ? 22 : 16)),
+                              bottom: isDesktop ? 16 : 10, 
+                              left: card.align === "center" ? "50%" : (card.align === "right" ? "auto" : (isDesktop ? 16 : 10)),
+                              right: card.align === "center" ? "auto" : (card.align === "left" ? "auto" : (isDesktop ? 16 : 10)),
                               transform: card.align === "center" ? "translateX(-50%)" : "none",
                               width: card.align === "center" ? "90%" : "auto",
                               textAlign: card.align === "center" ? "center" : "left",
@@ -1835,11 +1835,11 @@ export const CustomerScreen = ({
                               className="pf" 
                               style={{ 
                                 display: "block", 
-                                fontSize: isDesktop ? 18 : 13, 
+                                fontSize: isDesktop ? 15 : 11, 
                                 fontWeight: 900, 
                                 textTransform: "uppercase", 
                                 letterSpacing: "1px",
-                                textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                                textShadow: "0 2px 4px rgba(0,0,0,0.6)",
                                 whiteSpace: card.align === "center" ? "normal" : "nowrap"
                               }}
                             >
