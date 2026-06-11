@@ -1917,55 +1917,7 @@ export const CustomerScreen = ({
                   )}
                 </div>
 
-                {/* Categories */}
-                <div className="flex gap-2.5 overflow-x-auto pb-2.5 no-scrollbar">
-                  {["View All", "Shirts", "Polo T-shirts", "T-shirts", "Trousers"].map(tabName => {
-                    let isActive = false;
-                    if (tabName === "View All") {
-                      isActive = selectedCategory === "All" && !searchQuery;
-                    } else if (tabName === "Shirts") {
-                      isActive = selectedCategory === "Shirt" && !searchQuery;
-                    } else if (tabName === "Polo T-shirts") {
-                      isActive = selectedCategory === "T-Shirt" && searchQuery === "polo";
-                    } else if (tabName === "T-shirts") {
-                      isActive = selectedCategory === "T-Shirt" && searchQuery === "";
-                    } else if (tabName === "Trousers") {
-                      isActive = selectedCategory === "Trouser" && !searchQuery;
-                    }
 
-                    return (
-                      <button
-                        key={tabName}
-                        onClick={() => {
-                          if (tabName === "View All") {
-                            setSelectedCategory("All");
-                            setSearchQuery("");
-                          } else if (tabName === "Shirts") {
-                            setSelectedCategory("Shirt");
-                            setSearchQuery("");
-                          } else if (tabName === "Polo T-shirts") {
-                            setSelectedCategory("T-Shirt");
-                            setSearchQuery("polo");
-                          } else if (tabName === "T-shirts") {
-                            setSelectedCategory("T-Shirt");
-                            setSearchQuery("");
-                          } else if (tabName === "Trousers") {
-                            setSelectedCategory("Trouser");
-                            setSearchQuery("");
-                          }
-                          setMaxPrice(null);
-                        }}
-                        className={`px-5 py-2 rounded-full font-bold text-xs cursor-pointer whitespace-nowrap transition-all duration-200 border ${
-                          isActive 
-                            ? "bg-black text-[#D4AF37] border-black" 
-                            : "bg-white text-gray-700 border-gray-300 hover:border-gray-400"
-                        }`}
-                      >
-                        {tabName}
-                      </button>
-                    );
-                  })}
-                </div>
 
                 {/* Catalog Grid */}
                 {filteredProducts.length === 0 ? (
