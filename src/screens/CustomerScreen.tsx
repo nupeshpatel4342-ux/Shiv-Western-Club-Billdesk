@@ -124,6 +124,27 @@ export const CustomerScreen = ({
   const [selectedColor, setSelectedColor] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  
+  React.useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const getProductPriceInfo = (p: any) => {
+    const finalPrice = p.sellingPrice || p.price || 0;
+    // If sellingPrice exists and price is higher, price is MRP.
+    // Otherwise calculate a D2C-styled MRP.
+    let mrp = p.price && p.sellingPrice && p.price > p.sellingPrice ? p.price : 0;
+    if (!mrp) {
+      mrp = Math.round(finalPrice * 2.2); // ~55% discount simulation
+    }
+    const discountPct = Math.round(((mrp - finalPrice) / mrp) * 100);
+    return { finalPrice, mrp, discountPct };
+  };
+  
   // Profile editing
   const [editName, setEditName] = useState(profile?.displayName || profile?.name || "");
   const [editAddress, setEditAddress] = useState(profile?.address || "");
@@ -566,151 +587,328 @@ export const CustomerScreen = ({
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", background: C.bg }}>
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FFFFFF", color: "#111111" }}>
       
-      {/* ----------------- DESKTOP SIDEBAR ----------------- */}
-      <aside style={{ width: 260, background: "#000", borderRight: `1px solid ${C.accent}`, display: window.innerWidth >= 768 ? "flex" : "none", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0 }}>
-        <div style={{ padding: "28px 24px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid rgba(212, 175, 55, 0.2)` }}>
-          <div style={{ width: 40, height: 40, borderRadius: 10, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Shirt size={22} color="#000" />
-          </div>
-          <div>
-            <h1 className="pf" style={{ fontSize: 17, fontWeight: 900, color: "#fff", letterSpacing: "-0.5px", margin: 0 }}>{settings.shopName}</h1>
-            <p style={{ fontSize: 9, color: C.accent, fontWeight: 800, margin: 0, letterSpacing: "1px" }}>CUSTOMER CLUB</p>
-          </div>
-        </div>
-        
-        <nav style={{ padding: "20px 12px", flex: 1, display: "flex", flexDirection: "column", gap: 4, overflowY: "auto" }}>
-          {menuItems.map(item => {
-            const isActive = activeTab === item.id;
-            return (
+      {/* ----------------- TOP ANNOUNCEMENT BAR ----------------- */}
+      <div style={{ 
+        background: "#000000", 
+        color: "#FFFFFF", 
+        padding: "8px 16px", 
+        fontSize: 10, 
+        fontWeight: 800, 
+        textAlign: "center", 
+        textTransform: "uppercase", 
+        letterSpacing: "1.5px",
+        zIndex: 101
+      }}>
+        ⚡ Free Shipping on Orders above ₹999 | Cash on Delivery Available ⚡
+      </div>
+
+      {/* ----------------- STICKY TOP HEADER ----------------- */}
+      <header style={{ 
+        position: "sticky", 
+        top: 0, 
+        zIndex: 100, 
+        background: "rgba(255, 255, 255, 0.85)", 
+        backdropFilter: "blur(20px)", 
+        WebkitBackdropFilter: "blur(20px)", 
+        borderBottom: "1px solid rgba(0,0,0,0.06)", 
+        boxShadow: "0 4px 30px rgba(0,0,0,0.01)" 
+      }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+          
+          {/* Left: Hamburger menu (mobile) & Brand Logo */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {!isDesktop && (
               <button 
-                key={item.id}
-                onClick={() => setActiveTab(item.id as any)}
-                style={{ 
-                  width: "100%", 
+                onClick={() => setDrawerOpen(true)} 
+                style={{ background: "transparent", border: "none", color: "#111", cursor: "pointer", padding: 0 }}
+              >
+                <Menu size={24} />
+              </button>
+            )}
+            <div 
+              onClick={() => setActiveTab("home")} 
+              style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Shirt size={16} color="#FFFFFF" />
+              </div>
+              <span className="pf" style={{ fontWeight: 900, fontSize: 18, color: "#000000", letterSpacing: "1.5px", textTransform: "uppercase" }}>
+                {settings.shopName}
+              </span>
+            </div>
+          </div>
+
+          {/* Center: Navigation Links (Desktop only) */}
+          {isDesktop && (
+            <nav style={{ display: "flex", gap: 28 }}>
+              {menuItems.filter(item => ["home", "products", "offers", "wishlist"].includes(item.id)).map(item => {
+                const isActive = activeTab === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id as any)}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      color: isActive ? "#000000" : "#666666",
+                      fontWeight: isActive ? 800 : 600,
+                      fontSize: 14,
+                      cursor: "pointer",
+                      padding: "8px 0",
+                      position: "relative",
+                      transition: "color 0.2s"
+                    }}
+                  >
+                    {item.label}
+                    {isActive && (
+                      <motion.div 
+                        layoutId="activeTabUnderline" 
+                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#000000" }} 
+                      />
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+
+          {/* Right: Cart, Search (Desktop), Account */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            {/* Search Input (Desktop only) */}
+            {isDesktop && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8, background: "#F3F4F6", padding: "8px 16px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}>
+                <Search size={16} color="#666" />
+                <input 
+                  value={searchQuery}
+                  onChange={e => {
+                    setSearchQuery(e.target.value);
+                    if (activeTab !== "products") setActiveTab("products");
+                  }}
+                  placeholder="Search products..." 
+                  style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: 150, color: "#111", fontWeight: 600 }}
+                />
+              </div>
+            )}
+
+            {/* Wishlist Button (Mobile only) */}
+            {!isDesktop && (
+              <button 
+                onClick={() => setActiveTab("wishlist")}
+                style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 0 }}
+              >
+                <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : "#111"} />
+              </button>
+            )}
+
+            {/* Cart Button */}
+            <button 
+              onClick={() => setActiveTab("cart")}
+              style={{ background: "none", border: "none", color: "#111", cursor: "pointer", padding: 0, position: "relative", display: "flex", alignItems: "center" }}
+            >
+              <ShoppingCart size={22} />
+              {cart.reduce((sum, item) => sum + item.qty, 0) > 0 && (
+                <span style={{ 
+                  position: "absolute", 
+                  top: -8, 
+                  right: -8, 
+                  background: "#E63946", 
+                  color: "#fff", 
+                  borderRadius: "50%", 
+                  width: 16, 
+                  height: 16, 
+                  fontSize: 9, 
+                  fontWeight: 800, 
                   display: "flex", 
                   alignItems: "center", 
-                  gap: 12, 
-                  padding: "12px 16px", 
-                  borderRadius: 12, 
-                  textAlign: "left", 
-                  color: isActive ? "#000" : "#fff", 
-                  background: isActive ? C.accent : "transparent",
-                  fontWeight: 700, 
-                  fontSize: 14, 
-                  border: "none",
-                  cursor: "pointer",
-                  transition: "all 0.2s"
-                }}
-              >
-                <span style={{ fontSize: 16 }}>{item.icon}</span>
-                {item.label}
-              </button>
-            );
-          })}
-        </nav>
-        
-        <div style={{ padding: "16px 20px", borderTop: `1px solid rgba(212, 175, 55, 0.2)`, display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 36, height: 36, borderRadius: "50%", background: C.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <span style={{ fontSize: 16, color: "#000" }}>👤</span>
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p className="pf" style={{ color: "#fff", fontWeight: 800, fontSize: 13, margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{profile?.displayName || profile?.name || "Customer"}</p>
-              <p style={{ fontSize: 10, color: C.accent, margin: 0 }}>{loyaltyPoints} Pts Available</p>
-            </div>
-          </div>
-          <button 
-            onClick={onLogout}
-            style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "10px", borderRadius: 10, background: `${C.red}22`, color: C.red, fontWeight: 800, fontSize: 13, border: "none", cursor: "pointer", transition: "0.2s" }}
-          >
-            <LogOut size={14} /> Logout
-          </button>
-        </div>
-      </aside>
+                  justifyContent: "center" 
+                }}>
+                  {cart.reduce((sum, item) => sum + item.qty, 0)}
+                </span>
+              )}
+            </button>
 
-      {/* ----------------- MAIN APP BODY ----------------- */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        
-        {/* Mobile Header */}
-        <header style={{ display: window.innerWidth >= 768 ? "none" : "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px", background: "#000", borderBottom: `1px solid ${C.accent}`, position: "sticky", top: 0, zIndex: 100 }}>
-          <button onClick={() => setDrawerOpen(true)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer" }}>
-            <Menu size={24} />
-          </button>
-          <div style={{ textAlign: "center" }}>
-            <span className="pf" style={{ fontWeight: 900, fontSize: 18, color: "#fff", letterSpacing: "-0.5px" }}>{settings.shopName}</span>
-            <span style={{ fontSize: 8, color: C.accent, fontWeight: 800, display: "block", marginTop: -2, letterSpacing: "1px" }}>CUSTOMER CLUB</span>
-          </div>
-          <div style={{ width: 24 }} />
-        </header>
-
-        {/* Sliding Mobile Drawer Navigation */}
-        <AnimatePresence>
-          {drawerOpen && (
-            <div 
-              style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", background: "rgba(0,0,0,0.5)" }} 
-              onClick={() => setDrawerOpen(false)}
-            >
-              <motion.div 
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                style={{ width: 280, background: "#000", height: "100%", display: "flex", flexDirection: "column", borderRight: `1px solid ${C.accent}` }}
-                onClick={e => e.stopPropagation()}
-              >
-                <div style={{ padding: "30px 24px 20px", borderBottom: `1px solid rgba(212, 175, 55, 0.2)` }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: C.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <Shirt size={24} color="#000" />
-                    </div>
-                    <button onClick={() => setDrawerOpen(false)} style={{ background: "transparent", border: "none", color: "#fff", cursor: "pointer" }}>
-                      <X size={20} />
-                    </button>
-                  </div>
-                  <h3 className="pf" style={{ color: "#fff", fontWeight: 800, fontSize: 18, margin: 0 }}>{profile?.displayName || profile?.name}</h3>
-                  <p style={{ color: C.accent, fontSize: 11, fontWeight: 700, margin: "4px 0 0" }}>Member ID: {profile?.phone}</p>
-                </div>
-                
-                <div style={{ padding: "14px 10px", flex: 1, overflowY: "auto" }}>
-                  {menuItems.map(item => (
-                    <button 
-                      key={item.id} 
-                      onClick={() => { setActiveTab(item.id as any); setDrawerOpen(false); }}
-                      style={{ 
-                        width: "100%", 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: 12, 
-                        padding: "12px 14px", 
-                        borderRadius: 12, 
-                        marginBottom: 4, 
-                        textAlign: "left", 
-                        color: activeTab === item.id ? "#000" : "#fff", 
-                        fontWeight: 700, 
-                        fontSize: 14, 
-                        border: "none", 
-                        background: activeTab === item.id ? C.accent : "transparent", 
-                        cursor: "pointer" 
+            {/* Account / Dropdown (Desktop only) */}
+            {isDesktop && (
+              <div style={{ position: "relative" }}>
+                {!profile?.isGuest ? (
+                  <>
+                    <button
+                      onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+                      style={{
+                        background: activeTab === "profile" || activeTab === "bills" || activeTab === "history" ? "rgba(0,0,0,0.05)" : "none",
+                        border: "1px solid rgba(0,0,0,0.1)",
+                        borderRadius: 100,
+                        padding: "8px 16px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "#111",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 6
                       }}
                     >
-                      <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
+                      <User size={14} /> My Account
                     </button>
-                  ))}
-                </div>
+                    <AnimatePresence>
+                      {showAccountDropdown && (
+                        <>
+                          <div 
+                            style={{ position: "fixed", inset: 0, zIndex: 90 }} 
+                            onClick={() => setShowAccountDropdown(false)} 
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            style={{
+                              position: "absolute",
+                              right: 0,
+                              top: "120%",
+                              width: 180,
+                              background: "#FFFFFF",
+                              border: "1px solid rgba(0,0,0,0.08)",
+                              borderRadius: 12,
+                              boxShadow: "0 10px 35px rgba(0,0,0,0.08)",
+                              zIndex: 100,
+                              padding: "6px 0",
+                              display: "flex",
+                              flexDirection: "column"
+                            }}
+                          >
+                            <button
+                              onClick={() => { setActiveTab("profile"); setShowAccountDropdown(false); }}
+                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              👤 Profile
+                            </button>
+                            <button
+                              onClick={() => { setActiveTab("bills"); setShowAccountDropdown(false); }}
+                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              📄 My Bills
+                            </button>
+                            <button
+                              onClick={() => { setActiveTab("history"); setShowAccountDropdown(false); }}
+                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#333", fontWeight: 600, cursor: "pointer" }}
+                            >
+                              📋 Order History
+                            </button>
+                            <div style={{ height: 1, background: "rgba(0,0,0,0.06)", margin: "4px 0" }} />
+                            <button
+                              onClick={() => { onLogout(); setShowAccountDropdown(false); }}
+                              style={{ background: "none", border: "none", width: "100%", padding: "10px 16px", textAlign: "left", fontSize: 13, color: "#E63946", fontWeight: 700, cursor: "pointer" }}
+                            >
+                              🚪 Logout
+                            </button>
+                          </motion.div>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </>
+                ) : (
+                  <button
+                    onClick={onLogout}
+                    style={{
+                      background: "#000000",
+                      color: "#FFFFFF",
+                      border: "none",
+                      borderRadius: 100,
+                      padding: "8px 18px",
+                      fontSize: 12,
+                      fontWeight: 800,
+                      cursor: "pointer",
+                      transition: "0.2s"
+                    }}
+                  >
+                    Login / Sign Up
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
 
-                <div style={{ padding: "16px 20px", borderTop: `1px solid rgba(212, 175, 55, 0.2)` }}>
+      {/* ----------------- MOBILE SLIDING DRAWER ----------------- */}
+      <AnimatePresence>
+        {drawerOpen && (
+          <div 
+            style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)" }} 
+            onClick={() => setDrawerOpen(false)}
+          >
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              style={{ width: 280, background: "#FFFFFF", height: "100%", display: "flex", flexDirection: "column", borderRight: "1px solid rgba(0,0,0,0.08)", boxShadow: "20px 0 50px rgba(0,0,0,0.05)" }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div style={{ padding: "30px 24px 20px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <Shirt size={24} color="#FFFFFF" />
+                  </div>
+                  <button onClick={() => setDrawerOpen(false)} style={{ background: "transparent", border: "none", color: "#111", cursor: "pointer" }}>
+                    <X size={20} />
+                  </button>
+                </div>
+                <h3 className="pf" style={{ color: "#111111", fontWeight: 850, fontSize: 18, margin: 0 }}>
+                  {profile?.isGuest ? settings.shopName : (profile?.displayName || profile?.name)}
+                </h3>
+                {!profile?.isGuest && (
+                  <p style={{ color: "#8B7355", fontSize: 11, fontWeight: 700, margin: "4px 0 0" }}>Member ID: {profile?.phone}</p>
+                )}
+              </div>
+              
+              <div style={{ padding: "14px 10px", flex: 1, overflowY: "auto" }}>
+                {menuItems.map(item => (
+                  <button 
+                    key={item.id} 
+                    onClick={() => { setActiveTab(item.id as any); setDrawerOpen(false); }}
+                    style={{ 
+                      width: "100%", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      gap: 12, 
+                      padding: "12px 14px", 
+                      borderRadius: 12, 
+                      marginBottom: 4, 
+                      textAlign: "left", 
+                      color: activeTab === item.id ? "#000000" : "#555555", 
+                      fontWeight: activeTab === item.id ? 800 : 600, 
+                      fontSize: 14, 
+                      border: "none", 
+                      background: activeTab === item.id ? "#F3F4F6" : "transparent", 
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <span style={{ fontSize: 16 }}>{item.icon}</span>{item.label}
+                  </button>
+                ))}
+              </div>
+
+              {!profile?.isGuest && (
+                <div style={{ padding: "16px 20px", borderTop: "1px solid rgba(0,0,0,0.06)" }}>
                   <button onClick={onLogout}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, color: C.red, fontWeight: 700, fontSize: 14, border: "none", background: `${C.red}15`, cursor: "pointer" }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 12, color: "#E63946", fontWeight: 700, fontSize: 14, border: "none", background: "#FEF2F2", cursor: "pointer" }}
                   >
                     <LogOut size={16} /> Logout
                   </button>
                 </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ----------------- MAIN CONTENT BODY ----------------- */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
+        
+
 
         {/* Tab Display Body */}
         <main style={{ flex: 1, padding: "24px 20px 100px", overflowY: "auto", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
@@ -720,109 +918,244 @@ export const CustomerScreen = ({
 
             {/* 1. HOME TAB */}
             {activeTab === "home" && (
-              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-                {/* Premium Banner */}
-                <div style={{ background: "linear-gradient(135deg, #0A1F44 0%, #000 100%)", borderRadius: 24, padding: "40px 24px", border: `2px solid ${C.accent}`, position: "relative", overflow: "hidden", boxShadow: "0 10px 30px rgba(0,0,0,0.15)" }}>
-                  <div style={{ position: "relative", zIndex: 2 }}>
-                    <span style={{ color: C.accent, fontSize: 12, fontWeight: 800, textTransform: "uppercase", letterSpacing: "2px" }}>Exclusive Club Offer</span>
-                    <h2 className="pf" style={{ fontSize: 30, fontWeight: 900, color: "#fff", marginTop: 8, marginBottom: 12, lineHeight: 1.2 }}>LUXURY FASHION &<br />SEASONAL FESTIVALS</h2>
-                    <p style={{ color: "#eee", fontSize: 14, maxWidth: 320, lineHeight: 1.5, marginBottom: 20 }}>Browse premium shirts, custom wear, and ethnic catalogs. Place instant reservations now.</p>
-                    <button onClick={() => setActiveTab("products")} style={{ background: C.accent, color: "#000", border: "none", padding: "12px 24px", borderRadius: 12, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}>Shop Collection →</button>
+              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} style={{ display: "flex", flexDirection: "column", gap: 32 }}>
+                
+                {/* Premium D2C Hero Banner */}
+                <div style={{ 
+                  background: "linear-gradient(135deg, #FDFBF7 0%, #EAE5D9 100%)", 
+                  borderRadius: 28, 
+                  padding: isDesktop ? "80px 60px" : "40px 24px", 
+                  position: "relative", 
+                  overflow: "hidden", 
+                  boxShadow: "0 10px 40px rgba(0,0,0,0.02)",
+                  border: "1px solid rgba(0,0,0,0.04)",
+                  display: "flex",
+                  alignItems: "center"
+                }}>
+                  <div style={{ position: "relative", zIndex: 2, maxWidth: 520 }}>
+                    <span style={{ color: "#8B7355", fontSize: 11, fontWeight: 900, textTransform: "uppercase", letterSpacing: "2.5px", display: "block", marginBottom: 12 }}>
+                      Summer Drops 2026
+                    </span>
+                    <h2 className="pf" style={{ 
+                      fontSize: isDesktop ? 46 : 30, 
+                      fontWeight: 900, 
+                      color: "#111111", 
+                      lineHeight: 1.1,
+                      letterSpacing: "-1px",
+                      margin: "0 0 14px",
+                      textTransform: "uppercase"
+                    }}>
+                      ESSENTIALS FOR<br />THE MODERN YOUTH
+                    </h2>
+                    <p style={{ color: "#555555", fontSize: 14, lineHeight: 1.6, margin: "0 0 28px" }}>
+                      Affordable. Trendy. Premium Quality. Discover the curated drops made for everyday comfort and street style.
+                    </p>
+                    <button 
+                      onClick={() => setActiveTab("products")} 
+                      style={{ 
+                        background: "#000000", 
+                        color: "#FFFFFF", 
+                        border: "none", 
+                        padding: "14px 32px", 
+                        borderRadius: 100, 
+                        fontSize: 13, 
+                        fontWeight: 800, 
+                        cursor: "pointer", 
+                        textTransform: "uppercase", 
+                        letterSpacing: "1px",
+                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                        transition: "all 0.2s"
+                      }}
+                      className="shadow-hover"
+                    >
+                      Shop Collection →
+                    </button>
                   </div>
-                  <div style={{ position: "absolute", right: -30, bottom: -30, opacity: 0.15, transform: "rotate(-15deg)" }}>
-                    <Shirt size={240} color={C.accent} />
-                  </div>
+                  {isDesktop && (
+                    <div style={{ position: "absolute", right: 60, top: "50%", transform: "translateY(-50%)", opacity: 0.8 }}>
+                      <Shirt size={280} color="rgba(139,115,85,0.06)" strokeWidth={1} />
+                    </div>
+                  )}
                 </div>
 
-                {/* Account Points Preview */}
-                {profile.isGuest ? (
-                  <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1.5px dashed ${C.accent}`, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, boxShadow: "0 4px 15px rgba(0,0,0,0.02)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Award size={24} color={C.accent} />
+                {/* Account Points & Loyalty Metrics */}
+                {!profile.isGuest && (
+                  <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "1fr 1fr" : "1fr", gap: 16 }}>
+                    <div style={{ background: "#FFFFFF", borderRadius: 20, padding: 20, border: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 14 }} className="shadow-soft">
+                      <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(139,115,85,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Award size={22} color="#8B7355" />
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, fontWeight: 800, color: C.dark, margin: 0 }}>Join the Customer Club</p>
-                        <p style={{ fontSize: 11, color: C.muted, margin: "2px 0 0" }}>Earn loyalty points for discount key vouchers and track orders!</p>
+                        <p style={{ fontSize: 11, color: "#666", fontWeight: 600, margin: 0 }}>Loyalty balance</p>
+                        <p className="pf" style={{ fontSize: 22, fontWeight: 900, color: "#111", margin: 0 }}>{loyaltyPoints} Pts Available</p>
                       </div>
                     </div>
-                    <button onClick={onLogout} style={{ background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "8px 16px", borderRadius: 10, fontSize: 11, fontWeight: 800, cursor: "pointer", whiteSpace: "nowrap" }}>Join Now</button>
-                  </div>
-                ) : (
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                    <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.accent}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <Award size={24} color={C.accent} />
+                    <div style={{ background: "#FFFFFF", borderRadius: 20, padding: 20, border: "1px solid rgba(0,0,0,0.06)", display: "flex", alignItems: "center", gap: 14 }} className="shadow-soft">
+                      <div style={{ width: 44, height: 44, borderRadius: 14, background: "rgba(45,106,79,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <ShoppingBag size={22} color="#2D6A4F" />
                       </div>
                       <div>
-                        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Loyalty Balance</p>
-                        <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.dark, margin: 0 }}>{loyaltyPoints} Pts</p>
-                      </div>
-                    </div>
-                    <div style={{ background: C.card, borderRadius: 20, padding: 18, border: `1px solid ${C.border}`, display: "flex", alignItems: "center", gap: 14 }}>
-                      <div style={{ width: 44, height: 44, borderRadius: 12, background: `${C.green}15`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        <ShoppingBag size={24} color={C.green} />
-                      </div>
-                      <div>
-                        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, margin: 0 }}>Total Purchases</p>
-                        <p className="pf" style={{ fontSize: 20, fontWeight: 900, color: C.green, margin: 0 }}>₹{totalPurchase.toLocaleString("en-IN")}</p>
+                        <p style={{ fontSize: 11, color: "#666", fontWeight: 600, margin: 0 }}>Total Purchases</p>
+                        <p className="pf" style={{ fontSize: 22, fontWeight: 900, color: "#2D6A4F", margin: 0 }}>₹{totalPurchase.toLocaleString("en-IN")}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* Promo Spotlight Banner */}
-                <div 
-                  onClick={() => setActiveTab("offers")}
-                  style={{ background: "#FFFBF0", borderRadius: 20, padding: "18px 24px", border: `1.5px dashed ${C.accent}`, display: "flex", alignItems: "center", gap: 16, cursor: "pointer" }}
-                >
-                  <span style={{ fontSize: 28 }}>✨</span>
-                  <div style={{ flex: 1 }}>
-                    <h4 style={{ fontSize: 14, fontWeight: 800, color: C.dark, margin: 0 }}>Flat 50% Off Vouchers Active</h4>
-                    <p style={{ fontSize: 12, color: C.muted, margin: "2px 0 0" }}>Check your special code keys in the Offers tab. Redeem points at checkouts!</p>
+                {/* Category Spotlight Grid */}
+                <div>
+                  <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111", marginBottom: 16 }}>Shop by Category</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 16 }}>
+                    {[
+                      { name: "Shirts", category: "Shirt", bg: "#FAF8F5", icon: "👔" },
+                      { name: "T-Shirts", category: "T-Shirt", bg: "#F5F7FA", icon: "👕" },
+                      { name: "Jeans", category: "Jeans", bg: "#F5F8FA", icon: "👖" },
+                      { name: "Ethnic wear", category: "Kurta", bg: "#FAF5F6", icon: "🕌" }
+                    ].map(cat => (
+                      <div
+                        key={cat.name}
+                        onClick={() => { setSelectedCategory(cat.category); setActiveTab("products"); }}
+                        style={{
+                          background: cat.bg,
+                          borderRadius: 22,
+                          padding: "24px 20px",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: 12,
+                          cursor: "pointer",
+                          border: "1px solid rgba(0,0,0,0.02)",
+                          transition: "all 0.2s"
+                        }}
+                        className="shadow-hover"
+                      >
+                        <span style={{ fontSize: 32 }}>{cat.icon}</span>
+                        <span style={{ fontSize: 13, fontWeight: 800, color: "#111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.name}</span>
+                      </div>
+                    ))}
                   </div>
-                  <ChevronRight size={18} color={C.accent} />
                 </div>
 
-                {/* Latest Arrivals horizontal track */}
+                {/* Promo Spotlight Banner (Glassmorphism) */}
+                <div 
+                  onClick={() => setActiveTab("offers")}
+                  style={{ 
+                    background: "rgba(253, 251, 247, 0.6)", 
+                    borderRadius: 24, 
+                    padding: "20px 24px", 
+                    border: "1px dashed #8B7355", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: 16, 
+                    cursor: "pointer",
+                    boxShadow: "0 8px 30px rgba(0,0,0,0.02)"
+                  }}
+                  className="glass-effect"
+                >
+                  <span style={{ fontSize: 24 }}>✨</span>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: 14, fontWeight: 800, color: "#111", margin: 0 }}>Flat 50% Off Vouchers Active</h4>
+                    <p style={{ fontSize: 12, color: "#666", margin: "2px 0 0" }}>Check your special code keys in the Offers tab. Redeem points at checkouts!</p>
+                  </div>
+                  <ChevronRight size={18} color="#8B7355" />
+                </div>
+
+                {/* New Drops Carousel */}
                 <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                    <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, margin: 0 }}>New Arrivals</h3>
-                    <button onClick={() => setActiveTab("products")} style={{ background: "none", border: "none", color: C.accent, fontSize: 13, fontWeight: 700, cursor: "pointer" }}>View Catalog</button>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                    <div>
+                      <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#111", margin: 0 }}>NEW DROPS</h3>
+                      <p style={{ fontSize: 12, color: "#777", margin: "2px 0 0" }}>Exclusive summer styles for you</p>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTab("products")} 
+                      style={{ background: "none", border: "none", color: "#8B7355", fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
+                    >
+                      View All
+                    </button>
                   </div>
                   
                   {products.length === 0 ? (
-                    <div style={{ textAlign: "center", padding: "40px 0", background: C.card, borderRadius: 16, border: `1px solid ${C.border}` }}>
-                      <p style={{ color: C.muted, fontSize: 13, margin: 0 }}>No items in stock.</p>
+                    <div style={{ textAlign: "center", padding: "40px 0", background: "#F9F9FB", borderRadius: 20, border: "1px solid rgba(0,0,0,0.06)" }}>
+                      <p style={{ color: "#777", fontSize: 13, margin: 0 }}>No items in stock.</p>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", gap: 16, overflowX: "auto", paddingBottom: 12 }} className="no-scrollbar">
-                      {products.slice(0, 6).map(p => {
+                    <div style={{ display: "flex", gap: 18, overflowX: "auto", paddingBottom: 16 }} className="no-scrollbar">
+                      {products.slice(0, 8).map(p => {
                         const isWish = isProductWishlisted(p.id);
+                        const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
                         return (
                           <div 
                             key={p.id} 
-                            style={{ background: C.card, borderRadius: 18, padding: 14, border: `1px solid ${C.border}`, minWidth: 190, width: 190, flexShrink: 0, position: "relative", boxShadow: "0 4px 10px rgba(0,0,0,0.01)" }}
+                            style={{ 
+                              background: "#FFFFFF", 
+                              borderRadius: 22, 
+                              padding: 14, 
+                              border: "1px solid rgba(0,0,0,0.05)", 
+                              minWidth: isDesktop ? 220 : 190, 
+                              width: isDesktop ? 220 : 190, 
+                              flexShrink: 0, 
+                              position: "relative",
+                              cursor: "pointer"
+                            }}
+                            className="product-card-hover shadow-hover shadow-soft"
                           >
                             <button 
-                              onClick={() => toggleWishlist(p.id)}
-                              style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,0.8)", border: "none", borderRadius: "50%", width: 28, height: 28, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, boxShadow: "0 2px 5px rgba(0,0,0,0.1)" }}
+                              onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+                              style={{ 
+                                position: "absolute", 
+                                top: 22, 
+                                right: 22, 
+                                background: "#FFFFFF", 
+                                border: "none", 
+                                borderRadius: "50%", 
+                                width: 32, 
+                                height: 32, 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                cursor: "pointer", 
+                                zIndex: 10, 
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
+                              }}
                             >
-                              <Heart size={16} fill={isWish ? C.red : "none"} color={isWish ? C.red : C.muted} />
+                              <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
                             </button>
                             <div 
                               onClick={() => setSelectedProduct(p)}
-                              style={{ width: "100%", height: 150, borderRadius: 12, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: 12, cursor: "pointer" }}
+                              style={{ 
+                                width: "100%", 
+                                height: isDesktop ? 200 : 160, 
+                                borderRadius: 16, 
+                                background: "#F5F5F3", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                overflow: "hidden", 
+                                marginBottom: 12, 
+                                border: "1px solid rgba(0,0,0,0.02)" 
+                              }}
                             >
                               {p.image ? (
-                                <img src={p.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
+                                <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
                               ) : (
-                                <Shirt size={40} color={C.muted} />
+                                <Shirt size={44} color="#888888" strokeWidth={1.5} />
                               )}
                             </div>
-                            <span style={{ fontSize: 9, color: C.accent, fontWeight: 800, textTransform: "uppercase" }}>{p.brand || "Shiv Western"}</span>
-                            <h4 style={{ fontSize: 13, fontWeight: 700, color: C.dark, margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-                            <p className="pf" style={{ fontSize: 15, fontWeight: 900, color: C.dark, margin: 0 }}>₹{(p.price || p.sellingPrice || 0).toLocaleString("en-IN")}</p>
+                            <div onClick={() => setSelectedProduct(p)}>
+                              <span style={{ fontSize: 9, color: "#888", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
+                              <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
+                              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
+                                <span className="pf" style={{ fontSize: 15, fontWeight: 900, color: "#111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
+                                {mrp > finalPrice && (
+                                  <>
+                                    <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999" }}>₹{mrp.toLocaleString("en-IN")}</span>
+                                    <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         );
                       })}
@@ -889,89 +1222,143 @@ export const CustomerScreen = ({
                       const isLowStock = hasStock && stockVal < 5;
 
                       return (
-                        <motion.div 
+                        <div 
                           key={p.id}
-                          whileHover={{ y: -6, boxShadow: "0 12px 30px rgba(0,0,0,0.08)" }}
-                          transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                          style={{ background: C.card, borderRadius: 20, padding: 14, border: `1.5px solid ${C.border}`, position: "relative", display: "flex", flexDirection: "column", justifyContent: "space-between" }}
+                          style={{ 
+                            background: "#FFFFFF", 
+                            borderRadius: 22, 
+                            padding: 14, 
+                            border: "1px solid rgba(0,0,0,0.05)", 
+                            position: "relative", 
+                            display: "flex", 
+                            flexDirection: "column", 
+                            justifyContent: "space-between",
+                            cursor: "pointer"
+                          }}
+                          className="product-card-hover shadow-hover shadow-soft"
+                          onClick={() => setSelectedProduct(p)}
                         >
                           <div>
                             {/* Wishlist Heart Button */}
                             <button 
-                              onClick={(e) => toggleWishlist(p.id, e)}
-                              style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,0.9)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", zIndex: 10, boxShadow: "0 2px 8px rgba(0,0,0,0.12)", transition: "0.2s" }}
+                              onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id, e); }}
+                              style={{ 
+                                position: "absolute", 
+                                top: 22, 
+                                right: 22, 
+                                background: "#FFFFFF", 
+                                border: "none", 
+                                borderRadius: "50%", 
+                                width: 32, 
+                                height: 32, 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                cursor: "pointer", 
+                                zIndex: 10, 
+                                boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
+                              }}
                             >
-                              <Heart size={16} fill={isWish ? C.red : "none"} color={isWish ? C.red : C.muted} />
+                              <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
                             </button>
 
                             {/* Product Image Wrapper */}
                             <div 
-                              onClick={() => setSelectedProduct(p)}
-                              style={{ width: "100%", height: 160, borderRadius: 14, background: C.bg, display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", border: `1px solid ${C.border}`, marginBottom: 12, cursor: "pointer", position: "relative" }}
+                              style={{ 
+                                width: "100%", 
+                                height: 180, 
+                                borderRadius: 16, 
+                                background: "#F5F5F3", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                overflow: "hidden", 
+                                border: "1px solid rgba(0,0,0,0.02)", 
+                                marginBottom: 12, 
+                                position: "relative" 
+                              }}
                             >
                               {p.image ? (
-                                <img src={p.image} style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }} className="hover-zoom" alt={p.name} />
+                                <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
                               ) : (
-                                <Shirt size={44} color={C.muted} />
+                                <Shirt size={44} color="#888888" strokeWidth={1.5} />
                               )}
+                              
+                              {/* Stock status badge overlay */}
+                              <div style={{ position: "absolute", bottom: 10, left: 10, zIndex: 5 }}>
+                                {!hasStock ? (
+                                  <span style={{ background: "#FEE2E2", color: "#DC2626", fontSize: 9, padding: "4px 8px", borderRadius: 100, fontWeight: 800 }}>
+                                    Out of Stock
+                                  </span>
+                                ) : isLowStock ? (
+                                  <span style={{ background: "#FEF3C7", color: "#D97706", fontSize: 9, padding: "4px 8px", borderRadius: 100, fontWeight: 800 }}>
+                                    Only {stockVal} left!
+                                  </span>
+                                ) : null}
+                              </div>
                             </div>
 
                             {/* Brand & Category */}
                             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-                              <span style={{ fontSize: 10, color: C.accent, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.5px" }}>{p.brand || "Shiv Western"}</span>
-                              <span style={{ background: C.bg, color: C.muted, fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{p.category || "General"}</span>
+                              <span style={{ fontSize: 9, color: "#8B7355", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
+                              <span style={{ background: "#F3F4F6", color: "#666", fontSize: 9, padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>{p.category || "General"}</span>
                             </div>
 
                             {/* Product Name */}
-                            <h4 style={{ fontSize: 14, fontWeight: 700, color: C.dark, margin: "0 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
+                            <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: "0 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
 
-                            {/* Size & Color summary */}
-                            <div style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 10 }}>
-                              {p.size && (
-                                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
-                                  <strong>Sizes:</strong> {p.size}
-                                </p>
-                              )}
-                              {p.color && (
-                                <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>
-                                  <strong>Colors:</strong> {p.color}
-                                </p>
-                              )}
-                            </div>
+                            {/* Sizes */}
+                            {p.size && (
+                              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 12 }}>
+                                {p.size.split(",").map((s: string) => (
+                                  <span key={s} style={{ fontSize: 8, padding: "1px 5px", border: "1px solid rgba(0,0,0,0.06)", borderRadius: 4, color: "#777", fontWeight: 750 }}>
+                                    {s.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
 
                           <div>
-                            {/* Price and Stock Status */}
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                              <p className="pf" style={{ fontSize: 16, fontWeight: 900, color: C.dark, margin: 0 }}>₹{(p.price || p.sellingPrice || 0).toLocaleString("en-IN")}</p>
-                              
-                              {/* Stock status badge */}
-                              {isLowStock ? (
-                                <span style={{ background: "#FEF3C7", color: "#D97706", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
-                                  Only {stockVal} left!
-                                </span>
-                              ) : hasStock ? (
-                                <span style={{ background: "#D1FAE5", color: "#059669", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
-                                  In Stock
-                                </span>
-                              ) : (
-                                <span style={{ background: "#FEE2E2", color: "#DC2626", fontSize: 9, padding: "3px 8px", borderRadius: 100, fontWeight: 800 }}>
-                                  Out of Stock
-                                </span>
-                              )}
-                            </div>
+                            {/* Price details */}
+                            {(() => {
+                              const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
+                              return (
+                                <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 12 }}>
+                                  <span className="pf" style={{ fontSize: 16, fontWeight: 900, color: "#111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
+                                  {mrp > finalPrice && (
+                                    <>
+                                      <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999" }}>₹{mrp.toLocaleString("en-IN")}</span>
+                                      <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
+                                    </>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
-                            {/* Enquiry Action Button */}
+                            {/* Primary Button */}
                             <button 
-                              onClick={() => setSelectedProduct(p)}
-                              style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "10px", borderRadius: 10, fontSize: 12, fontWeight: 800, cursor: "pointer", transition: "0.2s", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}
-                              onMouseEnter={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.color = "#000"; }}
-                              onMouseLeave={e => { e.currentTarget.style.background = C.dark; e.currentTarget.style.color = C.accent; }}
+                              style={{ 
+                                width: "100%", 
+                                background: "#000000", 
+                                color: "#FFFFFF", 
+                                border: "none", 
+                                padding: "10px", 
+                                borderRadius: 100, 
+                                fontSize: 12, 
+                                fontWeight: 800, 
+                                cursor: "pointer", 
+                                transition: "all 0.2s", 
+                                display: "flex", 
+                                alignItems: "center", 
+                                justifyContent: "center", 
+                                gap: 6 
+                              }}
                             >
-                              💬 View Details & Enquire
+                              View Details & Buy
                             </button>
                           </div>
-                        </motion.div>
+                        </div>
                       );
                     })}
                   </div>
@@ -1532,20 +1919,20 @@ export const CustomerScreen = ({
       {/* Product Details Modal */}
       <AnimatePresence>
         {selectedProduct && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", padding: 20 }}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", padding: 20 }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              style={{ background: C.card, borderRadius: 24, padding: 24, width: "100%", maxWidth: 440, border: `1.5px solid ${C.accent}`, boxShadow: "0 10px 30px rgba(0,0,0,0.15)", position: "relative" }}
+              style={{ background: "#FFFFFF", borderRadius: 28, padding: 28, width: "100%", maxWidth: 460, border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.08)", position: "relative" }}
             >
               <button 
                 onClick={() => { setSelectedProduct(null); setSelectedSize(""); setSelectedColor(""); }}
-                style={{ position: "absolute", right: 20, top: 20, background: C.bg, border: "none", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: C.muted, fontWeight: 700 }}
+                style={{ position: "absolute", right: 24, top: 24, background: "#F3F4F6", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#111111", fontWeight: 700 }}
               >
                 ✕
               </button>
-              <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, marginBottom: 18 }}>Product Details</h3>
+              <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginBottom: 18 }}>Product Details</h3>
               {renderProductDetails(selectedProduct)}
             </motion.div>
           </div>
@@ -1555,57 +1942,57 @@ export const CustomerScreen = ({
       {/* Guest Conversion Modal Popup */}
       <AnimatePresence>
         {showConversionModal && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", padding: 20 }}>
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)", backdropFilter: "blur(6px)", padding: 20 }}>
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 30 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 30 }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              style={{ background: "linear-gradient(135deg, #0A1F44 0%, #000 100%)", borderRadius: 28, padding: "32px 28px", width: "100%", maxWidth: 440, border: `2px solid ${C.accent}`, boxShadow: "0 20px 50px rgba(0,0,0,0.3)", position: "relative", textAlign: "center", color: "#fff" }}
+              style={{ background: "#FFFFFF", borderRadius: 28, padding: "36px 32px", width: "100%", maxWidth: 460, border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 25px 60px rgba(0,0,0,0.1)", position: "relative", textAlign: "center", color: "#111111" }}
             >
               <button 
                 onClick={() => setShowConversionModal(false)}
-                style={{ position: "absolute", right: 20, top: 20, background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#fff", fontWeight: 700 }}
+                style={{ position: "absolute", right: 24, top: 24, background: "#F3F4F6", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#111111", fontWeight: 700 }}
               >
                 ✕
               </button>
 
-              <div style={{ display: "inline-flex", width: 64, height: 64, borderRadius: "50%", background: "rgba(212, 175, 55, 0.15)", alignItems: "center", justifyContent: "center", border: `2px solid ${C.accent}`, marginBottom: 20 }}>
-                <Award size={32} color={C.accent} />
+              <div style={{ display: "inline-flex", width: 60, height: 60, borderRadius: "50%", background: "rgba(139,115,85,0.1)", alignItems: "center", justifyContent: "center", border: "1px solid rgba(139,115,85,0.2)", marginBottom: 20 }}>
+                <Award size={28} color="#8B7355" />
               </div>
 
-              <h3 className="pf" style={{ fontSize: 22, fontWeight: 900, color: C.accent, marginBottom: 8 }}>Unlock Club Member Perks! 🌟</h3>
-              <p style={{ fontSize: 13, color: "#e0e0e0", lineHeight: 1.5, margin: "0 0 24px" }}>
+              <h3 className="pf" style={{ fontSize: 22, fontWeight: 900, color: "#111111", marginBottom: 8 }}>Unlock Club Member Perks! 🌟</h3>
+              <p style={{ fontSize: 13, color: "#555555", lineHeight: 1.5, margin: "0 0 24px" }}>
                 Add items to cart and create a free account today to claim your special benefits. It takes less than 30 seconds!
               </p>
 
-              <div style={{ display: "flex", flexDirection: "column", gap: 14, textAlign: "left", marginBottom: 28, background: "rgba(255,255,255,0.05)", padding: 18, borderRadius: 16, border: "1px solid rgba(255,255,255,0.08)" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left", marginBottom: 28, background: "#F9F9FB", padding: 18, borderRadius: 20, border: "1px solid rgba(0,0,0,0.04)" }}>
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 16 }}>🏷️</span>
                   <div>
-                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Flat 50% Off & Vouchers</h5>
-                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Unlock exclusive voucher codes (e.g. SHIVW50) at counter checkout.</p>
+                    <h5 style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "#111111" }}>Flat 50% Off & Vouchers</h5>
+                    <p style={{ fontSize: 11, color: "#666", margin: "2px 0 0" }}>Unlock exclusive voucher codes (e.g. SHIVW50) at counter checkout.</p>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 16 }}>🏆</span>
                   <div>
-                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Loyalty Cashpoints</h5>
-                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Earn 1 point per ₹100 spent, redeemable directly for cash discounts.</p>
+                    <h5 style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "#111111" }}>Loyalty Cashpoints</h5>
+                    <p style={{ fontSize: 11, color: "#666", margin: "2px 0 0" }}>Earn 1 point per ₹100 spent, redeemable directly for cash discounts.</p>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 16 }}>📦</span>
                   <div>
-                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Real-time Reservation Tracking</h5>
-                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Track reservation status, approvals, and order records instantly.</p>
+                    <h5 style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "#111111" }}>Real-time Reservation Tracking</h5>
+                    <p style={{ fontSize: 11, color: "#666", margin: "2px 0 0" }}>Track reservation status, approvals, and order records instantly.</p>
                   </div>
                 </div>
                 <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
                   <span style={{ fontSize: 16 }}>📄</span>
                   <div>
-                    <h5 style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "#fff" }}>Digital Receipts & PDF Invoices</h5>
-                    <p style={{ fontSize: 11, color: "#ccc", margin: "2px 0 0" }}>Retrieve or share your invoices via PDF download or WhatsApp.</p>
+                    <h5 style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "#111111" }}>Digital Receipts & PDF Invoices</h5>
+                    <p style={{ fontSize: 11, color: "#666", margin: "2px 0 0" }}>Retrieve or share your invoices via PDF download or WhatsApp.</p>
                   </div>
                 </div>
               </div>
@@ -1616,13 +2003,13 @@ export const CustomerScreen = ({
                     setShowConversionModal(false);
                     onLogout(true);
                   }}
-                  style={{ width: "100%", background: C.accent, color: "#000", border: "none", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: `0 4px 15px rgba(212, 175, 55, 0.4)` }}
+                  style={{ width: "100%", background: "#000000", color: "#FFFFFF", border: "none", padding: "14px", borderRadius: 100, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 6px 20px rgba(0,0,0,0.15)" }}
                 >
                   Create Club Account
                 </button>
                 <button 
                   onClick={() => setShowConversionModal(false)}
-                  style={{ width: "100%", background: "transparent", color: "#ccc", border: "1.5px solid rgba(255,255,255,0.2)", padding: "12px", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
+                  style={{ width: "100%", background: "transparent", color: "#444444", border: "1px solid rgba(0,0,0,0.15)", padding: "12px", borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: "pointer" }}
                 >
                   Continue as Guest
                 </button>
