@@ -16,9 +16,13 @@ const getNavLinks = (role?: string) => {
   
   return [
     { icon: <LayoutDashboard size={20} />, label: "Dashboard", tab: "dashboard", show: isAuthorized },
-    { icon: <Plus size={20} />, label: "Billing", tab: "bill", show: true },
-    { icon: <ShoppingBag size={20} />, label: "Products", tab: "products", show: true },
-    { icon: <ClipboardList size={20} />, label: "Orders", tab: "orders", show: true },
+    { icon: <Plus size={20} />, label: "Billing", tab: "bill", show: isAuthorized },
+    { icon: <History size={20} />, label: "Bill History", tab: "history", show: isAuthorized },
+    { icon: <ShoppingBag size={20} />, label: "Products", tab: "products", show: isAuthorized },
+    { icon: <Boxes size={20} />, label: "Stock Inventory", tab: "inventory", show: isAuthorized },
+    { icon: <Users size={20} />, label: "Customers", tab: "customers", show: isAuthorized },
+    { icon: <ClipboardList size={20} />, label: "Orders", tab: "orders", show: isAuthorized },
+    { icon: <TrendingUp size={20} />, label: "Analytics Reports", tab: "reports", show: isAuthorized },
     { icon: <Tag size={20} />, label: "Categories", tab: "categories", show: isAuthorized },
     { icon: <Image size={20} />, label: "Banners", tab: "banners", show: isAuthorized },
     { icon: <SettingsIcon size={20} />, label: "Settings", tab: "settings", show: isAuthorized }
