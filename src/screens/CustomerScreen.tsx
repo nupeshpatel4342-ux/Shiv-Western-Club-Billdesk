@@ -1358,14 +1358,14 @@ export const CustomerScreen = ({
         {activeTab === "home" && (() => {
           if (activeBanners === null) {
             return (
-              <div className="w-full h-[250px] md:h-[400px] lg:h-[600px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
+              <div className="w-full h-[200px] md:h-[300px] lg:h-[400px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
                 Loading promotional banners...
               </div>
             );
           }
           return (
             <div
-              className="w-full h-[250px] md:h-[400px] lg:h-[600px] relative overflow-hidden"
+              className="w-full h-[200px] md:h-[300px] lg:h-[400px] relative overflow-hidden"
               onMouseEnter={() => setSlidePaused(true)}
               onMouseLeave={() => setSlidePaused(false)}
             >
