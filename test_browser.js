@@ -16,7 +16,7 @@ import puppeteer from 'puppeteer';
   await new Promise(r => setTimeout(r, 3000));
   
   console.log('Taking screenshot...');
-  await page.screenshot({ path: 'screenshot.png' });
+  await page.screenshot({ path: 'screenshot.png', fullPage: true });
   
   console.log('Done.');
   await browser.close();

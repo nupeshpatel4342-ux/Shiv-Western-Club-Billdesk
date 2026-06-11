@@ -477,6 +477,44 @@ export const CustomerScreen = ({
     }
   };
 
+  const handleQuickAddToCart = (e: React.MouseEvent, product: any) => {
+    e.stopPropagation();
+    if (profile.isGuest) {
+      onLogout(true);
+      return;
+    }
+    
+    const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["M"];
+    const defaultSize = sizes[0] || "M";
+    
+    const colors = product.color ? product.color.split(",").map((c: string) => c.trim()) : ["Standard"];
+    const defaultColor = colors[0] || "Standard";
+
+    const existingIndex = cart.findIndex(
+      item => item.id === product.id && item.size === defaultSize && item.color === defaultColor
+    );
+
+    let updatedCart;
+    if (existingIndex > -1) {
+      updatedCart = [...cart];
+      updatedCart[existingIndex].qty += 1;
+    } else {
+      updatedCart = [...cart, {
+        id: product.id,
+        name: product.name,
+        price: product.price || product.sellingPrice,
+        size: defaultSize,
+        color: defaultColor,
+        image: product.image,
+        brand: product.brand,
+        qty: 1
+      }];
+    }
+
+    setCart(updatedCart);
+    alert(`🎉 Added "${product.name}" (Size: ${defaultSize}) to your cart!`);
+  };
+
   const updateCartQty = (productId: string, size: string, color: string, delta: number) => {
     const updated = cart.map(item => {
       if (item.id === productId && item.size === size && item.color === color) {
@@ -649,6 +687,96 @@ export const CustomerScreen = ({
     }
   };
 
+  const renderProductCard = (p: CatalogProduct) => {
+    const isWish = isProductWishlisted(p.id);
+    const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
+    
+    return (
+      <div 
+        key={p.id} 
+        style={{ 
+          background: "#FFFFFF", 
+          borderRadius: 22, 
+          padding: 14, 
+          border: "1px solid rgba(0,0,0,0.05)", 
+          position: "relative",
+          cursor: "pointer"
+        }}
+        className="prod-card shadow-hover shadow-soft"
+        onClick={() => setSelectedProduct(p)}
+      >
+        {/* Wishlist Button */}
+        <button 
+          onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+          style={{ 
+            position: "absolute", 
+            top: 22, 
+            right: 22, 
+            background: "#FFFFFF", 
+            border: "none", 
+            borderRadius: "50%", 
+            width: 32, 
+            height: 32, 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            cursor: "pointer", 
+            zIndex: 10, 
+            boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
+          }}
+        >
+          <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
+        </button>
+
+        {/* Image Container with Add to Cart Overlay */}
+        <div 
+          style={{ 
+            width: "100%", 
+            height: isDesktop ? 220 : 170, 
+            borderRadius: 16, 
+            background: "#F5F5F3", 
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center", 
+            overflow: "hidden", 
+            marginBottom: 12, 
+            border: "1px solid rgba(0,0,0,0.02)",
+            position: "relative"
+          }}
+        >
+          {p.image ? (
+            <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
+          ) : (
+            <Shirt size={44} color="#888888" strokeWidth={1.5} />
+          )}
+
+          {/* Quick Add to Cart Hover Button */}
+          <button 
+            className="prod-add-to-cart-btn"
+            onClick={(e) => handleQuickAddToCart(e, p)}
+          >
+            {profile.isGuest ? "🔑 Join to Buy" : "🛒 Add to Cart"}
+          </button>
+        </div>
+
+        {/* Content details */}
+        <div>
+          <span style={{ fontSize: 9, color: "#888888", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
+          <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111111", margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
+            <span className="pf" style={{ fontSize: 15, fontWeight: 900, color: "#111111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
+            {mrp > finalPrice && (
+              <>
+                <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999999" }}>₹{mrp.toLocaleString("en-IN")}</span>
+                <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderProductDetails = (product: any) => {
     const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["S", "M", "L", "XL"];
     const colors = product.color ? product.color.split(",").map((c: string) => c.trim()) : ["Standard"];
@@ -737,7 +865,7 @@ export const CustomerScreen = ({
             onClick={() => addToCart(product)}
             style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
           >
-            🛒 Add to Cart
+            {profile.isGuest ? "🔑 Join Club to Buy" : "🛒 Add to Cart"}
           </button>
           <button 
             onClick={() => handleEnquiry(product)}
@@ -1588,15 +1716,20 @@ export const CustomerScreen = ({
                   <ChevronRight size={18} color="#8B7355" />
                 </div>
 
-                {/* New Drops Carousel */}
+                {/* 1. New Arrivals Section */}
                 <div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
                     <div>
-                      <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#111", margin: 0 }}>NEW DROPS</h3>
-                      <p style={{ fontSize: 12, color: "#777", margin: "2px 0 0" }}>Exclusive summer styles for you</p>
+                      <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#111111", margin: 0 }}>NEW ARRIVALS</h3>
+                      <p style={{ fontSize: 12, color: "#777777", margin: "2px 0 0" }}>The latest drops in style and trends</p>
                     </div>
                     <button 
-                      onClick={() => setActiveTab("products")} 
+                      onClick={() => {
+                        setActiveTab("products");
+                        setSelectedCategory("All");
+                        setSearchQuery("");
+                        setSortBy("newest");
+                      }} 
                       style={{ background: "none", border: "none", color: "#8B7355", fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
                     >
                       View All
@@ -1605,87 +1738,50 @@ export const CustomerScreen = ({
                   
                   {products.length === 0 ? (
                     <div style={{ textAlign: "center", padding: "40px 0", background: "#F9F9FB", borderRadius: 20, border: "1px solid rgba(0,0,0,0.06)" }}>
-                      <p style={{ color: "#777", fontSize: 13, margin: 0 }}>No items in stock.</p>
+                      <p style={{ color: "#777777", fontSize: 13, margin: 0 }}>No items in stock.</p>
                     </div>
                   ) : (
-                    <div style={{ display: "flex", gap: 18, overflowX: "auto", paddingBottom: 16 }} className="no-scrollbar">
-                      {products.slice(0, 8).map(p => {
-                        const isWish = isProductWishlisted(p.id);
-                        const { finalPrice, mrp, discountPct } = getProductPriceInfo(p);
-                        return (
-                          <div 
-                            key={p.id} 
-                            style={{ 
-                              background: "#FFFFFF", 
-                              borderRadius: 22, 
-                              padding: 14, 
-                              border: "1px solid rgba(0,0,0,0.05)", 
-                              minWidth: isDesktop ? 220 : 190, 
-                              width: isDesktop ? 220 : 190, 
-                              flexShrink: 0, 
-                              position: "relative",
-                              cursor: "pointer"
-                            }}
-                            className="product-card-hover shadow-hover shadow-soft"
-                          >
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
-                              style={{ 
-                                position: "absolute", 
-                                top: 22, 
-                                right: 22, 
-                                background: "#FFFFFF", 
-                                border: "none", 
-                                borderRadius: "50%", 
-                                width: 32, 
-                                height: 32, 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                cursor: "pointer", 
-                                zIndex: 10, 
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.06)" 
-                              }}
-                            >
-                              <Heart size={16} fill={isWish ? "#E63946" : "none"} color={isWish ? "#E63946" : "#777777"} />
-                            </button>
-                            <div 
-                              onClick={() => setSelectedProduct(p)}
-                              style={{ 
-                                width: "100%", 
-                                height: isDesktop ? 200 : 160, 
-                                borderRadius: 16, 
-                                background: "#F5F5F3", 
-                                display: "flex", 
-                                alignItems: "center", 
-                                justifyContent: "center", 
-                                overflow: "hidden", 
-                                marginBottom: 12, 
-                                border: "1px solid rgba(0,0,0,0.02)" 
-                              }}
-                            >
-                              {p.image ? (
-                                <img src={p.image} className="product-image-zoom" style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={p.name} />
-                              ) : (
-                                <Shirt size={44} color="#888888" strokeWidth={1.5} />
-                              )}
-                            </div>
-                            <div onClick={() => setSelectedProduct(p)}>
-                              <span style={{ fontSize: 9, color: "#888", fontWeight: 800, textTransform: "uppercase", letterSpacing: "1px" }}>{p.brand || "SHIV WESTERN"}</span>
-                              <h4 style={{ fontSize: 13, fontWeight: 700, color: "#111", margin: "2px 0 6px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</h4>
-                              <div style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-                                <span className="pf" style={{ fontSize: 15, fontWeight: 900, color: "#111" }}>₹{finalPrice.toLocaleString("en-IN")}</span>
-                                {mrp > finalPrice && (
-                                  <>
-                                    <span style={{ fontSize: 11, textDecoration: "line-through", color: "#999" }}>₹{mrp.toLocaleString("en-IN")}</span>
-                                    <span style={{ fontSize: 10, color: "#2D6A4F", fontWeight: 800 }}>({discountPct}% OFF)</span>
-                                  </>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div style={{ 
+                      display: "grid", 
+                      gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", 
+                      gap: isDesktop ? "24px" : "12px" 
+                    }}>
+                      {products.slice(0, 8).map(p => renderProductCard(p))}
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Best Sellers Section */}
+                <div style={{ marginTop: 24 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                    <div>
+                      <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: "#111111", margin: 0 }}>BEST SELLERS</h3>
+                      <p style={{ fontSize: 12, color: "#777777", margin: "2px 0 0" }}>Customer favorites and top rated fits</p>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        setActiveTab("products");
+                        setSelectedCategory("All");
+                        setSearchQuery("");
+                        setSortBy("default");
+                      }} 
+                      style={{ background: "none", border: "none", color: "#8B7355", fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px" }}
+                    >
+                      View All
+                    </button>
+                  </div>
+                  
+                  {products.length === 0 ? (
+                    <div style={{ textAlign: "center", padding: "40px 0", background: "#F9F9FB", borderRadius: 20, border: "1px solid rgba(0,0,0,0.06)" }}>
+                      <p style={{ color: "#777777", fontSize: 13, margin: 0 }}>No items in stock.</p>
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      display: "grid", 
+                      gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", 
+                      gap: isDesktop ? "24px" : "12px" 
+                    }}>
+                      {products.slice().reverse().slice(0, 8).map(p => renderProductCard(p))}
                     </div>
                   )}
                 </div>
