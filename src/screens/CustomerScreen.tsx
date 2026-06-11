@@ -587,24 +587,20 @@ export const CustomerScreen = ({
   };
 
   const headerNavItems = [
-    { id: "men", label: "Men" },
-    { id: "women", label: "Women" },
-    { id: "t-shirts", label: "T-Shirts" },
     { id: "shirts", label: "Shirts" },
+    { id: "t-shirts", label: "T-Shirts" },
     { id: "jeans", label: "Jeans" },
-    { id: "new-arrivals", label: "New Arrivals" },
-    { id: "offers", label: "Offers" }
+    { id: "trousers", label: "Trousers" },
+    { id: "winterwear", label: "Winterwear" }
   ];
 
   const mobileDrawerItems = [
     { id: "home", label: "Home", icon: "🏠" },
-    { id: "men", label: "Men", icon: "🤵" },
-    { id: "women", label: "Women", icon: "💃" },
-    { id: "t-shirts", label: "T-Shirts", icon: "👕" },
     { id: "shirts", label: "Shirts", icon: "👔" },
+    { id: "t-shirts", label: "T-Shirts", icon: "👕" },
     { id: "jeans", label: "Jeans", icon: "👖" },
-    { id: "new-arrivals", label: "New Arrivals", icon: "🔥" },
-    { id: "offers", label: "Offers", icon: "🏷️" },
+    { id: "trousers", label: "Trousers", icon: "👖" },
+    { id: "winterwear", label: "Winterwear", icon: "🧥" },
     { id: "wishlist", label: "Wishlist", icon: "❤️" },
     { id: "cart", label: `My Cart ${cart.length > 0 ? `(${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, icon: "🛒" },
     { id: "profile", label: "My Profile", icon: "👤" },
@@ -613,58 +609,36 @@ export const CustomerScreen = ({
   ];
 
   const handleNavClick = (menuId: string) => {
-    if (menuId === "men") {
-      setActiveTab("products");
-      setSelectedCategory("All");
-      setSelectedGender("Men");
-      setSortBy("default");
-    } else if (menuId === "women") {
-      setActiveTab("products");
-      setSelectedCategory("All");
-      setSelectedGender("Women");
-      setSortBy("default");
-    } else if (menuId === "t-shirts") {
-      setActiveTab("products");
-      setSelectedCategory("T-Shirt");
-      setSelectedGender("All");
-      setSortBy("default");
-    } else if (menuId === "shirts") {
-      setActiveTab("products");
+    setActiveTab("products");
+    setSelectedGender("All");
+    setSortBy("default");
+
+    if (menuId === "shirts") {
       setSelectedCategory("Shirt");
-      setSelectedGender("All");
-      setSortBy("default");
+    } else if (menuId === "t-shirts") {
+      setSelectedCategory("T-Shirt");
     } else if (menuId === "jeans") {
-      setActiveTab("products");
       setSelectedCategory("Jeans");
-      setSelectedGender("All");
-      setSortBy("default");
-    } else if (menuId === "new-arrivals") {
-      setActiveTab("products");
-      setSelectedCategory("All");
-      setSelectedGender("All");
-      setSortBy("newest");
-    } else if (menuId === "offers") {
-      setActiveTab("offers");
-      setSelectedCategory("All");
-      setSelectedGender("All");
-      setSortBy("default");
+    } else if (menuId === "trousers") {
+      setSelectedCategory("Trouser");
+    } else if (menuId === "winterwear") {
+      setSelectedCategory("Western Wear"); // Winterwear products are categorized under Western Wear or Winterwear
     }
   };
 
   const isNavActive = (menuId: string) => {
-    if (menuId === "men") return activeTab === "products" && selectedGender === "Men" && selectedCategory === "All" && sortBy === "default";
-    if (menuId === "women") return activeTab === "products" && selectedGender === "Women" && selectedCategory === "All" && sortBy === "default";
-    if (menuId === "t-shirts") return activeTab === "products" && selectedCategory === "T-Shirt";
-    if (menuId === "shirts") return activeTab === "products" && selectedCategory === "Shirt";
-    if (menuId === "jeans") return activeTab === "products" && selectedCategory === "Jeans";
-    if (menuId === "new-arrivals") return activeTab === "products" && sortBy === "newest" && selectedCategory === "All" && selectedGender === "All";
-    if (menuId === "offers") return activeTab === "offers";
+    if (activeTab !== "products") return false;
+    if (menuId === "shirts") return selectedCategory === "Shirt";
+    if (menuId === "t-shirts") return selectedCategory === "T-Shirt";
+    if (menuId === "jeans") return selectedCategory === "Jeans";
+    if (menuId === "trousers") return selectedCategory === "Trouser";
+    if (menuId === "winterwear") return selectedCategory === "Western Wear" || selectedCategory === "Winterwear";
     return false;
   };
 
   const handleMobileDrawerClick = (itemId: string) => {
     setDrawerOpen(false);
-    if (["men", "women", "t-shirts", "shirts", "jeans", "new-arrivals"].includes(itemId)) {
+    if (["shirts", "t-shirts", "jeans", "trousers", "winterwear"].includes(itemId)) {
       handleNavClick(itemId);
     } else {
       if (itemId === "home") {
@@ -778,7 +752,7 @@ export const CustomerScreen = ({
     );
   };
 
-  const headerColor = (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#111111";
+  const headerColor = "#111111";
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#FFFFFF", color: "#111111" }}>
@@ -800,22 +774,30 @@ export const CustomerScreen = ({
 
       {/* ----------------- STICKY TOP HEADER ----------------- */}
       <header style={{ 
-        position: (activeTab === "home" && !isScrolled) ? "absolute" : "sticky", 
+        position: "sticky", 
         top: 0, 
         left: 0,
         right: 0,
         zIndex: 100, 
-        background: (activeTab === "home" && !isScrolled) ? "transparent" : "#FFFFFF", 
-        backdropFilter: (activeTab === "home" && !isScrolled) ? "none" : "blur(20px)", 
-        WebkitBackdropFilter: (activeTab === "home" && !isScrolled) ? "none" : "blur(20px)", 
-        borderBottom: (activeTab === "home" && !isScrolled) ? "none" : "1px solid rgba(0,0,0,0.06)", 
-        boxShadow: (activeTab === "home" && !isScrolled) ? "none" : "0 4px 30px rgba(0,0,0,0.02)",
+        background: "#FFFFFF", 
+        backdropFilter: "blur(20px)", 
+        WebkitBackdropFilter: "blur(20px)", 
+        borderBottom: "1px solid rgba(0,0,0,0.06)", 
+        boxShadow: isScrolled ? "0 4px 20px rgba(0,0,0,0.05)" : "none",
         transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)"
       }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "14px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
+        <div style={{ 
+          maxWidth: 1280, 
+          margin: "0 auto", 
+          padding: isDesktop ? "12px 24px" : "12px 16px", 
+          display: "flex", 
+          alignItems: "center", 
+          justifyContent: "space-between", 
+          gap: isDesktop ? 24 : 12 
+        }}>
           
           {/* Left: Hamburger menu (mobile) & Brand Logo */}
-          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
             {!isDesktop && (
               <button 
                 onClick={() => setDrawerOpen(true)} 
@@ -834,18 +816,18 @@ export const CustomerScreen = ({
               }} 
               style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
             >
-              <div style={{ width: 32, height: 32, borderRadius: "50%", background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Shirt size={16} color={(activeTab === "home" && !isScrolled) ? "#000000" : "#FFFFFF"} />
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#111111", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Shirt size={16} color="#FFFFFF" />
               </div>
-              <span className="pf" style={{ fontWeight: 900, fontSize: 18, color: headerColor, letterSpacing: "1.5px", textTransform: "uppercase" }}>
-                {settings.shopName}
+              <span className="pf" style={{ fontWeight: 900, fontSize: isDesktop ? 18 : 14, color: headerColor, letterSpacing: "1px", textTransform: "uppercase" }}>
+                Shiv Western Club
               </span>
             </div>
           </div>
 
-          {/* Center: Navigation Links (Desktop only) */}
+          {/* Center-Left: Navigation Links (Desktop only) */}
           {isDesktop && (
-            <nav style={{ display: "flex", gap: 24 }}>
+            <nav style={{ display: "flex", gap: 20 }}>
               {headerNavItems.map(item => {
                 const isActive = isNavActive(item.id);
                 return (
@@ -855,9 +837,7 @@ export const CustomerScreen = ({
                     style={{
                       background: "none",
                       border: "none",
-                      color: isActive 
-                        ? (activeTab === "home" && !isScrolled ? "#FFFFFF" : "#000000") 
-                        : (activeTab === "home" && !isScrolled ? "rgba(255,255,255,0.7)" : "#666666"),
+                      color: isActive ? "#111111" : "#555555",
                       fontWeight: isActive ? 800 : 600,
                       fontSize: 13,
                       cursor: "pointer",
@@ -872,7 +852,7 @@ export const CustomerScreen = ({
                     {isActive && (
                       <motion.div 
                         layoutId="activeNavUnderline" 
-                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000" }} 
+                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
                       />
                     )}
                   </button>
@@ -881,50 +861,96 @@ export const CustomerScreen = ({
             </nav>
           )}
 
-          {/* Right: Search, Account, Wishlist, Cart */}
-          <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
-            
-            {/* Search toggler/input */}
-            <div style={{ display: "flex", alignItems: "center" }}>
-              {searchOpen ? (
-                <motion.div 
-                  initial={{ width: 0, opacity: 0 }}
-                  animate={{ width: isDesktop ? 200 : 150, opacity: 1 }}
-                  exit={{ width: 0, opacity: 0 }}
-                  style={{ display: "flex", alignItems: "center", gap: 6, background: (activeTab === "home" && !isScrolled) ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.04)", padding: "6px 12px", borderRadius: 100, border: "1px solid rgba(0,0,0,0.05)" }}
+          {/* Middle: Search Bar (Desktop only) */}
+          {isDesktop && (
+            <div style={{ flex: 1, maxWidth: 320, position: "relative" }}>
+              <input 
+                type="text"
+                value={searchQuery}
+                onChange={e => {
+                  setSearchQuery(e.target.value);
+                  if (activeTab !== "products") setActiveTab("products");
+                }}
+                placeholder="Search entire store here..." 
+                style={{ 
+                  width: "100%", 
+                  padding: "9px 12px 9px 38px", 
+                  borderRadius: 8, 
+                  border: "1px solid #E5E7EB", 
+                  outline: "none", 
+                  fontSize: 13, 
+                  fontWeight: 500,
+                  color: "#333333",
+                  background: "#F8F9FB",
+                  transition: "all 0.2s" 
+                }}
+                onFocus={e => {
+                  e.target.style.borderColor = "#111111";
+                  e.target.style.background = "#FFFFFF";
+                }}
+                onBlur={e => {
+                  e.target.style.borderColor = "#E5E7EB";
+                  e.target.style.background = "#F8F9FB";
+                }}
+              />
+              <Search 
+                size={16} 
+                color="#666666" 
+                style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} 
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  style={{
+                    position: "absolute",
+                    right: 12,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    color: "#999999",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    fontWeight: 700
+                  }}
                 >
-                  <Search size={14} color={(activeTab === "home" && !isScrolled) ? "rgba(255,255,255,0.8)" : "#666"} />
-                  <input 
-                    value={searchQuery}
-                    onChange={e => {
-                      setSearchQuery(e.target.value);
-                      if (activeTab !== "products") setActiveTab("products");
-                    }}
-                    placeholder="Search..." 
-                    autoFocus
-                    style={{ border: "none", outline: "none", background: "transparent", fontSize: 12, width: isDesktop ? 120 : 80, color: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#111", fontWeight: 600 }}
-                  />
-                  <button 
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setSearchQuery("");
-                    }}
-                    style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#666", fontSize: 11, fontWeight: 700 }}
-                  >
-                    ✕
-                  </button>
-                </motion.div>
-              ) : (
-                <button 
-                  onClick={() => setSearchOpen(true)}
-                  style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, display: "flex", alignItems: "center" }}
-                >
-                  <Search size={22} />
+                  ✕
                 </button>
               )}
             </div>
+          )}
 
-            {/* Account dropdown/button */}
+          {/* Right: Wishlist, Profile, Cart */}
+          <div style={{ display: "flex", alignItems: "center", gap: 16, flexShrink: 0 }}>
+            {/* Wishlist Button */}
+            <button 
+              onClick={() => setActiveTab("wishlist")}
+              style={{ background: "none", border: "none", color: "#333333", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+              title="Wishlist"
+            >
+              <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : "#333333"} />
+              {wishlist.length > 0 && (
+                <span style={{ 
+                  position: "absolute", 
+                  top: -4, 
+                  right: -4, 
+                  background: "#111111", 
+                  color: "#FFFFFF", 
+                  borderRadius: "50%", 
+                  width: 14, 
+                  height: 14, 
+                  fontSize: 8, 
+                  fontWeight: 800, 
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center" 
+                }}>
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
+
+            {/* Profile/Account dropdown/button */}
             <div style={{ position: "relative" }}>
               <button
                 onClick={() => {
@@ -937,7 +963,7 @@ export const CustomerScreen = ({
                 style={{
                   background: "none",
                   border: "none",
-                  color: headerColor,
+                  color: "#333333",
                   cursor: "pointer",
                   padding: 4,
                   display: "flex",
@@ -1003,44 +1029,18 @@ export const CustomerScreen = ({
               )}
             </div>
 
-            {/* Wishlist Button */}
-            <button 
-              onClick={() => setActiveTab("wishlist")}
-              style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
-            >
-              <Heart size={22} fill={activeTab === "wishlist" ? "#E63946" : "none"} color={activeTab === "wishlist" ? "#E63946" : headerColor} />
-              {wishlist.length > 0 && (
-                <span style={{ 
-                  position: "absolute", 
-                  top: -6, 
-                  right: -6, 
-                  background: (activeTab === "home" && !isScrolled) ? "#FFFFFF" : "#000000", 
-                  color: (activeTab === "home" && !isScrolled) ? "#000000" : "#FFFFFF", 
-                  borderRadius: "50%", 
-                  width: 14, 
-                  height: 14, 
-                  fontSize: 8, 
-                  fontWeight: 800, 
-                  display: "flex", 
-                  alignItems: "center", 
-                  justifyContent: "center" 
-                }}>
-                  {wishlist.length}
-                </span>
-              )}
-            </button>
-
-            {/* Cart Button */}
+            {/* Cart Button with badge */}
             <button 
               onClick={() => setActiveTab("cart")}
-              style={{ background: "none", border: "none", color: headerColor, cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+              style={{ background: "none", border: "none", color: "#333333", cursor: "pointer", padding: 4, position: "relative", display: "flex", alignItems: "center" }}
+              title="Cart"
             >
-              <ShoppingCart size={22} color={headerColor} />
+              <ShoppingCart size={22} color="#333333" />
               {cart.reduce((sum, item) => sum + item.qty, 0) > 0 && (
                 <span style={{ 
                   position: "absolute", 
-                  top: -6, 
-                  right: -6, 
+                  top: -4, 
+                  right: -4, 
                   background: "#E63946", 
                   color: "#fff", 
                   borderRadius: "50%", 
@@ -1059,6 +1059,58 @@ export const CustomerScreen = ({
           </div>
         </div>
       </header>
+
+      {/* Mobile Search Bar (Only on mobile) */}
+      {!isDesktop && (
+        <div style={{ padding: "0 16px 12px 16px", background: "#FFFFFF", borderBottom: "1px solid rgba(0,0,0,0.06)", zIndex: 90 }}>
+          <div style={{ position: "relative", width: "100%" }}>
+            <input 
+              type="text"
+              value={searchQuery}
+              onChange={e => {
+                setSearchQuery(e.target.value);
+                if (activeTab !== "products") setActiveTab("products");
+              }}
+              placeholder="Search entire store here..." 
+              style={{ 
+                width: "100%", 
+                padding: "8px 12px 8px 36px", 
+                borderRadius: 8, 
+                border: "1px solid #E5E7EB", 
+                outline: "none", 
+                fontSize: 12, 
+                fontWeight: 500,
+                color: "#333333",
+                background: "#F8F9FB"
+              }}
+            />
+            <Search 
+              size={16} 
+              color="#666666" 
+              style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} 
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                style={{
+                  position: "absolute",
+                  right: 12,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "none",
+                  border: "none",
+                  color: "#999999",
+                  cursor: "pointer",
+                  fontSize: 11,
+                  fontWeight: 700
+                }}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ----------------- MOBILE SLIDING DRAWER ----------------- */}
       <AnimatePresence>
