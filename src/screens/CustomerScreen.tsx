@@ -953,7 +953,7 @@ export const CustomerScreen = ({
               }} 
               style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}
             >
-              <div style={{ width: 32, height: 32, borderRadius: 8, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
+              <div style={{ width: isDesktop ? 44 : 38, height: isDesktop ? 44 : 38, borderRadius: 10, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
                 <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
               </div>
               <span className="pf" style={{ fontWeight: 900, fontSize: isDesktop ? 18 : 14, color: headerColor, letterSpacing: "1px", textTransform: "uppercase" }}>
@@ -1266,7 +1266,7 @@ export const CustomerScreen = ({
             >
               <div style={{ padding: "30px 24px 20px", borderBottom: "1px solid rgba(0,0,0,0.06)" }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-                  <div style={{ width: 44, height: 44, borderRadius: 12, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div style={{ width: 50, height: 50, borderRadius: 14, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 4px 12px rgba(0,0,0,0.04)" }}>
                     <img src={settings.logo || "/logo.svg"} alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
                   </div>
                   <button onClick={() => setDrawerOpen(false)} style={{ background: "transparent", border: "none", color: "#111", cursor: "pointer" }}>
