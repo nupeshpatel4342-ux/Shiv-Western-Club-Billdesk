@@ -1366,7 +1366,7 @@ export const CustomerScreen = ({
                           inset: 0,
                           opacity: active ? 1 : 0,
                           transition: "opacity 0.7s ease",
-                          background: slide.bg,
+                          background: slide.bg.startsWith("data:") || slide.bg.startsWith("http") ? `url(${slide.bg}) center center / cover no-repeat` : slide.bg,
                           display: "flex",
                           alignItems: "center",
                           overflow: "hidden",
@@ -1397,20 +1397,48 @@ export const CustomerScreen = ({
                           background: `linear-gradient(to bottom, transparent, ${slide.accent}, transparent)`,
                         }} />
 
-                        {/* Big decorative emoji/product illustration */}
-                        <div style={{
-                          position: "absolute",
-                          right: isDesktop ? "8%" : "5%",
-                          top: "50%",
-                          transform: "translateY(-50%)",
-                          fontSize: isDesktop ? 200 : 120,
-                          opacity: 0.08,
-                          userSelect: "none",
-                          pointerEvents: "none",
-                          lineHeight: 1,
-                        }}>
-                          {slide.imgEmoji}
-                        </div>
+                        {/* Big decorative emoji/product illustration or custom uploaded image */}
+                        {slide.imgEmoji && (slide.imgEmoji.startsWith("data:") || slide.imgEmoji.startsWith("http")) ? (
+                          <div style={{
+                            position: "absolute",
+                            right: isDesktop ? "8%" : "5%",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            width: isDesktop ? "40%" : "45%",
+                            height: "85%",
+                            userSelect: "none",
+                            pointerEvents: "none",
+                            zIndex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}>
+                            <img 
+                              src={slide.imgEmoji} 
+                              alt={slide.headline} 
+                              style={{ 
+                                width: "100%", 
+                                height: "100%", 
+                                objectFit: "contain", 
+                                filter: "drop-shadow(0 15px 30px rgba(0,0,0,0.35))" 
+                              }} 
+                            />
+                          </div>
+                        ) : (
+                          <div style={{
+                            position: "absolute",
+                            right: isDesktop ? "8%" : "5%",
+                            top: "50%",
+                            transform: "translateY(-50%)",
+                            fontSize: isDesktop ? 200 : 120,
+                            opacity: 0.08,
+                            userSelect: "none",
+                            pointerEvents: "none",
+                            lineHeight: 1,
+                          }}>
+                            {slide.imgEmoji}
+                          </div>
+                        )}
 
                         {/* Circular glow */}
                         <div style={{
@@ -1702,7 +1730,13 @@ export const CustomerScreen = ({
                           }}
                           className="shadow-hover"
                         >
-                          <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{icon}</span>
+                          {icon.startsWith("data:") || icon.startsWith("http") ? (
+                            <div style={{ width: 44, height: 44, borderRadius: 12, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", background: "#fff", border: "1px solid rgba(0,0,0,0.08)" }}>
+                              <img src={icon} alt={displayLabel} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            </div>
+                          ) : (
+                            <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{icon}</span>
+                          )}
                           <div style={{ textAlign: "center" }}>
                             <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: isDarkBg ? "#ffffff" : "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{displayLabel}</span>
                             {tag && <span style={{ display: "block", fontSize: 10, fontWeight: 600, color: isDarkBg ? "rgba(255,255,255,0.7)" : "#666666", textTransform: "uppercase", letterSpacing: "1px", marginTop: 4 }}>{tag}</span>}

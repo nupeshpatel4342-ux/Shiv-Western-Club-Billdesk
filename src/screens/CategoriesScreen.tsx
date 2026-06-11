@@ -188,16 +188,61 @@ export const CategoriesScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Front Icon (Emoji or single character)</label>
-                <input 
-                  type="text" 
-                  value={icon}
-                  onChange={e => setIcon(e.target.value)}
-                  placeholder="👔, 👕, 👖, etc." 
-                  maxLength={5}
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Thumbnail (Emoji or Image Upload)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={icon.startsWith("data:") ? "Custom Image Uploaded" : icon}
+                    onChange={e => setIcon(e.target.value)}
+                    placeholder="👔, 👕, 👖..." 
+                    maxLength={icon.startsWith("data:") ? undefined : 5}
+                    disabled={icon.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="add-category-image"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setIcon(reader.result as string);
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="add-category-image"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {icon.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setIcon("👕")}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Badge Tag (e.g. Hot Trend, From ₹399)</label>
@@ -286,16 +331,61 @@ export const CategoriesScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Front Icon</label>
-                <input 
-                  type="text" 
-                  value={editingCategory.icon}
-                  onChange={e => setEditingCategory({ ...editingCategory, icon: e.target.value })}
-                  placeholder="👔, 👕, 👖" 
-                  maxLength={5}
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Thumbnail (Emoji or Image Upload)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={editingCategory.icon.startsWith("data:") ? "Custom Image Uploaded" : editingCategory.icon}
+                    onChange={e => setEditingCategory({ ...editingCategory, icon: e.target.value })}
+                    placeholder="👔, 👕, 👖..." 
+                    maxLength={editingCategory.icon.startsWith("data:") ? undefined : 5}
+                    disabled={editingCategory.icon.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="edit-category-image"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setEditingCategory({ ...editingCategory, icon: reader.result as string });
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="edit-category-image"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {editingCategory.icon.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingCategory({ ...editingCategory, icon: "👕" })}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Badge Tag</label>
@@ -384,11 +474,17 @@ export const CategoriesScreen = ({
                 }}
               >
                 {cat.tag && (
-                  <span style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase" }}>
+                  <span style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase", zIndex: 5 }}>
                     {cat.tag}
                   </span>
                 )}
-                <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{cat.icon}</span>
+                {cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("http")) ? (
+                  <div style={{ width: 64, height: 64, borderRadius: 16, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${C.border}`, background: "#fff", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>
+                    <img src={cat.icon} alt={cat.displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{cat.icon}</span>
+                )}
                 <div style={{ textAlign: "center" }}>
                   <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "#ffffff" : "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.displayName}</span>
                   <span style={{ display: "block", fontSize: 9, color: cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "rgba(255,255,255,0.7)" : "#777777", textTransform: "uppercase", fontWeight: 700, marginTop: 2 }}>{cat.name} filter</span>

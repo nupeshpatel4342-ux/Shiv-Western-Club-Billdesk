@@ -230,15 +230,60 @@ export const BannersScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Banner Emoji Image (e.g. 👕)</label>
-                <input 
-                  type="text" 
-                  value={imgEmoji} 
-                  onChange={e => setImgEmoji(e.target.value)}
-                  placeholder="👕, 👔, 👖" 
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Banner Graphic (Emoji or Upload Image)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={imgEmoji.startsWith("data:") ? "Custom Image Uploaded" : imgEmoji} 
+                    onChange={e => setImgEmoji(e.target.value)}
+                    placeholder="👕, 👔, 👖" 
+                    disabled={imgEmoji.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="add-banner-graphic"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setImgEmoji(reader.result as string);
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="add-banner-graphic"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {imgEmoji.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setImgEmoji("👕")}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Corner Accent Badge (e.g. Trending, Hot Deal)</label>
@@ -251,15 +296,60 @@ export const BannersScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Background Color / Gradient CSS</label>
-                <input 
-                  type="text" 
-                  value={bg} 
-                  onChange={e => setBg(e.target.value)}
-                  placeholder="linear-gradient(...)" 
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Background (CSS Gradient or Upload Image)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={bg.startsWith("data:") ? "Custom Background Uploaded" : bg} 
+                    onChange={e => setBg(e.target.value)}
+                    placeholder="linear-gradient(...)" 
+                    disabled={bg.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="add-banner-bg"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setBg(reader.result as string);
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="add-banner-bg"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {bg.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setBg(PRESET_BANNER_BGS[0].value)}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Accent Color HEX (e.g. #F4C430)</label>
@@ -377,15 +467,60 @@ export const BannersScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Banner Emoji Image</label>
-                <input 
-                  type="text" 
-                  value={editingBanner.imgEmoji} 
-                  onChange={e => setEditingBanner({ ...editingBanner, imgEmoji: e.target.value })}
-                  placeholder="👕" 
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Banner Graphic (Emoji or Upload Image)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={editingBanner.imgEmoji.startsWith("data:") ? "Custom Image Uploaded" : editingBanner.imgEmoji} 
+                    onChange={e => setEditingBanner({ ...editingBanner, imgEmoji: e.target.value })}
+                    placeholder="👕" 
+                    disabled={editingBanner.imgEmoji.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="edit-banner-graphic"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setEditingBanner({ ...editingBanner, imgEmoji: reader.result as string });
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="edit-banner-graphic"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {editingBanner.imgEmoji.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingBanner({ ...editingBanner, imgEmoji: "👕" })}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Corner Accent Badge</label>
@@ -398,15 +533,60 @@ export const BannersScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Background Color / Gradient CSS</label>
-                <input 
-                  type="text" 
-                  value={editingBanner.bg} 
-                  onChange={e => setEditingBanner({ ...editingBanner, bg: e.target.value })}
-                  placeholder="linear-gradient(...)" 
-                  required
-                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                />
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Background (CSS Gradient or Upload Image)</label>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input 
+                    type="text" 
+                    value={editingBanner.bg.startsWith("data:") ? "Custom Background Uploaded" : editingBanner.bg} 
+                    onChange={e => setEditingBanner({ ...editingBanner, bg: e.target.value })}
+                    placeholder="linear-gradient(...)" 
+                    disabled={editingBanner.bg.startsWith("data:")}
+                    required
+                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="edit-banner-bg"
+                    onChange={e => {
+                      if (e.target.files && e.target.files.length > 0) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          setEditingBanner({ ...editingBanner, bg: reader.result as string });
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                      }
+                    }}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="edit-banner-bg"
+                    style={{ 
+                      padding: "10px 14px", 
+                      borderRadius: 10, 
+                      border: `1.5px solid ${C.border}`, 
+                      background: C.bg, 
+                      color: C.dark, 
+                      fontSize: 12, 
+                      fontWeight: 700, 
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4
+                    }}
+                  >
+                    Upload
+                  </label>
+                  {editingBanner.bg.startsWith("data:") && (
+                    <button 
+                      type="button" 
+                      onClick={() => setEditingBanner({ ...editingBanner, bg: PRESET_BANNER_BGS[0].value })}
+                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Accent Color HEX</label>
@@ -499,7 +679,7 @@ export const BannersScreen = ({
               {/* Slider Mock Graphic */}
               <div 
                 style={{ 
-                  background: b.bg, 
+                  background: b.bg.startsWith("data:") || b.bg.startsWith("http") ? `url(${b.bg}) center center / cover no-repeat` : b.bg, 
                   minHeight: 200, 
                   padding: "40px", 
                   position: "relative", 
@@ -531,10 +711,16 @@ export const BannersScreen = ({
                   </button>
                 </div>
 
-                {/* Emoji float */}
-                <div style={{ fontSize: 96, marginRight: 20, zIndex: 2, filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }}>
-                  {b.imgEmoji}
-                </div>
+                {/* Emoji float or Uploaded Image */}
+                {b.imgEmoji && (b.imgEmoji.startsWith("data:") || b.imgEmoji.startsWith("http")) ? (
+                  <div style={{ width: 140, height: 140, marginRight: 20, zIndex: 2, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <img src={b.imgEmoji} alt={b.headline} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain", filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }} />
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 96, marginRight: 20, zIndex: 2, filter: "drop-shadow(0 10px 20px rgba(0,0,0,0.3))" }}>
+                    {b.imgEmoji}
+                  </div>
+                )}
               </div>
             </div>
           ))}
