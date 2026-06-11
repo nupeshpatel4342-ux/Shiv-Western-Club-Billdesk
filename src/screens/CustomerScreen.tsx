@@ -1358,14 +1358,14 @@ export const CustomerScreen = ({
         {activeTab === "home" && (() => {
           if (activeBanners === null) {
             return (
-              <div className="w-full h-[200px] md:h-[300px] lg:h-[400px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
+              <div className="w-full aspect-square md:aspect-[3/1] md:h-[300px] lg:h-[400px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
                 Loading promotional banners...
               </div>
             );
           }
           return (
             <div
-              className="w-full h-[200px] md:h-[300px] lg:h-[400px] relative overflow-hidden"
+              className="w-full aspect-square md:aspect-[3/1] md:h-[300px] lg:h-[400px] relative overflow-hidden"
               onMouseEnter={() => setSlidePaused(true)}
               onMouseLeave={() => setSlidePaused(false)}
             >
@@ -1383,7 +1383,7 @@ export const CustomerScreen = ({
                       zIndex: active ? 10 : 0
                     }}
                   >
-                    {slide.imageUrl ? (
+                    {(slide.desktopImageUrl || slide.mobileImageUrl || slide.imageUrl) ? (
                       <div 
                         onClick={() => slide.ctaLink && handleCtaClick(slide.ctaLink)}
                         style={{ 
@@ -1392,11 +1392,17 @@ export const CustomerScreen = ({
                           cursor: slide.ctaLink ? "pointer" : "default"
                         }}
                       >
-                        <img 
-                          src={slide.imageUrl} 
-                          alt={slide.name || "Promotion Banner"} 
-                          className="w-full h-full object-cover object-center"
-                        />
+                        <picture style={{ width: "100%", height: "100%" }}>
+                          <source 
+                            media="(max-width: 767px)" 
+                            srcSet={slide.mobileImageUrl || slide.imageUrl || slide.desktopImageUrl} 
+                          />
+                          <img 
+                            src={slide.desktopImageUrl || slide.imageUrl || slide.mobileImageUrl} 
+                            alt={slide.name || "Promotion Banner"} 
+                            className="w-full h-full object-cover object-center"
+                          />
+                        </picture>
                       </div>
                     ) : (
                       // Fallback for old seeder / gradient banners

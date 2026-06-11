@@ -8,18 +8,12 @@ import { motion, AnimatePresence } from "motion/react";
 interface Banner {
   id: string;
   name?: string;
-  imageUrl?: string;
+  desktopImageUrl?: string;
+  mobileImageUrl?: string;
+  imageUrl?: string; // Legacy fallback
   isActive?: boolean;
   ctaLink?: string;
   createdAt: number;
-  // Backward compatibility fields
-  tag?: string;
-  headline?: string;
-  sub?: string;
-  cta?: string;
-  bg?: string;
-  accent?: string;
-  imgEmoji?: string;
 }
 
 export const BannersScreen = ({
@@ -34,20 +28,25 @@ export const BannersScreen = ({
 
   // Form States
   const [name, setName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [desktopImageUrl, setDesktopImageUrl] = useState("");
+  const [mobileImageUrl, setMobileImageUrl] = useState("");
   const [ctaLink, setCtaLink] = useState("Shirt");
   const [isActive, setIsActive] = useState(true);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, type: "desktop" | "mobile") => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      if (file.size > 1024 * 1024) {
-        alert("Image size must be less than 1MB for upload.");
+      if (file.size > 1.5 * 1024 * 1024) {
+        alert("Image size must be less than 1.5MB for upload.");
         return;
       }
       const reader = new FileReader();
       reader.onload = () => {
-        setImageUrl(reader.result as string);
+        if (type === "desktop") {
+          setDesktopImageUrl(reader.result as string);
+        } else {
+          setMobileImageUrl(reader.result as string);
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -59,16 +58,21 @@ export const BannersScreen = ({
       alert("Banner name/title is required!");
       return;
     }
-    if (!imageUrl) {
-      alert("Please upload a banner image!");
+    if (!desktopImageUrl && !mobileImageUrl) {
+      alert("Please upload at least one banner image (Desktop or Mobile)!");
       return;
     }
 
     setIsSubmitting(true);
     try {
+      // If only one aspect ratio is uploaded, copy it to the other to guarantee image coverage
+      const finalDesktop = desktopImageUrl || mobileImageUrl;
+      const finalMobile = mobileImageUrl || desktopImageUrl;
+
       const newBanner = {
         name: name.trim(),
-        imageUrl: imageUrl,
+        desktopImageUrl: finalDesktop,
+        mobileImageUrl: finalMobile,
         ctaLink: ctaLink.trim(),
         isActive: isActive,
         createdAt: Date.now()
@@ -78,11 +82,12 @@ export const BannersScreen = ({
 
       // Reset Form
       setName("");
-      setImageUrl("");
+      setDesktopImageUrl("");
+      setMobileImageUrl("");
       setCtaLink("Shirt");
       setIsActive(true);
       setShowAdd(false);
-      alert("Promotional banner added successfully!");
+      alert("Responsive promotional banner added successfully!");
     } catch (err) {
       console.error(err);
       alert("Failed to add banner.");
@@ -123,7 +128,7 @@ export const BannersScreen = ({
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 28 }}>
         <div>
           <h2 className="pf" style={{ fontSize: 26, fontWeight: 900, color: C.dark, letterSpacing: "-0.8px", margin: 0 }}>Promotional Banners</h2>
-          <p style={{ fontSize: 13, color: C.muted, fontWeight: 500, margin: "4px 0 0" }}>Manage dynamic full-width homepage hero banners & offers</p>
+          <p style={{ fontSize: 13, color: C.muted, fontWeight: 500, margin: "4px 0 0" }}>Manage responsive D2C storefront banners for desktop & mobile viewports</p>
         </div>
         {!showAdd && (
           <button 
@@ -165,7 +170,7 @@ export const BannersScreen = ({
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-              <h3 className="pf" style={{ fontSize: 18, fontWeight: 800, color: C.dark, margin: 0 }}>Upload New promotional Banner</h3>
+              <h3 className="pf" style={{ fontSize: 18, fontWeight: 800, color: C.dark, margin: 0 }}>Upload Responsive Promotional Banners</h3>
               <button 
                 type="button" 
                 onClick={() => setShowAdd(false)} 
@@ -175,15 +180,15 @@ export const BannersScreen = ({
               </button>
             </div>
 
-            <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <form onSubmit={handleAdd} style={{ display: "flex", flexDirection: "column", gap: 24 }}>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
                 <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Banner Title / Campaign Name</label>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Campaign Name / Label</label>
                   <input 
                     type="text" 
                     value={name} 
                     onChange={e => setName(e.target.value)}
-                    placeholder="e.g. Summer Vacation Shirts Promo" 
+                    placeholder="e.g. Summer Vacation Banner" 
                     required
                     style={{ 
                       padding: "12px 14px", 
@@ -221,67 +226,89 @@ export const BannersScreen = ({
                 </div>
               </div>
 
-              {/* File upload drag/click box */}
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Promotional Banner Graphic (100% Full-width)</label>
-                <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
-                  <div style={{ flex: 1 }}>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      id="banner-image-file"
-                      onChange={handleImageUpload}
-                      style={{ display: "none" }}
-                    />
-                    <label 
-                      htmlFor="banner-image-file"
-                      style={{ 
-                        border: `2px dashed ${C.border}`, 
-                        borderRadius: 16, 
-                        padding: "30px 20px", 
-                        display: "flex", 
-                        flexDirection: "column", 
-                        alignItems: "center", 
-                        justifyContent: "center", 
-                        cursor: "pointer",
-                        background: "#F9FAFB",
-                        transition: "all 0.2s"
-                      }}
-                      onMouseEnter={e => e.currentTarget.style.borderColor = C.accent}
-                      onMouseLeave={e => e.currentTarget.style.borderColor = C.border}
-                    >
-                      <ImageIcon size={32} color={C.muted} style={{ marginBottom: 8 }} />
-                      <span style={{ fontSize: 13, fontWeight: 700, color: C.dark }}>Click to Upload Banner Image</span>
-                      <span style={{ fontSize: 11, color: C.muted, marginTop: 4 }}>High-resolution, landscape format (aspect ratio ~2.5:1 recommended)</span>
-                    </label>
-                  </div>
+              {/* Upload sections */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                {/* Desktop Upload */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Desktop Banner Image (1200 x 400 pixels — 3:1)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="desktop-image-file"
+                    onChange={(e) => handleImageUpload(e, "desktop")}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="desktop-image-file"
+                    style={{ 
+                      border: `2px dashed ${desktopImageUrl ? C.accent : C.border}`, 
+                      borderRadius: 16, 
+                      padding: "24px 16px", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      alignItems: "center", 
+                      justifyContent: "center", 
+                      cursor: "pointer",
+                      background: "#F9FAFB",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <ImageIcon size={28} color={C.muted} style={{ marginBottom: 8 }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.dark }}>Upload Desktop Image</span>
+                    <span style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Aspect ratio 3:1 (1200x400)</span>
+                  </label>
 
-                  {imageUrl && (
-                    <div style={{ position: "relative", width: 220, height: 100, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}`, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
-                      <img 
-                        src={imageUrl} 
-                        alt="Preview" 
-                        style={{ width: "100%", height: "100%", objectFit: "cover" }} 
-                      />
+                  {desktopImageUrl && (
+                    <div style={{ position: "relative", width: "100%", height: 90, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}`, marginTop: 8 }}>
+                      <img src={desktopImageUrl} alt="Desktop Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       <button 
                         type="button" 
-                        onClick={() => setImageUrl("")}
-                        style={{ 
-                          position: "absolute", 
-                          top: 6, 
-                          right: 6, 
-                          background: "rgba(0,0,0,0.6)", 
-                          color: "#FFF", 
-                          border: "none", 
-                          borderRadius: "50%", 
-                          width: 22, 
-                          height: 22, 
-                          cursor: "pointer", 
-                          display: "flex", 
-                          alignItems: "center", 
-                          justifyContent: "center",
-                          fontSize: 10 
-                        }}
+                        onClick={() => setDesktopImageUrl("")}
+                        style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", color: "#FFF", border: "none", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Mobile Upload */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase", letterSpacing: "0.5px" }}>Mobile Banner Image (1080 x 1080 pixels — 1:1)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="mobile-image-file"
+                    onChange={(e) => handleImageUpload(e, "mobile")}
+                    style={{ display: "none" }}
+                  />
+                  <label 
+                    htmlFor="mobile-image-file"
+                    style={{ 
+                      border: `2px dashed ${mobileImageUrl ? C.accent : C.border}`, 
+                      borderRadius: 16, 
+                      padding: "24px 16px", 
+                      display: "flex", 
+                      flexDirection: "column", 
+                      alignItems: "center", 
+                      justifyContent: "center", 
+                      cursor: "pointer",
+                      background: "#F9FAFB",
+                      transition: "all 0.2s"
+                    }}
+                  >
+                    <ImageIcon size={28} color={C.muted} style={{ marginBottom: 8 }} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: C.dark }}>Upload Mobile Image</span>
+                    <span style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>Aspect ratio 1:1 (1080x1080)</span>
+                  </label>
+
+                  {mobileImageUrl && (
+                    <div style={{ position: "relative", width: 90, height: 90, borderRadius: 12, overflow: "hidden", border: `1px solid ${C.border}`, marginTop: 8 }}>
+                      <img src={mobileImageUrl} alt="Mobile Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <button 
+                        type="button" 
+                        onClick={() => setMobileImageUrl("")}
+                        style={{ position: "absolute", top: 6, right: 6, background: "rgba(0,0,0,0.6)", color: "#FFF", border: "none", borderRadius: "50%", width: 22, height: 22, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                       >
                         ✕
                       </button>
@@ -358,14 +385,14 @@ export const BannersScreen = ({
           <div style={{ padding: "80px 40px", textAlign: "center" }}>
             <ImageIcon size={48} color={C.muted} style={{ marginBottom: 16, opacity: 0.5 }} />
             <p style={{ fontSize: 16, fontWeight: 700, color: C.dark, margin: 0 }}>No Banners Configured</p>
-            <p style={{ fontSize: 13, color: C.muted, marginTop: 6, margin: 0 }}>Create dynamic visual offers for your store visitors above.</p>
+            <p style={{ fontSize: 13, color: C.muted, marginTop: 6, margin: 0 }}>Create responsive storefront promotional banners above.</p>
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ borderBottom: `1.5px solid ${C.border}`, background: "#FAFBFD" }}>
-                  <th style={{ padding: "14px 24px", fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Preview</th>
+                  <th style={{ padding: "14px 24px", fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Responsive Previews</th>
                   <th style={{ padding: "14px 24px", fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Banner Info</th>
                   <th style={{ padding: "14px 24px", fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Link</th>
                   <th style={{ padding: "14px 24px", fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Status</th>
@@ -377,29 +404,31 @@ export const BannersScreen = ({
                   <tr key={b.id} style={{ borderBottom: `1px solid ${C.border}`, transition: "background 0.2s" }} className="hover:bg-gray-50/50">
                     {/* Preview Column */}
                     <td style={{ padding: "16px 24px" }}>
-                      {b.imageUrl ? (
-                        <div style={{ width: 140, height: 60, borderRadius: 8, overflow: "hidden", border: `1px solid ${C.border}` }}>
-                          <img src={b.imageUrl} alt={b.name || "Banner"} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                        {/* Desktop Image */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <span style={{ fontSize: 8, fontWeight: 850, color: C.muted, letterSpacing: "0.2px" }}>DESKTOP (3:1)</span>
+                          <div style={{ width: 110, height: 37, borderRadius: 6, overflow: "hidden", border: `1px solid ${C.border}`, background: "#f3f4f6" }}>
+                            {b.desktopImageUrl || b.imageUrl ? (
+                              <img src={b.desktopImageUrl || b.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 9, color: C.muted }}>No Image</div>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        // Fallback/Legacy styling preview
-                        <div 
-                          style={{ 
-                            width: 140, 
-                            height: 60, 
-                            borderRadius: 8, 
-                            background: b.bg || "#0e1e38", 
-                            display: "flex", 
-                            alignItems: "center", 
-                            justifyContent: "center",
-                            fontSize: 24,
-                            color: b.accent || "#fff",
-                            border: `1px solid ${C.border}`
-                          }}
-                        >
-                          {b.imgEmoji || "👕"}
+
+                        {/* Mobile Image */}
+                        <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                          <span style={{ fontSize: 8, fontWeight: 850, color: C.muted, letterSpacing: "0.2px" }}>MOBILE (1:1)</span>
+                          <div style={{ width: 37, height: 37, borderRadius: 6, overflow: "hidden", border: `1px solid ${C.border}`, background: "#f3f4f6" }}>
+                            {b.mobileImageUrl || b.imageUrl ? (
+                              <img src={b.mobileImageUrl || b.imageUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                            ) : (
+                              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 9, color: C.muted }}>No Image</div>
+                            )}
+                          </div>
                         </div>
-                      )}
+                      </div>
                     </td>
 
                     {/* Banner Info Column */}
@@ -486,9 +515,9 @@ export const BannersScreen = ({
       <div style={{ marginTop: 24, display: "flex", gap: 10, background: "#EFF6FF", border: "1.5px solid #BFDBFE", borderRadius: 16, padding: "16px 20px", color: "#1E40AF" }}>
         <AlertCircle size={20} style={{ flexShrink: 0, marginTop: 1 }} />
         <div>
-          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>Storefront Guideline</h4>
+          <h4 style={{ margin: 0, fontSize: 13, fontWeight: 800 }}>Responsive Poster Guideline</h4>
           <p style={{ margin: "4px 0 0", fontSize: 12, lineHeight: 1.5, opacity: 0.9 }}>
-            Only banners set as <strong>Active</strong> will be displayed on the customer-facing website carousel. Banners without image uploads will fall back to legacy gradient format automatically.
+            Upload both a wide desktop graphic (1200x400, 3:1) and a square mobile graphic (1080x1080, 1:1) for optimal display. The store will automatically present the appropriate version based on the visitor's screen.
           </p>
         </div>
       </div>
