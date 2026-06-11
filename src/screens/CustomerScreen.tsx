@@ -1826,7 +1826,7 @@ export const CustomerScreen = ({
                           className="prod-card"
                         >
                           <img 
-                            src={card.image} 
+                            src={card.image.startsWith("/") ? `${card.image}?v=1.2` : card.image} 
                             alt={card.title} 
                             style={{ 
                               width: "100%", 
