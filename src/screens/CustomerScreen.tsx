@@ -142,14 +142,14 @@ const CATEGORY_CARDS = [
     image: "/categories/shirts.png", 
     category: "Shirt", 
     search: "", 
-    align: "right" 
+    align: "center" 
   },
   { 
     title: "TROUSERS", 
     image: "/categories/trousers.png", 
     category: "Trouser", 
     search: "", 
-    align: "left" 
+    align: "center" 
   },
   { 
     title: "EVERYTHING UNDER ₹799", 
@@ -157,42 +157,71 @@ const CATEGORY_CARDS = [
     category: "All", 
     search: "", 
     maxPrice: 799, 
-    align: "center" 
+    align: "center",
+    hideTitle: true
   },
   { 
     title: "POLOS", 
     image: "/categories/polos.png", 
     category: "T-Shirt", 
     search: "polo", 
-    align: "right" 
+    align: "center" 
   },
   { 
     title: "CARGOS", 
     image: "/categories/cargos.png", 
     category: "Trouser", 
     search: "cargo", 
-    align: "right" 
+    align: "center" 
   },
   { 
     title: "JEANS", 
     image: "/categories/jeans.png", 
     category: "Jeans", 
     search: "", 
-    align: "left" 
+    align: "center" 
   },
   { 
-    title: "T-SHIRTS", 
+    title: "OVERSIZED", 
     image: "/categories/t_shirts.png", 
     category: "T-Shirt", 
-    search: "", 
-    align: "right" 
+    search: "oversized", 
+    align: "center" 
   },
   { 
     title: "PRINTED", 
     image: "/categories/printed.png", 
-    category: "T-Shirt", 
+    category: "Shirt", 
     search: "printed", 
-    align: "left" 
+    align: "center" 
+  },
+  { 
+    title: "ACTIVEWEAR", 
+    image: "/categories/activewear.png", 
+    category: "All", 
+    search: "active", 
+    align: "center" 
+  },
+  { 
+    title: "SHORTS", 
+    image: "/categories/shorts.png", 
+    category: "All", 
+    search: "shorts", 
+    align: "center" 
+  },
+  { 
+    title: "OUTERWEAR", 
+    image: "/categories/outerwear.png", 
+    category: "Winterwear", 
+    search: "", 
+    align: "center" 
+  },
+  { 
+    title: "COMBOS", 
+    image: "/categories/combos.png", 
+    category: "All", 
+    search: "combo", 
+    align: "center" 
   }
 ];
 
@@ -1763,7 +1792,7 @@ export const CustomerScreen = ({
                     <div style={{ width: 48, height: 3, background: C.accent, margin: "10px auto 0", borderRadius: 4 }} />
                   </div>
                   
-                  <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(4, 1fr)" : "repeat(2, 1fr)", gap: 16 }}>
+                  <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(6, 1fr)" : "repeat(3, 1fr)", gap: isDesktop ? 16 : 10 }}>
                     {CATEGORY_CARDS.map(card => {
                       return (
                         <div
@@ -1788,8 +1817,8 @@ export const CustomerScreen = ({
                           }}
                           style={{
                             position: "relative",
-                            aspectRatio: "1.25/1",
-                            borderRadius: 16,
+                            aspectRatio: "3/4",
+                            borderRadius: 4,
                             overflow: "hidden",
                             cursor: "pointer",
                             boxShadow: "0 6px 15px rgba(0,0,0,0.05)",
@@ -1808,44 +1837,46 @@ export const CustomerScreen = ({
                           />
                           
                           {/* Dark bottom gradient overlay */}
-                          <div 
-                            style={{ 
-                              position: "absolute", 
-                              inset: 0, 
-                              background: "linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 60%, transparent 100%)",
-                              pointerEvents: "none"
-                            }} 
-                          />
+                          {!card.hideTitle && (
+                            <div 
+                              style={{ 
+                                position: "absolute", 
+                                inset: 0, 
+                                background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)",
+                                pointerEvents: "none"
+                              }} 
+                            />
+                          )}
                           
                           {/* Text overlay */}
-                          <div 
-                            style={{ 
-                              position: "absolute", 
-                              bottom: isDesktop ? 16 : 10, 
-                              left: card.align === "center" ? "50%" : (card.align === "right" ? "auto" : (isDesktop ? 16 : 10)),
-                              right: card.align === "center" ? "auto" : (card.align === "left" ? "auto" : (isDesktop ? 16 : 10)),
-                              transform: card.align === "center" ? "translateX(-50%)" : "none",
-                              width: card.align === "center" ? "90%" : "auto",
-                              textAlign: card.align === "center" ? "center" : "left",
-                              color: "#FFFFFF",
-                              zIndex: 2,
-                            }}
-                          >
-                            <span 
-                              className="pf" 
+                          {!card.hideTitle && (
+                            <div 
                               style={{ 
-                                display: "block", 
-                                fontSize: isDesktop ? 15 : 11, 
-                                fontWeight: 900, 
-                                textTransform: "uppercase", 
-                                letterSpacing: "1px",
-                                textShadow: "0 2px 4px rgba(0,0,0,0.6)",
-                                whiteSpace: card.align === "center" ? "normal" : "nowrap"
+                                position: "absolute", 
+                                bottom: isDesktop ? 14 : 8, 
+                                left: 0,
+                                right: 0,
+                                textAlign: "center",
+                                color: "#FFFFFF",
+                                zIndex: 2,
+                                padding: "0 8px"
                               }}
                             >
-                              {card.title}
-                            </span>
-                          </div>
+                              <span 
+                                className="pf" 
+                                style={{ 
+                                  display: "block", 
+                                  fontSize: isDesktop ? 14 : 10, 
+                                  fontWeight: 800, 
+                                  textTransform: "uppercase", 
+                                  letterSpacing: "1.5px",
+                                  textShadow: "0 2px 4px rgba(0,0,0,0.8)",
+                                }}
+                              >
+                                {card.title}
+                              </span>
+                            </div>
+                          )}
                         </div>
                       );
                     })}
