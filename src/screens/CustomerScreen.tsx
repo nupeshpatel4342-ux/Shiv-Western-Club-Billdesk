@@ -283,8 +283,9 @@ const getEnrichedProductData = (product: any) => {
   }
 
   // Calculate pricing values
-  const mrpVal = product.mrp || Math.round(product.price * 1.5);
-  const discountVal = product.discount || Math.round(((mrpVal - product.price) / mrpVal) * 100);
+  const finalPrice = product.sellingPrice || product.price || 0;
+  const mrpVal = product.price || finalPrice;
+  const discountVal = mrpVal > finalPrice ? Math.round(((mrpVal - finalPrice) / mrpVal) * 100) : 0;
 
   // Clean sizes and colors lists
   const availableSizes = product.available_sizes || (product.size ? product.size.split(",").map((s: any) => s.trim()) : ["S", "M", "L", "XL", "XXL"]);
@@ -295,7 +296,7 @@ const getEnrichedProductData = (product: any) => {
     id: product.id,
     name: product.name,
     category: product.category || "Menswear",
-    price: product.price || 0,
+    price: finalPrice,
     mrp: mrpVal,
     discount: discountVal,
     images: galleryImages,
