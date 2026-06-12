@@ -2432,34 +2432,37 @@ export const CustomerScreen = ({
         {/* Tab Display Body */}
         <main style={{ flex: 1, padding: "24px 20px 100px", overflowY: "auto", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
           <AnimatePresence mode="wait">
-            {selectedProduct ? (
-              <motion.div
-                key="product-detail"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                transition={{ duration: 0.3 }}
-              >
-                <ProductDetailPage
-                  product={selectedProduct}
-                  onClose={() => {
-                    setSelectedProduct(null);
-                    setSelectedSize("");
-                    setSelectedColor("");
-                  }}
-                  isWishlisted={isProductWishlisted(selectedProduct.id)}
-                  onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct.id); }}
-                  onAddToCart={handleAddToCartFromPage}
-                  onBuyNow={handleBuyNowFromPage}
-                  isGuest={profile.isGuest}
-                  isDesktop={isDesktop}
-                  allProducts={products}
-                  onProductClick={(p) => setSelectedProduct(p)}
-                  isProductWishlistedGlobal={isProductWishlisted}
-                  toggleWishlistGlobal={toggleWishlist}
-                />
-              </motion.div>
-            ) : (
+            {selectedProduct ? (() => {
+              const activeProduct = products.find(p => p.id === selectedProduct.id) || selectedProduct;
+              return (
+                <motion.div
+                  key="product-detail"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <ProductDetailPage
+                    product={activeProduct}
+                    onClose={() => {
+                      setSelectedProduct(null);
+                      setSelectedSize("");
+                      setSelectedColor("");
+                    }}
+                    isWishlisted={isProductWishlisted(activeProduct.id)}
+                    onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(activeProduct.id); }}
+                    onAddToCart={handleAddToCartFromPage}
+                    onBuyNow={handleBuyNowFromPage}
+                    isGuest={profile.isGuest}
+                    isDesktop={isDesktop}
+                    allProducts={products}
+                    onProductClick={(p) => setSelectedProduct(p)}
+                    isProductWishlistedGlobal={isProductWishlisted}
+                    toggleWishlistGlobal={toggleWishlist}
+                  />
+                </motion.div>
+              );
+            })() : (
               <>
                 {/* TABS COMPONENT SWITCHER */}
 
