@@ -348,6 +348,10 @@ interface ProductDetailPageProps {
   onBuyNow: (product: any, size: string, color: string) => void;
   isGuest: boolean;
   isDesktop: boolean;
+  allProducts: any[];
+  onProductClick: (product: any) => void;
+  isProductWishlistedGlobal: (id: string) => boolean;
+  toggleWishlistGlobal: (id: string) => void;
 }
 
 const ProductDetailPage = ({
@@ -358,7 +362,11 @@ const ProductDetailPage = ({
   onAddToCart,
   onBuyNow,
   isGuest,
-  isDesktop
+  isDesktop,
+  allProducts,
+  onProductClick,
+  isProductWishlistedGlobal,
+  toggleWishlistGlobal
 }: ProductDetailPageProps) => {
   const enriched = getEnrichedProductData(product) || product;
   const imagesList = enriched.images || [enriched.image].filter(Boolean);
@@ -415,6 +423,40 @@ const ProductDetailPage = ({
     material: false,
     shipping: false
   });
+
+  // Save viewed product to localStorage recently viewed list
+  React.useEffect(() => {
+    if (product && product.id) {
+      try {
+        const stored = localStorage.getItem("recently_viewed_products");
+        let list: string[] = stored ? JSON.parse(stored) : [];
+        list = list.filter(id => id !== product.id);
+        list.unshift(product.id);
+        if (list.length > 10) {
+          list = list.slice(0, 10);
+        }
+        localStorage.setItem("recently_viewed_products", JSON.stringify(list));
+      } catch (e) {
+        console.error("Error updating recently viewed products:", e);
+      }
+    }
+  }, [product]);
+
+  // Compute actual product items for Recently Viewed list (excluding current)
+  const recentlyViewed = useMemo(() => {
+    if (!product || !allProducts) return [];
+    try {
+      const stored = localStorage.getItem("recently_viewed_products");
+      const list: string[] = stored ? JSON.parse(stored) : [];
+      const otherIds = list.filter(id => id !== product.id);
+      return otherIds
+        .map(id => allProducts.find(p => p.id === id))
+        .filter(Boolean);
+    } catch (e) {
+      console.error("Error reading recently viewed products:", e);
+      return [];
+    }
+  }, [product, allProducts]);
 
   React.useEffect(() => {
     if (product) {
@@ -932,13 +974,41 @@ const ProductDetailPage = ({
         </div>
       )}
 
+      {/* Recently Viewed Products */}
+      {recentlyViewed.length > 0 && (
+        <div style={{ marginTop: 48, borderTop: '1px solid #E5E7EB', paddingTop: 36, paddingBottom: 20 }}>
+          <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 20, textTransform: 'uppercase', letterSpacing: '1px' }}>
+            Recently Viewed
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {recentlyViewed.slice(0, 4).map((p: any) => (
+              <ProductCard
+                key={p.id}
+                product={p}
+                isWishlisted={isProductWishlistedGlobal(p.id)}
+                onWishlistToggle={(e) => {
+                  e.stopPropagation();
+                  toggleWishlistGlobal(p.id);
+                }}
+                onClick={() => {
+                  onProductClick(p);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                isGuest={isGuest}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Size Guide Chart Modal */}
       {sizeChartOpen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 20 }}>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifycontent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 20 }}>
           <div style={{ background: '#FFF', borderRadius: 24, padding: 28, width: '100%', maxWidth: 500, border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 25px 60px rgba(0,0,0,0.15)', position: 'relative' }}>
             <button 
               onClick={() => setSizeChartOpen(false)}
-              style={{ position: 'absolute', right: 20, top: 20, background: '#F3F4F6', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111', fontWeight: 700 }}
+              style={{ position: 'absolute', right: 20, top: 20, background: '#F3F4F6', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifycontent: 'center', cursor: 'pointer', color: '#111', fontWeight: 700 }}
             >
               ✕
             </button>
@@ -2382,6 +2452,10 @@ export const CustomerScreen = ({
                   onBuyNow={handleBuyNowFromPage}
                   isGuest={profile.isGuest}
                   isDesktop={isDesktop}
+                  allProducts={products}
+                  onProductClick={(p) => setSelectedProduct(p)}
+                  isProductWishlistedGlobal={isProductWishlisted}
+                  toggleWishlistGlobal={toggleWishlist}
                 />
               </motion.div>
             ) : (
