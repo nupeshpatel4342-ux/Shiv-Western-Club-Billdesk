@@ -375,6 +375,35 @@ const ProductDetailPage = ({
   }, [enriched.available_colors]);
 
   const [selectedColor, setSelectedColor] = useState(initialColor);
+
+  const currentGalleryImages = useMemo(() => {
+    const fullImagesList = enriched.images || [enriched.image].filter(Boolean);
+    if (!selectedColor) return fullImagesList;
+    
+    // Find the variant
+    const variant = enriched.available_colors?.find((cv: any) => {
+      const cleanCv = getColorObject(cv);
+      return cleanCv?.name === selectedColor;
+    });
+    
+    if (variant) {
+      const cleanCv = getColorObject(variant);
+      if (cleanCv.image_indices && Array.isArray(cleanCv.image_indices) && cleanCv.image_indices.length > 0) {
+        return cleanCv.image_indices.map((idx: number) => fullImagesList[idx]).filter(Boolean);
+      } else if (cleanCv.image_index !== undefined && fullImagesList[cleanCv.image_index]) {
+        return [fullImagesList[cleanCv.image_index]];
+      }
+    }
+    
+    return fullImagesList;
+  }, [enriched.images, enriched.image, enriched.available_colors, selectedColor]);
+
+  // Effect to automatically select the first image of the selected color's gallery
+  React.useEffect(() => {
+    if (currentGalleryImages && currentGalleryImages.length > 0) {
+      setActiveImage(currentGalleryImages[0]);
+    }
+  }, [selectedColor, currentGalleryImages]);
   
   const [pincode, setPincode] = useState("");
   const [pincodeStatus, setPincodeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: "" });
@@ -479,7 +508,7 @@ const ProductDetailPage = ({
           {/* Desktop Thumbnails (Left side of large image) */}
           {isDesktop && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 520, overflowY: 'auto', width: 80, flexShrink: 0 }} className="no-scrollbar">
-              {imagesList.map((img: string, idx: number) => {
+              {currentGalleryImages.map((img: string, idx: number) => {
                 const isActive = activeImage === img;
                 return (
                   <button
@@ -526,7 +555,7 @@ const ProductDetailPage = ({
           {/* Mobile Thumbnails (Below large image) */}
           {!isDesktop && (
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8 }} className="no-scrollbar">
-              {imagesList.map((img: string, idx: number) => {
+              {currentGalleryImages.map((img: string, idx: number) => {
                 const isActive = activeImage === img;
                 return (
                   <button
@@ -597,9 +626,6 @@ const ProductDetailPage = ({
                       key={c.name}
                       onClick={() => {
                         setSelectedColor(c.name);
-                        if (c.image_index !== undefined && imagesList[c.image_index]) {
-                          setActiveImage(imagesList[c.image_index]);
-                        }
                       }}
                       style={{
                         width: 32,

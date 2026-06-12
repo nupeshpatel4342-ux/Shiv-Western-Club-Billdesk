@@ -67,13 +67,14 @@ export const ProductsScreen = ({
   
   // Custom multi-variant states
   const [galleryImages, setGalleryImages] = useState<string[]>([]);
-  const [colorVariants, setColorVariants] = useState<{ name: string, hex: string, image_index: number }[]>([]);
+  const [colorVariants, setColorVariants] = useState<{ name: string, hex: string, image_index: number, image_indices?: number[] }[]>([]);
   const [outOfStockSizes, setOutOfStockSizes] = useState<string[]>([]);
 
   // Temp input states for color variants
   const [tempColorName, setTempColorName] = useState("");
   const [tempColorHex, setTempColorHex] = useState("#000000");
   const [tempColorImageIdx, setTempColorImageIdx] = useState<number>(0);
+  const [tempColorImageIndices, setTempColorImageIndices] = useState<number[]>([]);
   
   // Sizes selection
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["S", "M", "L", "XL", "XXL"]);
@@ -523,7 +524,7 @@ export const ProductsScreen = ({
                       {colorVariants.map((cv, idx) => (
                         <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: "6px 12px", fontSize: 12, fontWeight: 650, color: C.dark }}>
                           <span style={{ width: 14, height: 14, borderRadius: "50%", background: cv.hex, border: "1px solid rgba(0,0,0,0.15)" }} />
-                          <span>{cv.name} (Image #{cv.image_index})</span>
+                          <span>{cv.name} (Images: {cv.image_indices ? cv.image_indices.map(x => `#${x}`).join(", ") : `#${cv.image_index}`})</span>
                           <button
                             type="button"
                             onClick={() => setColorVariants(prev => prev.filter((_, i) => i !== idx))}
@@ -561,7 +562,7 @@ export const ProductsScreen = ({
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 4 }}>Associated Photo</label>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 4 }}>Primary Photo</label>
                       <select
                         value={tempColorImageIdx}
                         onChange={e => setTempColorImageIdx(Number(e.target.value))}
@@ -580,15 +581,67 @@ export const ProductsScreen = ({
                           alert("Please enter a color name.");
                           return;
                         }
-                        setColorVariants(prev => [...prev, { name: tempColorName.trim(), hex: tempColorHex, image_index: tempColorImageIdx }]);
+                        const selectedIdxs = tempColorImageIndices.length > 0 ? tempColorImageIndices : [tempColorImageIdx];
+                        const primaryIdx = selectedIdxs.includes(tempColorImageIdx) ? tempColorImageIdx : selectedIdxs[0];
+                        setColorVariants(prev => [...prev, { 
+                          name: tempColorName.trim(), 
+                          hex: tempColorHex, 
+                          image_index: primaryIdx,
+                          image_indices: selectedIdxs
+                        }]);
                         setTempColorName("");
                         setTempColorHex("#000000");
                         setTempColorImageIdx(0);
+                        setTempColorImageIndices([]);
                       }}
                       style={{ background: C.dark, color: C.accent, border: "none", padding: "10px 16px", borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: "pointer" }}
                     >
                       Add Color
                     </button>
+
+                    {galleryImages.length > 0 && (
+                      <div style={{ gridColumn: "span 4", marginTop: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                        <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 6 }}>
+                          Select All Photos for this Color Variant (Checked photos will be listed for this color on storefront):
+                        </label>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {galleryImages.map((imgSrc, i) => {
+                            const isChecked = tempColorImageIndices.includes(i);
+                            return (
+                              <div
+                                key={i}
+                                onClick={() => {
+                                  setTempColorImageIndices(prev => 
+                                    prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
+                                  );
+                                }}
+                                style={{
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 8,
+                                  overflow: "hidden",
+                                  border: isChecked ? `2.5px solid ${C.accent}` : `1px solid ${C.border}`,
+                                  position: "relative",
+                                  cursor: "pointer",
+                                  opacity: isChecked ? 1 : 0.5,
+                                  transition: "all 0.15s"
+                                }}
+                              >
+                                <img src={imgSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                                {isChecked && (
+                                  <div style={{ position: "absolute", top: 2, right: 2, background: C.accent, color: C.dark, borderRadius: "50%", width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900 }}>
+                                    ✓
+                                  </div>
+                                )}
+                                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#FFF", fontSize: 8, textAlign: "center", padding: "1px 0" }}>
+                                  #{i}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -811,7 +864,7 @@ export const ProductsScreen = ({
                         return (
                           <div key={idx} style={{ display: "flex", alignItems: "center", gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 10, padding: "6px 12px", fontSize: 12, fontWeight: 650, color: C.dark }}>
                             <span style={{ width: 14, height: 14, borderRadius: "50%", background: cleanCv.hex, border: "1px solid rgba(0,0,0,0.15)" }} />
-                            <span>{cleanCv.name} (Image #{cleanCv.image_index || 0})</span>
+                            <span>{cleanCv.name} (Images: {cleanCv.image_indices ? cleanCv.image_indices.map((x: any) => `#${x}`).join(", ") : `#${cleanCv.image_index}`})</span>
                             <button
                               type="button"
                               onClick={() => {
@@ -853,7 +906,7 @@ export const ProductsScreen = ({
                       </div>
                     </div>
                     <div>
-                      <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 4 }}>Associated Photo</label>
+                      <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 4 }}>Primary Photo</label>
                       <select
                         value={tempColorImageIdx}
                         onChange={e => setTempColorImageIdx(Number(e.target.value))}
@@ -872,19 +925,71 @@ export const ProductsScreen = ({
                           alert("Please enter a color name.");
                           return;
                         }
+                        const selectedIdxs = tempColorImageIndices.length > 0 ? tempColorImageIndices : [tempColorImageIdx];
+                        const primaryIdx = selectedIdxs.includes(tempColorImageIdx) ? tempColorImageIdx : selectedIdxs[0];
                         const currentColors = editingProduct.available_colors || [];
                         setEditingProduct({
                           ...editingProduct,
-                          available_colors: [...currentColors, { name: tempColorName.trim(), hex: tempColorHex, image_index: tempColorImageIdx }]
+                          available_colors: [...currentColors, { 
+                            name: tempColorName.trim(), 
+                            hex: tempColorHex, 
+                            image_index: primaryIdx,
+                            image_indices: selectedIdxs
+                          }]
                         });
                         setTempColorName("");
                         setTempColorHex("#000000");
                         setTempColorImageIdx(0);
+                        setTempColorImageIndices([]);
                       }}
                       style={{ background: C.dark, color: C.accent, border: "none", padding: "10px 16px", borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: "pointer" }}
                     >
                       Add Color
                     </button>
+
+                    {(editingProduct.images || []).length > 0 && (
+                      <div style={{ gridColumn: "span 4", marginTop: 12, borderTop: `1px solid ${C.border}`, paddingTop: 12 }}>
+                        <label style={{ fontSize: 10, fontWeight: 800, color: C.muted, display: "block", marginBottom: 6 }}>
+                          Select All Photos for this Color Variant (Checked photos will be listed for this color on storefront):
+                        </label>
+                        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                          {(editingProduct.images || []).map((imgSrc: string, i: number) => {
+                            const isChecked = tempColorImageIndices.includes(i);
+                            return (
+                              <div
+                                key={i}
+                                onClick={() => {
+                                  setTempColorImageIndices(prev => 
+                                    prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]
+                                  );
+                                }}
+                                style={{
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 8,
+                                  overflow: "hidden",
+                                  border: isChecked ? `2.5px solid ${C.accent}` : `1px solid ${C.border}`,
+                                  position: "relative",
+                                  cursor: "pointer",
+                                  opacity: isChecked ? 1 : 0.5,
+                                  transition: "all 0.15s"
+                                }}
+                              >
+                                <img src={imgSrc} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="" />
+                                {isChecked && (
+                                  <div style={{ position: "absolute", top: 2, right: 2, background: C.accent, color: C.dark, borderRadius: "50%", width: 14, height: 14, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 900 }}>
+                                    ✓
+                                  </div>
+                                )}
+                                <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "rgba(0,0,0,0.6)", color: "#FFF", fontSize: 8, textAlign: "center", padding: "1px 0" }}>
+                                  #{i}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
