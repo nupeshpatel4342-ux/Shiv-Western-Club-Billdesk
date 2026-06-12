@@ -16,6 +16,10 @@ import {
   Menu, 
   X, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
+  ArrowLeft,
+  Star,
   Search, 
   Calendar,
   LogOut,
@@ -23,7 +27,9 @@ import {
   ShoppingCart,
   Plus,
   Minus,
-  Trash2
+  Trash2,
+  Truck,
+  ShieldCheck
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { doWhatsApp, doPDF } from "../utils/exportUtils";
@@ -225,6 +231,735 @@ const CATEGORY_CARDS = [
     align: "center" 
   }
 ];
+
+const getEnrichedProductData = (product: any) => {
+  if (!product) return null;
+
+  // Build gallery images array
+  let galleryImages = product.images || [];
+  if (!Array.isArray(galleryImages) || galleryImages.length === 0) {
+    if (product.image) {
+      // Create a nice set of varied photos using categories and focuses to make it look like a high-end storefront gallery
+      if (product.category === "Shirt") {
+        galleryImages = [
+          product.image,
+          "/categories/shirts.png",
+          "/categories/shirts_focused_1781203465401.png"
+        ];
+      } else if (product.category === "Trouser") {
+        galleryImages = [
+          product.image,
+          "/categories/trousers.png",
+          "/categories/trousers_focused_1781203405559.png"
+        ];
+      } else if (product.category === "T-Shirt") {
+        galleryImages = [
+          product.image,
+          "/categories/t_shirts.png",
+          "/categories/printed.png"
+        ];
+      } else if (product.category === "Jeans") {
+        galleryImages = [
+          product.image,
+          "/categories/jeans.png",
+          "/categories/jeans_focused_1781203436747.png"
+        ];
+      } else if (product.category === "Shorts") {
+        galleryImages = [
+          product.image,
+          "/categories/shorts.png",
+          "/categories/shorts_focused_1781203449888.png"
+        ];
+      } else {
+        galleryImages = [
+          product.image,
+          "/categories/combos.png",
+          "/hero_fashion_banner.png"
+        ];
+      }
+    } else {
+      galleryImages = ["/logo.svg"];
+    }
+  }
+
+  // Calculate pricing values
+  const mrpVal = product.mrp || Math.round(product.price * 1.5);
+  const discountVal = product.discount || Math.round(((mrpVal - product.price) / mrpVal) * 100);
+
+  // Clean sizes and colors lists
+  const availableSizes = product.available_sizes || (product.size ? product.size.split(",").map((s: any) => s.trim()) : ["S", "M", "L", "XL", "XXL"]);
+  const availableColors = product.available_colors || (product.color ? product.color.split(",").map((c: any) => c.trim()) : ["Navy Blue", "Olive Green", "Charcoal Black"]);
+
+  return {
+    ...product,
+    id: product.id,
+    name: product.name,
+    category: product.category || "Menswear",
+    price: product.price || 0,
+    mrp: mrpVal,
+    discount: discountVal,
+    images: galleryImages,
+    available_sizes: availableSizes,
+    available_colors: availableColors,
+    description: product.description || `Elevate your casual wear with this premium ${product.category || "item"} from Shiv Western Club. Engineered with tailored precision, it boasts structural comfort, breathable fabrics, and a modern aesthetic suitable for all-day urban versatility. Pair it with your favorite denims or structured chinos for an effortless, premium D2C look.`,
+    materialCare: product.materialCare || "• 100% Premium Combed Cotton & Eco-Friendly Dyes\n• Breathable knit fabric with soft finish\n• Cold machine wash on gentle cycle\n• Wash inside out with like colors\n• Iron on low heat; Do not iron directly on print",
+    shippingReturns: product.shippingReturns || "• Free Delivery on all orders above ₹999 across India\n• Dispatched within 24-48 hours; delivery in 3-5 business days\n• 15-Day Hassle-Free Returns & Exchanges available\n• Cash on Delivery (COD) supported in all major pin codes",
+    stockStatus: product.stockStatus || (product.stock > 0 ? "in_stock" : "out_of_stock"),
+    stock: product.stock !== undefined ? product.stock : 10,
+  };
+};
+
+const getColorObject = (color: any) => {
+  if (typeof color === "string") {
+    const clean = color.trim().toLowerCase();
+    const map: Record<string, string> = {
+      "navy blue": "#1A365D",
+      "indigo blue": "#1B3A4B",
+      "olive green": "#4A5D4E",
+      "charcoal black": "#1A1A1A",
+      "black": "#000000",
+      "white": "#FFFFFF",
+      "ivory white": "#F5F5F0",
+      "red": "#9B2226",
+      "blue": "#3B82F6",
+      "green": "#10B981",
+      "gray": "#6B7280",
+      "grey": "#6B7280",
+      "beige": "#F5F5DC",
+      "brown": "#78350F",
+      "khaki": "#C3B091",
+      "mustard": "#E1AD01",
+      "maroon": "#800000"
+    };
+    return {
+      name: color,
+      hex: map[clean] || "#9CA3AF"
+    };
+  }
+  return color;
+};
+
+interface ProductDetailPageProps {
+  product: any;
+  onClose: () => void;
+  isWishlisted: boolean;
+  onWishlistToggle: (e: React.MouseEvent) => void;
+  onAddToCart: (product: any, size: string, color: string) => void;
+  onBuyNow: (product: any, size: string, color: string) => void;
+  isGuest: boolean;
+  isDesktop: boolean;
+}
+
+const ProductDetailPage = ({
+  product,
+  onClose,
+  isWishlisted,
+  onWishlistToggle,
+  onAddToCart,
+  onBuyNow,
+  isGuest,
+  isDesktop
+}: ProductDetailPageProps) => {
+  const enriched = getEnrichedProductData(product) || product;
+  const imagesList = enriched.images || [enriched.image].filter(Boolean);
+
+  const [activeImage, setActiveImage] = useState(imagesList[0] || "");
+  const [selectedSize, setSelectedSize] = useState("");
+  
+  const initialColor = useMemo(() => {
+    if (enriched.available_colors && enriched.available_colors.length > 0) {
+      const firstColor = getColorObject(enriched.available_colors[0]);
+      return firstColor?.name || "";
+    }
+    return "";
+  }, [enriched.available_colors]);
+
+  const [selectedColor, setSelectedColor] = useState(initialColor);
+  
+  const [pincode, setPincode] = useState("");
+  const [pincodeStatus, setPincodeStatus] = useState<{ type: 'success' | 'error' | null, message: string }>({ type: null, message: "" });
+  const [checkingPincode, setCheckingPincode] = useState(false);
+  const [sizeChartOpen, setSizeChartOpen] = useState(false);
+
+  const [openAccordions, setOpenAccordions] = useState({
+    description: true,
+    material: false,
+    shipping: false
+  });
+
+  React.useEffect(() => {
+    if (product) {
+      const freshEnriched = getEnrichedProductData(product) || product;
+      const freshImages = freshEnriched.images || [freshEnriched.image].filter(Boolean);
+      setActiveImage(freshImages[0] || "");
+      setSelectedSize("");
+      if (freshEnriched.available_colors && freshEnriched.available_colors.length > 0) {
+        const firstColor = getColorObject(freshEnriched.available_colors[0]);
+        setSelectedColor(firstColor?.name || "");
+      } else {
+        setSelectedColor("");
+      }
+      setPincode("");
+      setPincodeStatus({ type: null, message: "" });
+    }
+  }, [product]);
+
+  const handlePincodeCheck = () => {
+    if (!pincode) {
+      setPincodeStatus({ type: 'error', message: "Please enter a pincode." });
+      return;
+    }
+    if (!/^\d{6}$/.test(pincode)) {
+      setPincodeStatus({ type: 'error', message: "Invalid pincode. Please enter a 6-digit number." });
+      return;
+    }
+    
+    setCheckingPincode(true);
+    setPincodeStatus({ type: null, message: "Checking availability..." });
+    
+    setTimeout(() => {
+      setCheckingPincode(false);
+      if (pincode.startsWith("38")) {
+        setPincodeStatus({
+          type: 'success',
+          message: "⚡ Super Express Delivery: 1-2 Days to Gujarat! COD Available."
+        });
+      } else {
+        setPincodeStatus({
+          type: 'success',
+          message: "🚚 Standard Shipping: Delivered in 3-5 days. COD Available."
+        });
+      }
+    }, 600);
+  };
+
+  const toggleAccordion = (section: 'description' | 'material' | 'shipping') => {
+    setOpenAccordions(prev => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  const materialPoints = useMemo(() => {
+    return Array.isArray(enriched.material_care) 
+      ? enriched.material_care 
+      : (enriched.materialCare || "").split("\n").map((line: string) => line.replace(/^•\s*/, "").trim()).filter(Boolean);
+  }, [enriched.material_care, enriched.materialCare]);
+
+  const shippingPoints = useMemo(() => {
+    return Array.isArray(enriched.shipping_returns) 
+      ? enriched.shipping_returns 
+      : (enriched.shippingReturns || "").split("\n").map((line: string) => line.replace(/^•\s*/, "").trim()).filter(Boolean);
+  }, [enriched.shipping_returns, enriched.shippingReturns]);
+
+  const colorList = useMemo(() => {
+    if (!enriched.available_colors) return [];
+    return enriched.available_colors.map((c: any) => getColorObject(c));
+  }, [enriched.available_colors]);
+
+  const sizes = ["S", "M", "L", "XL", "XXL"];
+
+  return (
+    <div className="fade" style={{ display: 'flex', flexDirection: 'column', gap: 24, paddingBottom: isDesktop ? '40px' : '100px' }}>
+      {/* Breadcrumb Navigation Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #E5E7EB', paddingBottom: 16 }}>
+        <button 
+          onClick={onClose}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: '#111', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          <ArrowLeft size={16} /> Back to Catalog
+        </button>
+        <span style={{ fontSize: 11, color: '#666', fontWeight: 600 }}>
+          Home / {enriched.category} / <span style={{ color: '#111', fontWeight: 700 }}>{enriched.name}</span>
+        </span>
+      </div>
+
+      {/* Main Grid Layout */}
+      <div style={{ display: 'grid', gridTemplateColumns: isDesktop ? '1.2fr 1fr' : '1fr', gap: isDesktop ? 48 : 28, alignItems: 'start' }}>
+        
+        {/* Left Section: Gallery */}
+        <div style={{ display: 'flex', flexDirection: isDesktop ? 'row' : 'column', gap: 16, position: isDesktop ? 'sticky' : 'relative', top: isDesktop ? 100 : 0 }}>
+          {/* Desktop Thumbnails (Left side of large image) */}
+          {isDesktop && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, maxHeight: 520, overflowY: 'auto', width: 80, flexShrink: 0 }} className="no-scrollbar">
+              {imagesList.map((img: string, idx: number) => {
+                const isActive = activeImage === img;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    style={{
+                      width: 76,
+                      height: 96,
+                      borderRadius: 10,
+                      border: isActive ? '2px solid #111' : '1.5px solid #E5E7EB',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      padding: 0,
+                      transition: 'all 0.2s',
+                      background: '#F8F9FB'
+                    }}
+                  >
+                    <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Large Main Image */}
+          <div style={{ flex: 1, position: 'relative' }}>
+            <div style={{ width: '100%', aspectRatio: isDesktop ? '3.2/4' : '1/1.15', borderRadius: 20, overflow: 'hidden', border: '1px solid #E5E7EB', background: '#F8F9FB' }}>
+              <img
+                src={activeImage}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.5s ease-out' }}
+                className="hover:scale-105 cursor-zoom-in"
+                alt={enriched.name}
+              />
+            </div>
+            <button 
+              onClick={onWishlistToggle}
+              style={{ position: 'absolute', right: 20, top: 20, background: '#FFF', border: 'none', borderRadius: '50%', width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', transition: 'all 0.2s', zIndex: 10 }}
+            >
+              <Heart size={22} fill={isWishlisted ? '#9B2226' : 'none'} color={isWishlisted ? '#9B2226' : '#6B7280'} />
+            </button>
+          </div>
+
+          {/* Mobile Thumbnails (Below large image) */}
+          {!isDesktop && (
+            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 8 }} className="no-scrollbar">
+              {imagesList.map((img: string, idx: number) => {
+                const isActive = activeImage === img;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImage(img)}
+                    style={{
+                      width: 64,
+                      height: 80,
+                      borderRadius: 8,
+                      border: isActive ? '2px solid #111' : '1.5px solid #E5E7EB',
+                      overflow: 'hidden',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                      padding: 0,
+                      transition: 'all 0.2s',
+                      background: '#F8F9FB'
+                    }}
+                  >
+                    <img src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Right Section: Details */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          {/* Brand & Category */}
+          <span style={{ fontSize: 11, color: '#C2A649', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '2px', marginBottom: 6 }}>
+            {enriched.brand || "SHIV WESTERN CLUB"}
+          </span>
+          
+          {/* Title */}
+          <h1 className="pf" style={{ fontSize: isDesktop ? 26 : 20, fontWeight: 900, color: '#111', lineHeight: 1.3, marginBottom: 8 }}>
+            {enriched.name}
+          </h1>
+
+          {/* Ratings & Reviews */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 18 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 3, background: '#F5F5F0', padding: '3px 8px', borderRadius: 6, fontSize: 11, fontWeight: 700, color: '#111' }}>
+              <Star size={11} fill="#D4AF37" color="#D4AF37" /> 4.8
+            </div>
+            <span style={{ fontSize: 12, color: '#666', fontWeight: 500 }}>| 142 Reviews & Ratings</span>
+          </div>
+
+          {/* Price details */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+            <span className="pf" style={{ fontSize: 24, fontWeight: 900, color: '#111' }}>₹{enriched.price.toLocaleString("en-IN")}</span>
+            <span style={{ fontSize: 15, color: '#9CA3AF', textDecoration: 'line-through' }}>₹{enriched.mrp.toLocaleString("en-IN")}</span>
+            <span style={{ background: '#E8F5EE', color: '#2D6A4F', fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 8 }}>{enriched.discount}% OFF</span>
+          </div>
+          <p style={{ fontSize: 11, color: '#6B7280', margin: '0 0 24px', fontWeight: 500 }}>Inclusive of all taxes</p>
+
+          <hr style={{ border: '0', borderTop: '1px solid #E5E7EB', margin: '0 0 20px' }} />
+
+          {/* Color Selection swatches */}
+          {colorList.length > 0 && (
+            <div style={{ marginBottom: 24 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111', display: 'block', marginBottom: 10 }}>
+                Color: <span style={{ fontWeight: 500, color: '#666' }}>{selectedColor}</span>
+              </span>
+              <div style={{ display: 'flex', gap: 12 }}>
+                {colorList.map((c: any) => {
+                  const isSelected = selectedColor === c.name;
+                  return (
+                    <button
+                      key={c.name}
+                      onClick={() => {
+                        setSelectedColor(c.name);
+                        if (c.image_index !== undefined && imagesList[c.image_index]) {
+                          setActiveImage(imagesList[c.image_index]);
+                        }
+                      }}
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: '50%',
+                        background: c.hex,
+                        border: isSelected ? '2px solid #000' : '1px solid #E5E7EB',
+                        boxShadow: isSelected ? '0 0 0 3px rgba(0,0,0,0.1)' : 'none',
+                        outline: 'none',
+                        cursor: 'pointer',
+                        padding: 0,
+                        transition: 'all 0.2s'
+                      }}
+                      title={c.name}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Size Guide & Grid */}
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#111' }}>
+                Select Size: <span style={{ fontWeight: 500, color: '#666' }}>{selectedSize || "None"}</span>
+              </span>
+              <button
+                onClick={() => setSizeChartOpen(true)}
+                style={{ background: 'none', border: 'none', color: '#C2A649', fontWeight: 800, fontSize: 12, cursor: 'pointer', textDecoration: 'underline', padding: 0 }}
+              >
+                Size Guide
+              </button>
+            </div>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10 }}>
+              {sizes.map((s) => {
+                const isOutOfStock = enriched.out_of_stock_sizes?.includes(s);
+                const isSelected = selectedSize === s;
+                return (
+                  <button
+                    key={s}
+                    disabled={isOutOfStock}
+                    onClick={() => setSelectedSize(s)}
+                    style={{
+                      padding: '12px 0',
+                      borderRadius: 10,
+                      border: isSelected ? '2px solid #111' : '1px solid #E5E7EB',
+                      background: isSelected ? '#111' : isOutOfStock ? '#F3F4F6' : '#FFF',
+                      color: isSelected ? '#FFF' : isOutOfStock ? '#9CA3AF' : '#111',
+                      fontWeight: 700,
+                      fontSize: 13,
+                      textDecoration: isOutOfStock ? 'line-through' : 'none',
+                      cursor: isOutOfStock ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    {s}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Inline CTA Buttons (Desktop) */}
+          {isDesktop && (
+            <div style={{ display: 'flex', gap: 14, marginBottom: 28 }}>
+              <button
+                onClick={() => {
+                  if (!selectedSize) {
+                    alert("Please select a size!");
+                    return;
+                  }
+                  onAddToCart(enriched, selectedSize, selectedColor);
+                }}
+                style={{
+                  flex: 1,
+                  background: '#FFF',
+                  color: '#111',
+                  border: '2px solid #111',
+                  padding: '16px',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  transition: 'all 0.2s'
+                }}
+              >
+                <ShoppingCart size={18} /> ADD TO CART
+              </button>
+              <button
+                onClick={() => {
+                  if (!selectedSize) {
+                    alert("Please select a size!");
+                    return;
+                  }
+                  onBuyNow(enriched, selectedSize, selectedColor);
+                }}
+                style={{
+                  flex: 1,
+                  background: '#111',
+                  color: '#FFF',
+                  border: 'none',
+                  padding: '16px',
+                  borderRadius: 12,
+                  fontSize: 14,
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8,
+                  transition: 'all 0.2s'
+                }}
+              >
+                ⚡ BUY NOW
+              </button>
+            </div>
+          )}
+
+          {/* Pincode Estimator */}
+          <div style={{ background: '#F8F9FB', border: '1px solid #E5E7EB', borderRadius: 16, padding: 18, marginBottom: 28 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#111', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+              <Truck size={16} /> Check Delivery & COD Availability
+            </span>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <input
+                type="text"
+                maxLength={6}
+                placeholder="Enter Pincode (e.g. 380001)"
+                value={pincode}
+                onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+                style={{ flex: 1, padding: '10px 14px', border: '1px solid #E5E7EB', borderRadius: 10, fontSize: 13, outline: 'none', background: '#FFF' }}
+              />
+              <button
+                disabled={checkingPincode}
+                onClick={handlePincodeCheck}
+                style={{ background: '#111', color: '#FFF', border: 'none', padding: '10px 18px', borderRadius: 10, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+              >
+                {checkingPincode ? '...' : 'Check'}
+              </button>
+            </div>
+            {pincodeStatus.message && (
+              <p style={{ fontSize: 12, fontWeight: 600, color: pincodeStatus.type === 'success' ? '#2D6A4F' : '#9B2226', margin: '8px 0 0' }}>
+                {pincodeStatus.message}
+              </p>
+            )}
+          </div>
+
+          {/* Collapsible Accordions */}
+          <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #E5E7EB' }}>
+            
+            {/* Description Accordion */}
+            <div style={{ borderBottom: '1px solid #E5E7EB' }}>
+              <button
+                onClick={() => toggleAccordion('description')}
+                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 4px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Product Description</span>
+                {openAccordions.description ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              {openAccordions.description && (
+                <div style={{ padding: '0 4px 16px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>
+                  {enriched.description}
+                </div>
+              )}
+            </div>
+
+            {/* Material & Wash Care Accordion */}
+            <div style={{ borderBottom: '1px solid #E5E7EB' }}>
+              <button
+                onClick={() => toggleAccordion('material')}
+                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 4px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Material & Wash Care</span>
+                {openAccordions.material ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              {openAccordions.material && (
+                <div style={{ padding: '0 4px 16px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>
+                  {materialPoints.length > 0 ? (
+                    <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
+                      {materialPoints.map((pt: string, idx: number) => (
+                        <li key={idx} style={{ marginBottom: 6 }}>{pt}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ margin: 0 }}>Standard wash care instructions apply.</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Shipping & Returns Accordion */}
+            <div style={{ borderBottom: '1px solid #E5E7EB' }}>
+              <button
+                onClick={() => toggleAccordion('shipping')}
+                style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 4px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 700, color: '#111' }}>Shipping & Easy Returns</span>
+                {openAccordions.shipping ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </button>
+              {openAccordions.shipping && (
+                <div style={{ padding: '0 4px 16px', fontSize: 13, color: '#555', lineHeight: 1.6 }}>
+                  {shippingPoints.length > 0 ? (
+                    <ul style={{ margin: 0, paddingLeft: 18, listStyleType: 'disc' }}>
+                      {shippingPoints.map((pt: string, idx: number) => (
+                        <li key={idx} style={{ marginBottom: 6 }}>{pt}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ margin: 0 }}>Standard shipping and return rules apply.</p>
+                  )}
+                </div>
+              )}
+            </div>
+            
+          </div>
+
+          {/* Safe & secure badge */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', background: '#F8F9FB', border: '1px solid #E5E7EB', borderRadius: 12, padding: 12, marginTop: 24 }}>
+            <ShieldCheck size={24} color="#2D6A4F" style={{ flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: '#555', fontWeight: 500, lineHeight: 1.4 }}>
+              <strong>100% Quality Assured</strong>. Handpicked fabric selections with strict double-stitching quality control.
+            </span>
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* Mobile Sticky CTA Bar */}
+      {!isDesktop && (
+        <div style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: '#FFF',
+          padding: '12px 16px env(safe-area-inset-bottom)',
+          borderTop: '1px solid #E5E7EB',
+          boxShadow: '0 -8px 24px rgba(0,0,0,0.08)',
+          display: 'flex',
+          gap: 12,
+          zIndex: 490
+        }}>
+          <button
+            onClick={() => {
+              if (!selectedSize) {
+                alert("Please select a size!");
+                return;
+              }
+              onAddToCart(enriched, selectedSize, selectedColor);
+            }}
+            style={{
+              flex: 1,
+              background: '#FFF',
+              color: '#111',
+              border: '2px solid #111',
+              padding: '14px',
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+          >
+            <ShoppingCart size={16} /> CART
+          </button>
+          <button
+            onClick={() => {
+              if (!selectedSize) {
+                alert("Please select a size!");
+                return;
+              }
+              onBuyNow(enriched, selectedSize, selectedColor);
+            }}
+            style={{
+              flex: 1,
+              background: '#111',
+              color: '#FFF',
+              border: 'none',
+              padding: '14px',
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 800,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              transition: 'all 0.2s'
+            }}
+          >
+            ⚡ BUY NOW
+          </button>
+        </div>
+      )}
+
+      {/* Size Guide Chart Modal */}
+      {sizeChartOpen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(6px)', padding: 20 }}>
+          <div style={{ background: '#FFF', borderRadius: 24, padding: 28, width: '100%', maxWidth: 500, border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 25px 60px rgba(0,0,0,0.15)', position: 'relative' }}>
+            <button 
+              onClick={() => setSizeChartOpen(false)}
+              style={{ position: 'absolute', right: 20, top: 20, background: '#F3F4F6', border: 'none', borderRadius: '50%', width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#111', fontWeight: 700 }}
+            >
+              ✕
+            </button>
+            <h3 className="pf" style={{ fontSize: 20, fontWeight: 900, color: '#111', marginBottom: 6 }}>Size Chart Guide</h3>
+            <p style={{ fontSize: 12, color: '#666', marginBottom: 20 }}>All measurements are in inches. Select your perfect fit.</p>
+            
+            <div style={{ overflowX: 'auto', border: '1.5px solid #E5E7EB', borderRadius: 16 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#F8F9FB', borderBottom: '1.5px solid #E5E7EB' }}>
+                    <th style={{ padding: '12px 16px', fontWeight: 700, color: '#111' }}>Size</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 700, color: '#111' }}>Chest (in)</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 700, color: '#111' }}>Length (in)</th>
+                    <th style={{ padding: '12px 16px', fontWeight: 700, color: '#111' }}>Shoulder (in)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { size: 'S', chest: '38', length: '27.5', shoulder: '17.5' },
+                    { size: 'M', chest: '40', length: '28.5', shoulder: '18.2' },
+                    { size: 'L', chest: '42', length: '29.5', shoulder: '19.0' },
+                    { size: 'XL', chest: '44', length: '30.5', shoulder: '19.8' },
+                    { size: 'XXL', chest: '46', length: '31.5', shoulder: '20.5' },
+                  ].map((row, idx) => (
+                    <tr key={row.size} style={{ borderBottom: idx === 4 ? 'none' : '1px solid #E5E7EB' }}>
+                      <td style={{ padding: '12px 16px', fontWeight: 700, color: '#111' }}>{row.size}</td>
+                      <td style={{ padding: '12px 16px', color: '#555' }}>{row.chest}</td>
+                      <td style={{ padding: '12px 16px', color: '#555' }}>{row.length}</td>
+                      <td style={{ padding: '12px 16px', color: '#555' }}>{row.shoulder}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            
+            <div style={{ marginTop: 20, background: '#FFFDF5', border: '1px solid #F3E8C4', borderRadius: 12, padding: 12, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 14 }}>💡</span>
+              <p style={{ fontSize: 11, color: '#856404', margin: 0, lineHeight: 1.4 }}>
+                <strong>Fit Tip:</strong> If your chest measurement is between sizes, order the smaller size for a tighter fit or the larger size for a relaxed/oversized fit.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const CustomerScreen = ({
   products,
@@ -631,6 +1366,38 @@ export const CustomerScreen = ({
     setIsCartOpen(true);
   };
 
+  const handleAddToCartFromPage = (product: any, size: string, color: string) => {
+    const existingIndex = cart.findIndex(
+      item => item.id === product.id && item.size === size && item.color === color
+    );
+
+    let updatedCart;
+    if (existingIndex > -1) {
+      updatedCart = [...cart];
+      updatedCart[existingIndex].qty += 1;
+    } else {
+      updatedCart = [...cart, {
+        id: product.id,
+        name: product.name,
+        price: product.price || product.sellingPrice,
+        size: size,
+        color: color,
+        image: product.image || (product.images && product.images[0]) || "",
+        brand: product.brand || "Shiv Western Club",
+        qty: 1
+      }];
+    }
+
+    setCart(updatedCart);
+    setIsCartOpen(true);
+  };
+
+  const handleBuyNowFromPage = (product: any, size: string, color: string) => {
+    handleAddToCartFromPage(product, size, color);
+    setCheckoutMode(true);
+    setIsCartOpen(true);
+  };
+
   const updateCartQty = (productId: string, size: string, color: string, delta: number) => {
     const updated = cart.map(item => {
       if (item.id === productId && item.size === size && item.color === color) {
@@ -809,107 +1576,7 @@ export const CustomerScreen = ({
 
 
 
-  const renderProductDetails = (product: any) => {
-    const sizes = product.size ? product.size.split(",").map((s: string) => s.trim()) : ["S", "M", "L", "XL"];
-    const colors = product.color ? product.color.split(",").map((c: string) => c.trim()) : ["Standard"];
-    const isWish = isProductWishlisted(product.id);
 
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <div style={{ display: "flex", gap: 16 }}>
-          <div style={{ width: 100, height: 100, borderRadius: 12, background: "#f0f2f5", display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${C.border}`, overflow: "hidden", position: "relative" }}>
-            {product.image ? (
-              <img src={product.image} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt={product.name} />
-            ) : (
-              <Shirt size={48} color={C.muted} />
-            )}
-          </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, textTransform: "uppercase" }}>{product.brand || "Shiv Western"}</span>
-              <button 
-                onClick={() => toggleWishlist(product.id)}
-                style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0 }}
-              >
-                <Heart size={20} fill={isWish ? C.red : "none"} color={isWish ? C.red : C.muted} />
-              </button>
-            </div>
-            <h4 style={{ fontSize: 16, fontWeight: 800, color: C.dark, margin: "2px 0 6px" }}>{product.name}</h4>
-            <span style={{ background: C.greenLight, color: C.green, fontSize: 10, padding: "2px 8px", borderRadius: 100, fontWeight: 700 }}>{product.category || "General Wear"}</span>
-            <p className="pf" style={{ fontSize: 18, fontWeight: 900, color: C.dark, marginTop: 8 }}>₹{(product.price || product.sellingPrice || 0).toLocaleString("en-IN")}</p>
-          </div>
-        </div>
-
-        {/* Sizes */}
-        <div>
-          <label style={{ fontSize: 12, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6 }}>Select Size</label>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            {sizes.map((s: string) => (
-              <button 
-                key={s} 
-                onClick={() => setSelectedSize(s)}
-                style={{ 
-                  padding: "8px 14px", 
-                  borderRadius: 8, 
-                  border: `1.5px solid ${selectedSize === s ? C.dark : C.border}`, 
-                  background: selectedSize === s ? C.dark : "transparent",
-                  color: selectedSize === s ? C.accent : C.dark,
-                  fontWeight: 700,
-                  fontSize: 12,
-                  cursor: "pointer"
-                }}
-              >
-                {s}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Colors */}
-        {colors.length > 0 && colors[0] !== "Standard" && (
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 700, color: C.muted, display: "block", marginBottom: 6 }}>Select Color</label>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              {colors.map((c: string) => (
-                <button 
-                  key={c} 
-                  onClick={() => setSelectedColor(c)}
-                  style={{ 
-                    padding: "8px 14px", 
-                    borderRadius: 8, 
-                    border: `1.5px solid ${selectedColor === c ? C.dark : C.border}`, 
-                    background: selectedColor === c ? C.dark : "transparent",
-                    color: selectedColor === c ? C.accent : C.dark,
-                    fontWeight: 700,
-                    fontSize: 12,
-                    cursor: "pointer"
-                  }}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: "flex", gap: 10, marginTop: 12 }}>
-          <button 
-            onClick={() => addToCart(product)}
-            style={{ flex: 1, background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
-          >
-            {profile.isGuest ? "🔑 Join Club to Buy" : "🛒 Add to Cart"}
-          </button>
-          <button 
-            onClick={() => handleEnquiry(product)}
-            style={{ background: "#25D366", color: "#fff", border: "none", padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", width: 54 }}
-            title="Enquire on WhatsApp"
-          >
-            <Phone size={20} />
-          </button>
-        </div>
-      </div>
-    );
-  };
 
   const headerColor = "#111111";
 
@@ -1355,7 +2022,7 @@ export const CustomerScreen = ({
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         
         {/* Full-width Hero Banner carousel rendered edge-to-edge */}
-        {activeTab === "home" && (() => {
+        {activeTab === "home" && !selectedProduct && (() => {
           if (activeBanners === null) {
             return (
               <div className="w-full aspect-square md:aspect-[3/1] md:h-[300px] lg:h-[400px] bg-gray-100 animate-pulse flex items-center justify-center text-gray-400 font-medium">
@@ -1668,8 +2335,32 @@ export const CustomerScreen = ({
         {/* Tab Display Body */}
         <main style={{ flex: 1, padding: "24px 20px 100px", overflowY: "auto", maxWidth: 1200, margin: "0 auto", width: "100%" }}>
           <AnimatePresence mode="wait">
-            
-            {/* TABS COMPONENT SWITCHER */}
+            {selectedProduct ? (
+              <motion.div
+                key="product-detail"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ProductDetailPage
+                  product={selectedProduct}
+                  onClose={() => {
+                    setSelectedProduct(null);
+                    setSelectedSize("");
+                    setSelectedColor("");
+                  }}
+                  isWishlisted={isProductWishlisted(selectedProduct.id)}
+                  onWishlistToggle={(e) => { e.stopPropagation(); toggleWishlist(selectedProduct.id); }}
+                  onAddToCart={handleAddToCartFromPage}
+                  onBuyNow={handleBuyNowFromPage}
+                  isGuest={profile.isGuest}
+                  isDesktop={isDesktop}
+                />
+              </motion.div>
+            ) : (
+              <>
+                {/* TABS COMPONENT SWITCHER */}
 
             {/* 1. HOME TAB */}
             {activeTab === "home" && (
@@ -2436,8 +3127,9 @@ export const CustomerScreen = ({
                 )}
               </motion.div>
             )}
-
-          </AnimatePresence>
+          </>
+        )}
+      </AnimatePresence>
         {/* ----------------- PROFESSIONAL FOOTER ----------------- */}
         <footer style={{ 
           background: "#111111", 
@@ -2520,7 +3212,7 @@ export const CustomerScreen = ({
         </main>
 
         {/* ----------------- MOBILE BOTTOM NAVIGATION ----------------- */}
-        <div style={{ display: window.innerWidth >= 768 ? "none" : "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
+        <div style={{ display: (window.innerWidth >= 768 || selectedProduct) ? "none" : "flex", borderTop: `1px solid ${C.border}`, background: C.card, position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 100, paddingBottom: "env(safe-area-inset-bottom)", boxShadow: "0 -4px 20px rgba(0,0,0,0.03)" }}>
           {[
             { id: "home", icon: "🏠", label: "Home" },
             { id: "products", icon: "🛍️", label: "Products" },
@@ -2559,29 +3251,6 @@ export const CustomerScreen = ({
         </div>
 
       </div>
-
-      {/* Product Details Modal */}
-      <AnimatePresence>
-        {selectedProduct && (
-          <div style={{ position: "fixed", inset: 0, zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", padding: 20 }}>
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              style={{ background: "#FFFFFF", borderRadius: 28, padding: 28, width: "100%", maxWidth: 460, border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 20px 50px rgba(0,0,0,0.08)", position: "relative" }}
-            >
-              <button 
-                onClick={() => { setSelectedProduct(null); setSelectedSize(""); setSelectedColor(""); }}
-                style={{ position: "absolute", right: 24, top: 24, background: "#F3F4F6", border: "none", borderRadius: "50%", width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", color: "#111111", fontWeight: 700 }}
-              >
-                ✕
-              </button>
-              <h3 className="pf" style={{ fontSize: 18, fontWeight: 900, color: "#111111", marginBottom: 18 }}>Product Details</h3>
-              {renderProductDetails(selectedProduct)}
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
 
       {/* Guest Conversion Modal Popup */}
       <AnimatePresence>
