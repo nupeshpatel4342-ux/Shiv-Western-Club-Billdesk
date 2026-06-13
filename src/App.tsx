@@ -311,6 +311,19 @@ const App = () => {
         { name: "All", displayName: "COMBOS", search: "combo", tag: "", bg: "linear-gradient(135deg, #1A365D 0%, #0A1F44 100%)", icon: "/categories/combos.png", border: "rgba(212,175,55,0.15)", createdAt: Date.now() + 11 }
       ];
 
+      // 1. Clean up old/obsolete default categories
+      const obsoleteDisplayNames = ["Casual Shirts", "Printed T-Shirts", "Formal Trousers", "Oversized Tees", "Denims", "Winter Wear"];
+      s.docs.forEach(async (d) => {
+        const data = d.data();
+        if (obsoleteDisplayNames.includes(data.displayName)) {
+          try {
+            await deleteDoc(doc(db, "categories", d.id));
+          } catch (e) {
+            console.error("Failed to delete obsolete category:", e);
+          }
+        }
+      });
+
       const existingNames = s.docs.map(d => d.data().displayName);
       const toSeed = defaults.filter(d => !existingNames.includes(d.displayName));
 
