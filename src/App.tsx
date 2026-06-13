@@ -324,8 +324,26 @@ const App = () => {
         }
       });
 
-      const existingNames = s.docs.map(d => d.data().displayName);
-      const toSeed = defaults.filter(d => !existingNames.includes(d.displayName));
+      // 2. Clean up any duplicate categories in the database (keep only the first one by displayName)
+      const seenDisplayNames = new Set<string>();
+      s.docs.forEach(async (d) => {
+        const data = d.data();
+        if (!data || !data.displayName) return;
+        const normalizedName = String(data.displayName).toUpperCase().trim();
+        if (seenDisplayNames.has(normalizedName)) {
+          // It's a duplicate! Delete it.
+          try {
+            await deleteDoc(doc(db, "categories", d.id));
+          } catch (e) {
+            console.error("Failed to delete duplicate category:", e);
+          }
+        } else {
+          seenDisplayNames.add(normalizedName);
+        }
+      });
+
+      const existingNames = s.docs.map(d => String(d.data().displayName || "").toUpperCase().trim());
+      const toSeed = defaults.filter(d => !existingNames.includes(String(d.displayName).toUpperCase().trim()));
 
       if (toSeed.length > 0) {
         toSeed.forEach(async (c) => {
