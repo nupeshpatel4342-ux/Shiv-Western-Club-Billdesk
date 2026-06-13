@@ -665,12 +665,120 @@ const App = () => {
     } else if (auth.currentUser?.isAnonymous && orderData.customerId === "guest") {
       orderData.customerId = auth.currentUser.uid;
     }
+    
+    // 1. Add order doc
     await addDoc(collection(db, "orders"), orderData);
+
+    // 2. Deduct product stock
+    try {
+      const prodId = orderData.productId;
+      if (prodId) {
+        const prodRef = doc(db, "products", prodId);
+        const prodSnap = await getDoc(prodRef);
+        if (prodSnap.exists()) {
+          const prodData = prodSnap.data();
+          const currentStock = prodData.stock !== undefined ? Number(prodData.stock) : 0;
+          const orderedQty = orderData.qty !== undefined ? Number(orderData.qty) : 1;
+          const newStock = Math.max(0, currentStock - orderedQty);
+
+          // Update stock in products collection
+          await updateDoc(prodRef, { stock: newStock });
+
+          // Log history in inventory_history
+          await addDoc(collection(db, "inventory_history"), {
+            productId: prodId,
+            productName: prodData.name || orderData.productName,
+            previousStock: currentStock,
+            newStock: newStock,
+            change: -orderedQty,
+            type: "sale",
+            updatedBy: orderData.customerName || "Customer Online",
+            timestamp: Date.now(),
+            reason: `Online Order Placed (Order Status: ${orderData.status || 'Reserved'})`
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to deduct stock for order:", err);
+    }
   };
 
   const handleUpdateOrderStatus = async (orderId: string, status: string) => {
     const orderRef = doc(db, "orders", orderId);
-    await updateDoc(orderRef, { status });
+    
+    try {
+      // 1. Fetch current order details before updating status
+      const orderSnap = await getDoc(orderRef);
+      if (orderSnap.exists()) {
+        const orderData = orderSnap.data();
+        const prevStatus = orderData.status;
+        const productId = orderData.productId;
+        const qty = orderData.qty !== undefined ? Number(orderData.qty) : 1;
+
+        // Update order status in orders collection
+        await updateDoc(orderRef, { status });
+
+        // 2. If status transitioned to Cancelled, restore stock
+        if (status === "Cancelled" && prevStatus !== "Cancelled") {
+          if (productId) {
+            const prodRef = doc(db, "products", productId);
+            const prodSnap = await getDoc(prodRef);
+            if (prodSnap.exists()) {
+              const prodData = prodSnap.data();
+              const currentStock = prodData.stock !== undefined ? Number(prodData.stock) : 0;
+              const newStock = currentStock + qty;
+
+              await updateDoc(prodRef, { stock: newStock });
+
+              await addDoc(collection(db, "inventory_history"), {
+                productId: productId,
+                productName: prodData.name || orderData.productName,
+                previousStock: currentStock,
+                newStock: newStock,
+                change: qty,
+                type: "addition",
+                updatedBy: profile?.displayName || "Admin/Staff",
+                timestamp: Date.now(),
+                reason: `Order #${orderId} Cancelled (Restored Stock)`
+              });
+            }
+          }
+        }
+        // 3. If status transitioned FROM Cancelled to something else, re-deduct stock
+        else if (prevStatus === "Cancelled" && status !== "Cancelled") {
+          if (productId) {
+            const prodRef = doc(db, "products", productId);
+            const prodSnap = await getDoc(prodRef);
+            if (prodSnap.exists()) {
+              const prodData = prodSnap.data();
+              const currentStock = prodData.stock !== undefined ? Number(prodData.stock) : 0;
+              const newStock = Math.max(0, currentStock - qty);
+
+              await updateDoc(prodRef, { stock: newStock });
+
+              await addDoc(collection(db, "inventory_history"), {
+                productId: productId,
+                productName: prodData.name || orderData.productName,
+                previousStock: currentStock,
+                newStock: newStock,
+                change: -qty,
+                type: "sale",
+                updatedBy: profile?.displayName || "Admin/Staff",
+                timestamp: Date.now(),
+                reason: `Order #${orderId} Reactivated`
+              });
+            }
+          }
+        }
+      } else {
+        // Fallback update
+        await updateDoc(orderRef, { status });
+      }
+    } catch (err) {
+      console.error("Failed to update order status or adjust stock:", err);
+      // Fallback update in case of error fetching/logging
+      await updateDoc(orderRef, { status }).catch(console.error);
+    }
   };
 
   const handleAdminPortalLogin = async (e: React.FormEvent) => {
