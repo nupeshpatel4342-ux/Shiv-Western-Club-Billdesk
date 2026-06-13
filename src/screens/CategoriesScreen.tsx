@@ -498,14 +498,13 @@ export const CategoriesScreen = ({
               {/* Frontend Card Preview */}
               <div 
                 style={{ 
-                  background: cat.bg, 
-                  padding: "32px 20px", 
-                  display: "flex", 
-                  flexDirection: "column", 
-                  alignItems: "center", 
-                  justifyContent: "center", 
-                  gap: 10,
+                  height: "220px",
                   position: "relative",
+                  background: cat.bg || "#eee", 
+                  overflow: "hidden",
+                  display: "flex", 
+                  alignItems: "center", 
+                  justifyContent: "center",
                   borderBottom: `1px solid ${C.border}`
                 }}
               >
@@ -514,16 +513,67 @@ export const CategoriesScreen = ({
                     {cat.tag}
                   </span>
                 )}
-                {cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("http")) ? (
-                  <div style={{ width: 64, height: 64, borderRadius: 16, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", border: `1.5px solid ${C.border}`, background: "#fff", filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>
-                    <img src={cat.icon} alt={cat.displayName} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  </div>
+                {cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? (
+                  <img 
+                    src={cat.icon} 
+                    alt={cat.displayName} 
+                    style={{ 
+                      width: "100%", 
+                      height: "100%", 
+                      objectFit: "cover",
+                      position: "absolute",
+                      inset: 0
+                    }} 
+                  />
                 ) : (
-                  <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))" }}>{cat.icon}</span>
+                  <span style={{ fontSize: 36, filter: "drop-shadow(0 4px 6px rgba(0,0,0,0.05))", zIndex: 2 }}>{cat.icon}</span>
                 )}
-                <div style={{ textAlign: "center" }}>
-                  <span style={{ display: "block", fontSize: 13, fontWeight: 800, color: cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "#ffffff" : "#111111", textTransform: "uppercase", letterSpacing: "0.5px" }}>{cat.displayName}</span>
-                  <span style={{ display: "block", fontSize: 9, color: cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "rgba(255,255,255,0.7)" : "#777777", textTransform: "uppercase", fontWeight: 700, marginTop: 2 }}>{cat.name} filter</span>
+                
+                {/* Gradient Overlay */}
+                {(cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http"))) && (
+                  <div 
+                    style={{ 
+                      position: "absolute", 
+                      inset: 0, 
+                      background: "linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)",
+                      pointerEvents: "none",
+                      zIndex: 1
+                    }} 
+                  />
+                )}
+
+                {/* Text Overlay */}
+                <div style={{ 
+                  position: "absolute", 
+                  bottom: 16, 
+                  left: 0, 
+                  right: 0, 
+                  textAlign: "center", 
+                  zIndex: 2,
+                  padding: "0 12px"
+                }}>
+                  <span style={{ 
+                    display: "block", 
+                    fontSize: 14, 
+                    fontWeight: 900, 
+                    color: cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? "#ffffff" : (cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "#ffffff" : "#111111"), 
+                    textTransform: "uppercase", 
+                    letterSpacing: "1px",
+                    textShadow: cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? "0 2px 4px rgba(0,0,0,0.8)" : "none"
+                  }}>
+                    {cat.displayName}
+                  </span>
+                  <span style={{ 
+                    display: "block", 
+                    fontSize: 9, 
+                    color: cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? "rgba(255,255,255,0.8)" : (cat.bg.includes("#0e1e38") || cat.bg.includes("#2A1B40") || cat.bg.includes("#182015") ? "rgba(255,255,255,0.7)" : "#777777"), 
+                    textTransform: "uppercase", 
+                    fontWeight: 700, 
+                    marginTop: 2,
+                    textShadow: cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? "0 1px 2px rgba(0,0,0,0.6)" : "none"
+                  }}>
+                    {cat.name} filter
+                  </span>
                 </div>
               </div>
 
