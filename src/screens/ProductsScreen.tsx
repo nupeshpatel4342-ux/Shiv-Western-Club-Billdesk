@@ -48,6 +48,18 @@ export const ProductsScreen = ({
   settings: Settings,
   isAdmin: boolean 
 }) => {
+  const categories = syncedCategories && syncedCategories.length > 0
+    ? Array.from(new Set(syncedCategories.map((c: any) => c.displayName || c.name)))
+    : ["Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+
+  const resolveCategoryValue = (catVal: string) => {
+    if (!catVal) return "";
+    if (categories.includes(catVal)) return catVal;
+    const found = syncedCategories.find(c => c.name === catVal);
+    if (found) return found.displayName || found.name;
+    return catVal;
+  };
+
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any | null>(null);
@@ -58,7 +70,13 @@ export const ProductsScreen = ({
   const [basePrice, setBasePrice] = useState("");
   const [price, setPrice] = useState(""); // Discounted Price
   const [sku, setSku] = useState("");
-  const [category, setCategory] = useState("Shirt");
+  const [category, setCategory] = useState(categories[0] || "Shirt");
+
+  React.useEffect(() => {
+    if (categories.length > 0 && !categories.includes(category)) {
+      setCategory(categories[0]);
+    }
+  }, [categories, category]);
   const [brand, setBrand] = useState("Shiv Western");
   const [color, setColor] = useState("Multi");
   const [barcode, setBarcode] = useState("");
@@ -80,9 +98,7 @@ export const ProductsScreen = ({
   const [selectedSizes, setSelectedSizes] = useState<string[]>(["S", "M", "L", "XL", "XXL"]);
   const availableSizes = ["S", "M", "L", "XL", "XXL", "Free Size"];
 
-  const categories = syncedCategories && syncedCategories.length > 0
-    ? Array.from(new Set(syncedCategories.map((c: any) => c.name)))
-    : ["Shirt", "T-Shirt", "Jeans", "Trouser", "Winterwear", "Kurta", "Saree", "Ladies Wear", "Western Wear"];
+  // Categories are defined at the component top level
 
   const filtered = products.filter(p => {
     const s = search.toLowerCase().trim();
@@ -687,7 +703,7 @@ export const ProductsScreen = ({
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, display: "block", marginBottom: 6 }}>Category dropdown *</label>
                     <select 
-                      value={editingProduct.category}
+                      value={resolveCategoryValue(editingProduct.category)}
                       onChange={e => setEditingProduct({ ...editingProduct, category: e.target.value })}
                       style={{ width: "100%", padding: "12px 14px", borderRadius: 10, border: `1.5px solid ${C.border}`, background: C.bg, fontSize: 13, fontWeight: 650, color: C.dark }}
                     >

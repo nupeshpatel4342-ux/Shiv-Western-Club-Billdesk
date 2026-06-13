@@ -1205,8 +1205,8 @@ export const CustomerScreen = ({
 
   // Filter products
   const filteredProducts = useMemo(() => {
-    const topwearNames = syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((c: any) => c.name);
-    const bottomwearNames = syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((c: any) => c.name);
+    const topwearNames = syncedCategories.filter((c: any) => c.navGroup === "Topwear").flatMap((c: any) => [c.name, c.displayName]);
+    const bottomwearNames = syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").flatMap((c: any) => [c.name, c.displayName]);
 
     let result = products.filter(p => {
       if (!p) return false;
@@ -1220,7 +1220,9 @@ export const CustomerScreen = ({
       } else if (selectedCategory === "Bottomwear") {
         matchesCategory = !!(p.category && bottomwearNames.includes(p.category));
       } else {
-        matchesCategory = p.category === selectedCategory;
+        const matchedCatsForSlug = syncedCategories.filter((c: any) => c.name === selectedCategory).map((c: any) => c.displayName);
+        matchesCategory = p.category === selectedCategory || 
+                          (p.category && matchedCatsForSlug.includes(p.category));
       }
       
       let matchesGender = true;
