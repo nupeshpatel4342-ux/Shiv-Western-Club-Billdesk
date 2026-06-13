@@ -143,94 +143,7 @@ const SLIDES = [
   },
 ];
 
-const CATEGORY_CARDS = [
-  { 
-    title: "SHIRTS", 
-    image: "/categories/shirts.png", 
-    category: "Shirt", 
-    search: "", 
-    align: "center" 
-  },
-  { 
-    title: "TROUSERS", 
-    image: "/categories/trousers.png", 
-    category: "Trouser", 
-    search: "", 
-    align: "center" 
-  },
-  { 
-    title: "EVERYTHING UNDER ₹799", 
-    image: "/categories/promo_799.png", 
-    category: "All", 
-    search: "", 
-    maxPrice: 799, 
-    align: "center",
-    hideTitle: true
-  },
-  { 
-    title: "POLOS", 
-    image: "/categories/polos.png", 
-    category: "T-Shirt", 
-    search: "polo", 
-    align: "center" 
-  },
-  { 
-    title: "CARGOS", 
-    image: "/categories/cargos.png", 
-    category: "Trouser", 
-    search: "cargo", 
-    align: "center" 
-  },
-  { 
-    title: "JEANS", 
-    image: "/categories/jeans.png", 
-    category: "Jeans", 
-    search: "", 
-    align: "center" 
-  },
-  { 
-    title: "OVERSIZED", 
-    image: "/categories/t_shirts.png", 
-    category: "T-Shirt", 
-    search: "oversized", 
-    align: "center" 
-  },
-  { 
-    title: "PRINTED", 
-    image: "/categories/printed.png", 
-    category: "Shirt", 
-    search: "printed", 
-    align: "center" 
-  },
-  { 
-    title: "ACTIVEWEAR", 
-    image: "/categories/activewear.png", 
-    category: "All", 
-    search: "active", 
-    align: "center" 
-  },
-  { 
-    title: "SHORTS", 
-    image: "/categories/shorts.png", 
-    category: "All", 
-    search: "shorts", 
-    align: "center" 
-  },
-  { 
-    title: "OUTERWEAR", 
-    image: "/categories/outerwear.png", 
-    category: "Winterwear", 
-    search: "", 
-    align: "center" 
-  },
-  { 
-    title: "COMBOS", 
-    image: "/categories/combos.png", 
-    category: "All", 
-    search: "combo", 
-    align: "center" 
-  }
-];
+
 
 const getEnrichedProductData = (product: any) => {
   if (!product) return null;
@@ -2514,15 +2427,15 @@ export const CustomerScreen = ({
                   </div>
                   
                   <div style={{ display: "grid", gridTemplateColumns: isDesktop ? "repeat(6, 1fr)" : "repeat(3, 1fr)", gap: isDesktop ? 16 : 10 }}>
-                    {CATEGORY_CARDS.map(card => {
+                    {syncedCategories.map(card => {
                       return (
                         <div
-                          key={card.title}
+                          key={card.id}
                           onClick={() => {
                             setActiveTab("products");
                             setSelectedGender("All");
                             setSortBy("default");
-                            if (card.category === "All") {
+                            if (card.name === "All") {
                               setSelectedCategory("All");
                               setSearchQuery("");
                               if (card.maxPrice) {
@@ -2531,8 +2444,8 @@ export const CustomerScreen = ({
                                 setMaxPrice(null);
                               }
                             } else {
-                              setSelectedCategory(card.category);
-                              setSearchQuery(card.search);
+                              setSelectedCategory(card.name);
+                              setSearchQuery(card.search || "");
                               setMaxPrice(null);
                             }
                           }}
@@ -2547,8 +2460,8 @@ export const CustomerScreen = ({
                           className="prod-card"
                         >
                           <img 
-                            src={card.image.startsWith("/") ? `${card.image}?v=1.2` : card.image} 
-                            alt={card.title} 
+                            src={card.icon.startsWith("/") ? `${card.icon}?v=1.2` : card.icon} 
+                            alt={card.displayName} 
                             style={{ 
                               width: "100%", 
                               height: "100%", 
@@ -2594,7 +2507,7 @@ export const CustomerScreen = ({
                                   textShadow: "0 2px 4px rgba(0,0,0,0.8)",
                                 }}
                               >
-                                {card.title}
+                                {card.displayName}
                               </span>
                             </div>
                           )}

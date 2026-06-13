@@ -187,61 +187,79 @@ export const CategoriesScreen = ({
                   style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
                 />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Thumbnail (Emoji or Image Upload)</label>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input 
-                    type="text" 
-                    value={icon.startsWith("data:") ? "Custom Image Uploaded" : icon}
-                    onChange={e => setIcon(e.target.value)}
-                    placeholder="👔, 👕, 👖..." 
-                    maxLength={icon.startsWith("data:") ? undefined : 5}
-                    disabled={icon.startsWith("data:")}
-                    required
-                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                  />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    id="add-category-image"
-                    onChange={e => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          setIcon(reader.result as string);
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                      }
-                    }}
-                    style={{ display: "none" }}
-                  />
-                  <label 
-                    htmlFor="add-category-image"
-                    style={{ 
-                      padding: "10px 14px", 
-                      borderRadius: 10, 
-                      border: `1.5px solid ${C.border}`, 
-                      background: C.bg, 
-                      color: C.dark, 
-                      fontSize: 12, 
-                      fontWeight: 700, 
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4
-                    }}
-                  >
-                    Upload
-                  </label>
-                  {icon.startsWith("data:") && (
-                    <button 
-                      type="button" 
-                      onClick={() => setIcon("👕")}
-                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
-                    >
-                      Clear
-                    </button>
-                  )}
+              <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Photo</label>
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ 
+                    width: 72, 
+                    height: 72, 
+                    borderRadius: 12, 
+                    border: `1.5px dashed ${C.border}`, 
+                    background: C.bg, 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    overflow: "hidden" 
+                  }}>
+                    {icon && (icon.startsWith("data:") || icon.startsWith("/") || icon.startsWith("http")) ? (
+                      <img src={icon} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontSize: 24 }}>🖼️</span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      id="add-category-image"
+                      onChange={e => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setIcon(reader.result as string);
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <label 
+                        htmlFor="add-category-image"
+                        style={{ 
+                          padding: "10px 16px", 
+                          borderRadius: 10, 
+                          border: `1.5px solid ${C.accent}`, 
+                          background: C.dark, 
+                          color: C.accent, 
+                          fontSize: 12, 
+                          fontWeight: 800, 
+                          cursor: "pointer"
+                        }}
+                      >
+                        Upload Photo
+                      </label>
+                      {icon && (icon.startsWith("data:") || icon.startsWith("/") || icon.startsWith("http")) && (
+                        <button 
+                          type="button" 
+                          onClick={() => setIcon("")}
+                          style={{ 
+                            padding: "10px 16px", 
+                            borderRadius: 10, 
+                            border: `1.5px solid ${C.border}`, 
+                            background: "transparent", 
+                            color: C.red, 
+                            cursor: "pointer", 
+                            fontWeight: 700,
+                            fontSize: 12
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>Recommended: 3:4 aspect ratio image (PNG or JPG)</p>
+                  </div>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -330,61 +348,79 @@ export const CategoriesScreen = ({
                   style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
                 />
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Thumbnail (Emoji or Image Upload)</label>
-                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                  <input 
-                    type="text" 
-                    value={editingCategory.icon.startsWith("data:") ? "Custom Image Uploaded" : editingCategory.icon}
-                    onChange={e => setEditingCategory({ ...editingCategory, icon: e.target.value })}
-                    placeholder="👔, 👕, 👖..." 
-                    maxLength={editingCategory.icon.startsWith("data:") ? undefined : 5}
-                    disabled={editingCategory.icon.startsWith("data:")}
-                    required
-                    style={{ flex: 1, padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
-                  />
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    id="edit-category-image"
-                    onChange={e => {
-                      if (e.target.files && e.target.files.length > 0) {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                          setEditingCategory({ ...editingCategory, icon: reader.result as string });
-                        };
-                        reader.readAsDataURL(e.target.files[0]);
-                      }
-                    }}
-                    style={{ display: "none" }}
-                  />
-                  <label 
-                    htmlFor="edit-category-image"
-                    style={{ 
-                      padding: "10px 14px", 
-                      borderRadius: 10, 
-                      border: `1.5px solid ${C.border}`, 
-                      background: C.bg, 
-                      color: C.dark, 
-                      fontSize: 12, 
-                      fontWeight: 700, 
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4
-                    }}
-                  >
-                    Upload
-                  </label>
-                  {editingCategory.icon.startsWith("data:") && (
-                    <button 
-                      type="button" 
-                      onClick={() => setEditingCategory({ ...editingCategory, icon: "👕" })}
-                      style={{ padding: "10px", borderRadius: 10, border: "none", background: `${C.red}11`, color: C.red, cursor: "pointer", fontWeight: 700 }}
-                    >
-                      Clear
-                    </button>
-                  )}
+              <div style={{ gridColumn: "span 2", display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Category Photo</label>
+                <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+                  <div style={{ 
+                    width: 72, 
+                    height: 72, 
+                    borderRadius: 12, 
+                    border: `1.5px dashed ${C.border}`, 
+                    background: C.bg, 
+                    display: "flex", 
+                    alignItems: "center", 
+                    justifyContent: "center", 
+                    overflow: "hidden" 
+                  }}>
+                    {editingCategory.icon && (editingCategory.icon.startsWith("data:") || editingCategory.icon.startsWith("/") || editingCategory.icon.startsWith("http")) ? (
+                      <img src={editingCategory.icon} alt="Preview" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      <span style={{ fontSize: 24 }}>🖼️</span>
+                    )}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      id="edit-category-image"
+                      onChange={e => {
+                        if (e.target.files && e.target.files.length > 0) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setEditingCategory({ ...editingCategory, icon: reader.result as string });
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: "none" }}
+                    />
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <label 
+                        htmlFor="edit-category-image"
+                        style={{ 
+                          padding: "10px 16px", 
+                          borderRadius: 10, 
+                          border: `1.5px solid ${C.accent}`, 
+                          background: C.dark, 
+                          color: C.accent, 
+                          fontSize: 12, 
+                          fontWeight: 800, 
+                          cursor: "pointer"
+                        }}
+                      >
+                        Change Photo
+                      </label>
+                      {editingCategory.icon && (editingCategory.icon.startsWith("data:") || editingCategory.icon.startsWith("/") || editingCategory.icon.startsWith("http")) && (
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingCategory({ ...editingCategory, icon: "" })}
+                          style={{ 
+                            padding: "10px 16px", 
+                            borderRadius: 10, 
+                            border: `1.5px solid ${C.border}`, 
+                            background: "transparent", 
+                            color: C.red, 
+                            cursor: "pointer", 
+                            fontWeight: 700,
+                            fontSize: 12
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 10, color: C.muted, margin: 0 }}>Recommended: 3:4 aspect ratio image (PNG or JPG)</p>
+                  </div>
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
