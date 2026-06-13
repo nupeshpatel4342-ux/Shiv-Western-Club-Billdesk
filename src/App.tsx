@@ -301,18 +301,18 @@ const App = () => {
         // --- 1. Categories Seeding & Cleanup ---
         const categorySnapshot = await getDocs(collection(db, "categories"));
         const defaults = [
-          { name: "Shirt", displayName: "SHIRTS", search: "", tag: "", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "/categories/shirts.png", border: "rgba(139,115,85,0.15)", createdAt: 1718000000000 },
-          { name: "Trouser", displayName: "TROUSERS", search: "", tag: "", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "/categories/trousers.png", border: "rgba(70,130,180,0.15)", createdAt: 1718000000001 },
-          { name: "All", displayName: "EVERYTHING UNDER ₹799", search: "", tag: "", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "/categories/promo_799.png", border: "rgba(188,143,143,0.15)", maxPrice: 799, hideTitle: true, createdAt: 1718000000002 },
-          { name: "T-Shirt", displayName: "POLOS", search: "polo", tag: "", bg: "linear-gradient(135deg, #F4FBF7 0%, #E6F5EC 100%)", icon: "/categories/polos.png", border: "rgba(45,106,79,0.12)", createdAt: 1718000000003 },
-          { name: "Trouser", displayName: "CARGOS", search: "cargo", tag: "", bg: "linear-gradient(135deg, #1A365D 0%, #0A1F44 100%)", icon: "/categories/cargos.png", border: "rgba(212,175,55,0.15)", createdAt: 1718000000004 },
-          { name: "Jeans", displayName: "JEANS", search: "", tag: "", bg: "linear-gradient(135deg, #2A1B40 0%, #170B26 100%)", icon: "/categories/jeans.png", border: "rgba(229,169,60,0.15)", createdAt: 1718000000005 },
-          { name: "T-Shirt", displayName: "OVERSIZED", search: "oversized", tag: "", bg: "linear-gradient(135deg, #182015 0%, #0A0D08 100%)", icon: "/categories/t_shirts.png", border: "rgba(194,166,73,0.15)", createdAt: 1718000000006 },
-          { name: "Shirt", displayName: "PRINTED", search: "printed", tag: "", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "/categories/printed.png", border: "rgba(139,115,85,0.15)", createdAt: 1718000000007 },
-          { name: "All", displayName: "ACTIVEWEAR", search: "active", tag: "", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "/categories/activewear.png", border: "rgba(70,130,180,0.15)", createdAt: 1718000000008 },
-          { name: "All", displayName: "SHORTS", search: "shorts", tag: "", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "/categories/shorts.png", border: "rgba(188,143,143,0.15)", createdAt: 1718000000009 },
-          { name: "Winterwear", displayName: "OUTERWEAR", search: "", tag: "", bg: "linear-gradient(135deg, #F4FBF7 0%, #E6F5EC 100%)", icon: "/categories/outerwear.png", border: "rgba(45,106,79,0.12)", createdAt: 1718000000010 },
-          { name: "All", displayName: "COMBOS", search: "combo", tag: "", bg: "linear-gradient(135deg, #1A365D 0%, #0A1F44 100%)", icon: "/categories/combos.png", border: "rgba(212,175,55,0.15)", createdAt: 1718000000011 }
+          { name: "Shirt", displayName: "SHIRTS", search: "", tag: "", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "/categories/shirts.png", border: "rgba(139,115,85,0.15)", createdAt: 1718000000000, navGroup: "Topwear" },
+          { name: "Trouser", displayName: "TROUSERS", search: "", tag: "", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "/categories/trousers.png", border: "rgba(70,130,180,0.15)", createdAt: 1718000000001, navGroup: "Bottomwear" },
+          { name: "All", displayName: "EVERYTHING UNDER ₹799", search: "", tag: "", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "/categories/promo_799.png", border: "rgba(188,143,143,0.15)", maxPrice: 799, hideTitle: true, createdAt: 1718000000002, navGroup: "None" },
+          { name: "T-Shirt", displayName: "POLOS", search: "polo", tag: "", bg: "linear-gradient(135deg, #F4FBF7 0%, #E6F5EC 100%)", icon: "/categories/polos.png", border: "rgba(45,106,79,0.12)", createdAt: 1718000000003, navGroup: "Topwear" },
+          { name: "Trouser", displayName: "CARGOS", search: "cargo", tag: "", bg: "linear-gradient(135deg, #1A365D 0%, #0A1F44 100%)", icon: "/categories/cargos.png", border: "rgba(212,175,55,0.15)", createdAt: 1718000000004, navGroup: "Bottomwear" },
+          { name: "Jeans", displayName: "JEANS", search: "", tag: "", bg: "linear-gradient(135deg, #2A1B40 0%, #170B26 100%)", icon: "/categories/jeans.png", border: "rgba(229,169,60,0.15)", createdAt: 1718000000005, navGroup: "Bottomwear" },
+          { name: "T-Shirt", displayName: "OVERSIZED", search: "oversized", tag: "", bg: "linear-gradient(135deg, #182015 0%, #0A0D08 100%)", icon: "/categories/t_shirts.png", border: "rgba(194,166,73,0.15)", createdAt: 1718000000006, navGroup: "Topwear" },
+          { name: "Shirt", displayName: "PRINTED", search: "printed", tag: "", bg: "linear-gradient(135deg, #FAF8F5 0%, #F3EFE9 100%)", icon: "/categories/printed.png", border: "rgba(139,115,85,0.15)", createdAt: 1718000000007, navGroup: "Topwear" },
+          { name: "All", displayName: "ACTIVEWEAR", search: "active", tag: "", bg: "linear-gradient(135deg, #F5F7FA 0%, #E7ECF3 100%)", icon: "/categories/activewear.png", border: "rgba(70,130,180,0.15)", createdAt: 1718000000008, navGroup: "None" },
+          { name: "All", displayName: "SHORTS", search: "shorts", tag: "", bg: "linear-gradient(135deg, #FAF5F6 0%, #F5E6E8 100%)", icon: "/categories/shorts.png", border: "rgba(188,143,143,0.15)", createdAt: 1718000000009, navGroup: "Bottomwear" },
+          { name: "Winterwear", displayName: "OUTERWEAR", search: "", tag: "", bg: "linear-gradient(135deg, #F4FBF7 0%, #E6F5EC 100%)", icon: "/categories/outerwear.png", border: "rgba(45,106,79,0.12)", createdAt: 1718000000010, navGroup: "Topwear" },
+          { name: "All", displayName: "COMBOS", search: "combo", tag: "", bg: "linear-gradient(135deg, #1A365D 0%, #0A1F44 100%)", icon: "/categories/combos.png", border: "rgba(212,175,55,0.15)", createdAt: 1718000000011, navGroup: "None" }
         ];
 
         const obsoleteDisplayNames = ["Casual Shirts", "Printed T-Shirts", "Formal Trousers", "Oversized Tees", "Denims", "Winter Wear"];
@@ -340,6 +340,30 @@ const App = () => {
             }
           } else {
             seenDisplayNames.add(normalizedName);
+            
+            // Auto-migrate navGroup if missing
+            if (docObj.navGroup === undefined) {
+              const matchedDefault = defaults.find(d => String(d.displayName).toUpperCase().trim() === normalizedName);
+              if (matchedDefault) {
+                try {
+                  await updateDoc(doc(db, "categories", docObj.id), {
+                    navGroup: matchedDefault.navGroup
+                  });
+                  console.log(`Auto-migrated category "${displayName}" to navGroup "${matchedDefault.navGroup}"`);
+                } catch (err) {
+                  console.error("Error auto-migrating category navGroup:", err);
+                }
+              } else {
+                // If it's a custom category, default to "None"
+                try {
+                  await updateDoc(doc(db, "categories", docObj.id), {
+                    navGroup: "None"
+                  });
+                } catch (err) {
+                  console.error("Error auto-migrating category navGroup:", err);
+                }
+              }
+            }
           }
         }
 

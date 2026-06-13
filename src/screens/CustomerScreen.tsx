@@ -996,6 +996,9 @@ export const CustomerScreen = ({
 }) => {
   const [activeTab, setActiveTab] = useState<"home" | "products" | "offers" | "profile" | "bills" | "history" | "wishlist" | "cart">("home");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [activeDropdown, setActiveDropdown] = useState<"topwear" | "bottomwear" | null>(null);
+  const [mobileTopwearOpen, setMobileTopwearOpen] = useState(false);
+  const [mobileBottomwearOpen, setMobileBottomwearOpen] = useState(false);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const [selectedGender, setSelectedGender] = useState<"All" | "Men" | "Women">("All");
   const [sortBy, setSortBy] = useState<"default" | "newest">("default");
@@ -1202,10 +1205,23 @@ export const CustomerScreen = ({
 
   // Filter products
   const filteredProducts = useMemo(() => {
+    const topwearNames = syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((c: any) => c.name);
+    const bottomwearNames = syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((c: any) => c.name);
+
     let result = products.filter(p => {
       if (!p) return false;
       const nameVal = String(p.name || '');
-      const matchesCategory = selectedCategory === "All" || p.category === selectedCategory;
+      
+      let matchesCategory = false;
+      if (selectedCategory === "All") {
+        matchesCategory = true;
+      } else if (selectedCategory === "Topwear") {
+        matchesCategory = !!(p.category && topwearNames.includes(p.category));
+      } else if (selectedCategory === "Bottomwear") {
+        matchesCategory = !!(p.category && bottomwearNames.includes(p.category));
+      } else {
+        matchesCategory = p.category === selectedCategory;
+      }
       
       let matchesGender = true;
       if (selectedGender === "Men") {
@@ -1524,21 +1540,37 @@ export const CustomerScreen = ({
     doWhatsApp(bill, settings, () => {});
   };
 
+  const handleCategoryClick = (cat: any) => {
+    setActiveTab("products");
+    setSelectedGender("All");
+    setSortBy("default");
+    setMaxPrice(null);
+    if (cat.name === "All") {
+      setSelectedCategory("All");
+      setSearchQuery("");
+      if (cat.maxPrice) {
+        setMaxPrice(cat.maxPrice);
+      } else {
+        setMaxPrice(null);
+      }
+    } else {
+      setSelectedCategory(cat.name);
+      setSearchQuery(cat.search || "");
+      setMaxPrice(null);
+    }
+  };
+
   const headerNavItems = [
-    { id: "shirts", label: "Shirts" },
-    { id: "t-shirts", label: "T-Shirts" },
-    { id: "jeans", label: "Jeans" },
-    { id: "trousers", label: "Trousers" },
-    { id: "winterwear", label: "Winterwear" }
+    { id: "topwear", label: "Topwear" },
+    { id: "bottomwear", label: "Bottomwear" },
+    { id: "combos", label: "Combos" },
+    { id: "new-arrivals", label: "New Arrivals" }
   ];
 
   const mobileDrawerItems = [
     { id: "home", label: "Home", icon: "🏠" },
-    { id: "shirts", label: "Shirts", icon: "👔" },
-    { id: "t-shirts", label: "T-Shirts", icon: "👕" },
-    { id: "jeans", label: "Jeans", icon: "👖" },
-    { id: "trousers", label: "Trousers", icon: "👖" },
-    { id: "winterwear", label: "Winterwear", icon: "🧥" },
+    { id: "combos", label: "Combos", icon: "🎁" },
+    { id: "new-arrivals", label: "New Arrivals", icon: "✨" },
     { id: "wishlist", label: "Wishlist", icon: "❤️" },
     { id: "cart", label: `My Cart ${cart.length > 0 ? `(${cart.reduce((sum, item) => sum + item.qty, 0)})` : ""}`, icon: "🛒" },
     { id: "profile", label: "My Profile", icon: "👤" },
@@ -1551,39 +1583,40 @@ export const CustomerScreen = ({
     setSelectedGender("All");
     setSortBy("default");
     setMaxPrice(null);
+    setSearchQuery("");
 
-    if (menuId === "shirts") {
-      setSelectedCategory("Shirt");
-    } else if (menuId === "t-shirts") {
-      setSelectedCategory("T-Shirt");
-    } else if (menuId === "jeans") {
-      setSelectedCategory("Jeans");
-    } else if (menuId === "trousers") {
-      setSelectedCategory("Trouser");
-    } else if (menuId === "winterwear") {
-      setSelectedCategory("Winterwear");
+    if (menuId === "topwear") {
+      setSelectedCategory("Topwear");
+    } else if (menuId === "bottomwear") {
+      setSelectedCategory("Bottomwear");
+    } else if (menuId === "combos") {
+      setSelectedCategory("All");
+      setSearchQuery("combo");
+    } else if (menuId === "new-arrivals") {
+      setSelectedCategory("All");
+      setSortBy("newest");
     }
   };
 
   const isNavActive = (menuId: string) => {
     if (activeTab !== "products") return false;
-    if (menuId === "shirts") return selectedCategory === "Shirt";
-    if (menuId === "t-shirts") return selectedCategory === "T-Shirt";
-    if (menuId === "jeans") return selectedCategory === "Jeans";
-    if (menuId === "trousers") return selectedCategory === "Trouser";
-    if (menuId === "winterwear") return selectedCategory === "Winterwear";
+    if (menuId === "topwear") return selectedCategory === "Topwear";
+    if (menuId === "bottomwear") return selectedCategory === "Bottomwear";
+    if (menuId === "combos") return selectedCategory === "All" && searchQuery === "combo";
+    if (menuId === "new-arrivals") return selectedCategory === "All" && sortBy === "newest" && searchQuery === "";
     return false;
   };
 
   const handleMobileDrawerClick = (itemId: string) => {
     setDrawerOpen(false);
-    if (["shirts", "t-shirts", "jeans", "trousers", "winterwear"].includes(itemId)) {
+    if (["topwear", "bottomwear", "combos", "new-arrivals"].includes(itemId)) {
       handleNavClick(itemId);
     } else {
       if (itemId === "home") {
         setSelectedCategory("All");
         setSelectedGender("All");
         setSortBy("default");
+        setSearchQuery("");
       }
       setActiveTab(itemId as any);
     }
@@ -1668,37 +1701,228 @@ export const CustomerScreen = ({
 
           {/* Center-Left: Navigation Links (Desktop only) */}
           {isDesktop && (
-            <nav style={{ display: "flex", gap: 20 }}>
-              {headerNavItems.map(item => {
-                const isActive = isNavActive(item.id);
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id)}
-                    style={{
-                      background: "none",
-                      border: "none",
-                      color: isActive ? "#111111" : "#555555",
-                      fontWeight: isActive ? 800 : 600,
-                      fontSize: 13,
-                      cursor: "pointer",
-                      padding: "8px 0",
-                      position: "relative",
-                      transition: "color 0.2s",
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px"
-                    }}
-                  >
-                    {item.label}
-                    {isActive && (
-                      <motion.div 
-                        layoutId="activeNavUnderline" 
-                        style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
-                      />
-                    )}
-                  </button>
-                );
-              })}
+            <nav style={{ display: "flex", gap: 24, alignItems: "center" }}>
+              {/* Topwear Dropdown */}
+              <div 
+                onMouseEnter={() => setActiveDropdown("topwear")} 
+                onMouseLeave={() => setActiveDropdown(null)}
+                style={{ position: "relative" }}
+              >
+                <button
+                  onClick={() => handleNavClick("topwear")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: isNavActive("topwear") ? "#111111" : "#555555",
+                    fontWeight: isNavActive("topwear") ? 800 : 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    padding: "10px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    position: "relative"
+                  }}
+                >
+                  Topwear <ChevronDown size={14} style={{ transform: activeDropdown === "topwear" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  {isNavActive("topwear") && (
+                    <motion.div 
+                      layoutId="activeNavUnderline" 
+                      style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
+                    />
+                  )}
+                </button>
+                
+                <AnimatePresence>
+                  {activeDropdown === "topwear" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        background: "#ffffff",
+                        borderRadius: 12,
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                        padding: "10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        minWidth: 160,
+                        zIndex: 1000
+                      }}
+                    >
+                      {syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((cat: any) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setActiveDropdown(null);
+                            handleCategoryClick(cat);
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            textAlign: "left",
+                            padding: "8px 12px",
+                            borderRadius: 8,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: selectedCategory === cat.name ? C.accent : "#333333",
+                            cursor: "pointer",
+                            transition: "0.2s",
+                            textTransform: "uppercase"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f7"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          {cat.displayName}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Bottomwear Dropdown */}
+              <div 
+                onMouseEnter={() => setActiveDropdown("bottomwear")} 
+                onMouseLeave={() => setActiveDropdown(null)}
+                style={{ position: "relative" }}
+              >
+                <button
+                  onClick={() => handleNavClick("bottomwear")}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: isNavActive("bottomwear") ? "#111111" : "#555555",
+                    fontWeight: isNavActive("bottomwear") ? 800 : 600,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    padding: "10px 0",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px",
+                    position: "relative"
+                  }}
+                >
+                  Bottomwear <ChevronDown size={14} style={{ transform: activeDropdown === "bottomwear" ? "rotate(180deg)" : "none", transition: "transform 0.2s" }} />
+                  {isNavActive("bottomwear") && (
+                    <motion.div 
+                      layoutId="activeNavUnderline" 
+                      style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
+                    />
+                  )}
+                </button>
+                
+                <AnimatePresence>
+                  {activeDropdown === "bottomwear" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      style={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        background: "#ffffff",
+                        borderRadius: 12,
+                        border: "1px solid rgba(0,0,0,0.08)",
+                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+                        padding: "10px",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 2,
+                        minWidth: 160,
+                        zIndex: 1000
+                      }}
+                    >
+                      {syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((cat: any) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => {
+                            setActiveDropdown(null);
+                            handleCategoryClick(cat);
+                          }}
+                          style={{
+                            background: "none",
+                            border: "none",
+                            textAlign: "left",
+                            padding: "8px 12px",
+                            borderRadius: 8,
+                            fontSize: 12,
+                            fontWeight: 700,
+                            color: selectedCategory === cat.name ? C.accent : "#333333",
+                            cursor: "pointer",
+                            transition: "0.2s",
+                            textTransform: "uppercase"
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f7"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                        >
+                          {cat.displayName}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Combos */}
+              <button
+                onClick={() => handleNavClick("combos")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: isNavActive("combos") ? "#111111" : "#555555",
+                  fontWeight: isNavActive("combos") ? 800 : 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  padding: "10px 0",
+                  position: "relative",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                Combos
+                {isNavActive("combos") && (
+                  <motion.div 
+                    layoutId="activeNavUnderline" 
+                    style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
+                  />
+                )}
+              </button>
+
+              {/* New Arrivals */}
+              <button
+                onClick={() => handleNavClick("new-arrivals")}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: isNavActive("new-arrivals") ? "#111111" : "#555555",
+                  fontWeight: isNavActive("new-arrivals") ? 800 : 600,
+                  fontSize: 13,
+                  cursor: "pointer",
+                  padding: "10px 0",
+                  position: "relative",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px"
+                }}
+              >
+                New Arrivals
+                {isNavActive("new-arrivals") && (
+                  <motion.div 
+                    layoutId="activeNavUnderline" 
+                    style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 2, background: "#111111" }} 
+                  />
+                )}
+              </button>
             </nav>
           )}
 
@@ -1986,12 +2210,166 @@ export const CustomerScreen = ({
               </div>
               
               <div style={{ padding: "14px 10px", flex: 1, overflowY: "auto" }}>
-                {mobileDrawerItems.map(item => {
-                  const isActive = item.id === "home" 
-                    ? activeTab === "home"
-                    : ["men", "women", "t-shirts", "shirts", "jeans", "new-arrivals"].includes(item.id)
-                      ? isNavActive(item.id)
-                      : activeTab === item.id;
+                {/* 1. Home Link */}
+                <button 
+                  onClick={() => { setDrawerOpen(false); setActiveTab("home"); setSearchQuery(""); setSelectedCategory("All"); }}
+                  style={{ 
+                    width: "100%", 
+                    display: "flex", 
+                    alignItems: "center", 
+                    gap: 12, 
+                    padding: "12px 14px", 
+                    borderRadius: 12, 
+                    marginBottom: 4, 
+                    textAlign: "left", 
+                    color: activeTab === "home" ? "#000000" : "#555555", 
+                    fontWeight: activeTab === "home" ? 800 : 600, 
+                    fontSize: 14, 
+                    border: "none", 
+                    background: activeTab === "home" ? "#F3F4F6" : "transparent", 
+                    cursor: "pointer" 
+                  }}
+                >
+                  <span style={{ fontSize: 16 }}>🏠</span>Home
+                </button>
+
+                {/* 2. Topwear Collapsible Section */}
+                <div style={{ display: "flex", flexDirection: "column", marginBottom: 4 }}>
+                  <button 
+                    onClick={() => setMobileTopwearOpen(!mobileTopwearOpen)}
+                    style={{ 
+                      width: "100%", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between",
+                      gap: 12, 
+                      padding: "12px 14px", 
+                      borderRadius: 12, 
+                      textAlign: "left", 
+                      color: selectedCategory === "Topwear" ? "#000000" : "#555555", 
+                      fontWeight: selectedCategory === "Topwear" ? 800 : 600, 
+                      fontSize: 14, 
+                      border: "none", 
+                      background: selectedCategory === "Topwear" ? "#F3F4F6" : "transparent", 
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 16 }}>👕</span>Topwear
+                    </div>
+                    {mobileTopwearOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {mobileTopwearOpen && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        style={{ overflow: "hidden", paddingLeft: 24, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
+                      >
+                        {syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((cat: any) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setDrawerOpen(false);
+                              handleCategoryClick(cat);
+                            }}
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              padding: "10px 14px",
+                              borderRadius: 10,
+                              textAlign: "left",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: selectedCategory === cat.name ? C.accent : "#555555",
+                              border: "none",
+                              background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
+                              cursor: "pointer",
+                              textTransform: "uppercase"
+                            }}
+                          >
+                            {cat.displayName}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 3. Bottomwear Collapsible Section */}
+                <div style={{ display: "flex", flexDirection: "column", marginBottom: 4 }}>
+                  <button 
+                    onClick={() => setMobileBottomwearOpen(!mobileBottomwearOpen)}
+                    style={{ 
+                      width: "100%", 
+                      display: "flex", 
+                      alignItems: "center", 
+                      justifyContent: "space-between",
+                      gap: 12, 
+                      padding: "12px 14px", 
+                      borderRadius: 12, 
+                      textAlign: "left", 
+                      color: selectedCategory === "Bottomwear" ? "#000000" : "#555555", 
+                      fontWeight: selectedCategory === "Bottomwear" ? 800 : 600, 
+                      fontSize: 14, 
+                      border: "none", 
+                      background: selectedCategory === "Bottomwear" ? "#F3F4F6" : "transparent", 
+                      cursor: "pointer" 
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <span style={{ fontSize: 16 }}>👖</span>Bottomwear
+                    </div>
+                    {mobileBottomwearOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                  </button>
+                  
+                  <AnimatePresence>
+                    {mobileBottomwearOpen && (
+                      <motion.div 
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        style={{ overflow: "hidden", paddingLeft: 24, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
+                      >
+                        {syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((cat: any) => (
+                          <button
+                            key={cat.id}
+                            onClick={() => {
+                              setDrawerOpen(false);
+                              handleCategoryClick(cat);
+                            }}
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              alignItems: "center",
+                              padding: "10px 14px",
+                              borderRadius: 10,
+                              textAlign: "left",
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: selectedCategory === cat.name ? C.accent : "#555555",
+                              border: "none",
+                              background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
+                              cursor: "pointer",
+                              textTransform: "uppercase"
+                            }}
+                          >
+                            {cat.displayName}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* 4. Other Dynamic Drawer items (Combos, New Arrivals, Account Links) */}
+                {mobileDrawerItems.filter(item => item.id !== "home").map(item => {
+                  const isActive = ["combos", "new-arrivals"].includes(item.id)
+                    ? isNavActive(item.id)
+                    : activeTab === item.id;
                   return (
                     <button 
                       key={item.id} 

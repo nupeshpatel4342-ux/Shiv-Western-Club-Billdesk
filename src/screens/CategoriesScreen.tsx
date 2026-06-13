@@ -14,6 +14,7 @@ interface Category {
   bg: string;
   search: string;
   createdAt: number;
+  navGroup?: string;
 }
 
 const PRESET_GRADIENTS = [
@@ -44,6 +45,7 @@ export const CategoriesScreen = ({
   const [bg, setBg] = useState(PRESET_GRADIENTS[0].value);
   const [border, setBorder] = useState(PRESET_GRADIENTS[0].border);
   const [search, setSearch] = useState("");
+  const [navGroup, setNavGroup] = useState("None");
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,7 +63,8 @@ export const CategoriesScreen = ({
         bg: bg,
         border: border,
         search: search.trim().toLowerCase() || name.trim().toLowerCase(),
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        navGroup: navGroup
       };
 
       await addDoc(collection(db, "categories"), newCat);
@@ -74,6 +77,7 @@ export const CategoriesScreen = ({
       setBg(PRESET_GRADIENTS[0].value);
       setBorder(PRESET_GRADIENTS[0].border);
       setSearch("");
+      setNavGroup("None");
       setShowAdd(false);
       alert("Category added successfully!");
     } catch (err) {
@@ -100,7 +104,8 @@ export const CategoriesScreen = ({
         bg: editingCategory.bg,
         border: editingCategory.border || "rgba(0,0,0,0.1)",
         search: editingCategory.search.trim().toLowerCase() || editingCategory.name.trim().toLowerCase(),
-        createdAt: editingCategory.createdAt || Date.now()
+        createdAt: editingCategory.createdAt || Date.now(),
+        navGroup: editingCategory.navGroup || "None"
       });
 
       setEditingCategory(null);
@@ -283,6 +288,18 @@ export const CategoriesScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Menu Group</label>
+                <select 
+                  value={navGroup}
+                  onChange={e => setNavGroup(e.target.value)}
+                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark, background: C.card, outline: "none" }}
+                >
+                  <option value="None">None (Don't show in Header Menu)</option>
+                  <option value="Topwear">Topwear (Dropdown List)</option>
+                  <option value="Bottomwear">Bottomwear (Dropdown List)</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Gradients & Borders Presets</label>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {PRESET_GRADIENTS.map(p => (
@@ -444,6 +461,18 @@ export const CategoriesScreen = ({
                 />
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Menu Group</label>
+                <select 
+                  value={editingCategory.navGroup || "None"}
+                  onChange={e => setEditingCategory({ ...editingCategory, navGroup: e.target.value })}
+                  style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark, background: C.card, outline: "none" }}
+                >
+                  <option value="None">None (Don't show in Header Menu)</option>
+                  <option value="Topwear">Topwear (Dropdown List)</option>
+                  <option value="Bottomwear">Bottomwear (Dropdown List)</option>
+                </select>
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Gradients Presets</label>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {PRESET_GRADIENTS.map(p => (
@@ -511,6 +540,11 @@ export const CategoriesScreen = ({
                 {cat.tag && (
                   <span style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,0.75)", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase", zIndex: 5 }}>
                     {cat.tag}
+                  </span>
+                )}
+                {cat.navGroup && cat.navGroup !== "None" && (
+                  <span style={{ position: "absolute", top: 12, left: 12, background: cat.navGroup === "Topwear" ? "#1E3A8A" : "#065F46", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase", zIndex: 5 }}>
+                    {cat.navGroup}
                   </span>
                 )}
                 {cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? (
