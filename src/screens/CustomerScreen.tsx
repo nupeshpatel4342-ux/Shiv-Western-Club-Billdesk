@@ -1199,6 +1199,7 @@ export const CustomerScreen = ({
   // Guest Conversion and Checkout states
   const [showConversionModal, setShowConversionModal] = useState(false);
   const [checkoutMode, setCheckoutMode] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [guestName, setGuestName] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
   const [guestAddress, setGuestAddress] = useState("");
@@ -1490,6 +1491,10 @@ export const CustomerScreen = ({
   };
 
   const handleBuyNowFromPage = (product: any, size: string, color: string) => {
+    if (profile.isGuest) {
+      setShowAuthModal(true);
+      return;
+    }
     handleAddToCartFromPage(product, size, color);
     setCheckoutMode(true);
     setIsCartOpen(true);
@@ -3160,7 +3165,13 @@ export const CustomerScreen = ({
                         {/* Checkout Form Toggle / Details */}
                         {!checkoutMode ? (
                           <button 
-                            onClick={() => setCheckoutMode(true)}
+                            onClick={() => {
+                              if (profile.isGuest) {
+                                setShowAuthModal(true);
+                              } else {
+                                setCheckoutMode(true);
+                              }
+                            }}
                             style={{ width: "100%", background: C.dark, color: C.accent, border: `1.5px solid ${C.accent}`, padding: "14px", borderRadius: 12, fontSize: 14, fontWeight: 800, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}
                           >
                             Proceed to Reservation
@@ -3576,7 +3587,13 @@ export const CustomerScreen = ({
 
                   {!checkoutMode ? (
                     <button 
-                      onClick={() => setCheckoutMode(true)}
+                      onClick={() => {
+                        if (profile.isGuest) {
+                          setShowAuthModal(true);
+                        } else {
+                          setCheckoutMode(true);
+                        }
+                      }}
                       style={{ width: "100%", background: "#000000", color: "#FFFFFF", border: "none", padding: "14px", borderRadius: 100, fontSize: 13, fontWeight: 800, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.5px", boxShadow: "0 4px 12px rgba(0,0,0,0.15)" }}
                     >
                       Proceed to Checkout
@@ -3644,6 +3661,96 @@ export const CustomerScreen = ({
           </div>
         )}
       </AnimatePresence>
+
+      {/* ----------------- AUTH REQ MODAL ----------------- */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <div style={{ position: "fixed", inset: 0, zIndex: 600, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.7)", backdropFilter: "blur(12px)", padding: 24 }}>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ type: "spring", damping: 25, stiffness: 350 }}
+              style={{ 
+                background: "linear-gradient(145deg, #0f244a 0%, #000000 100%)", 
+                borderRadius: 28, 
+                padding: "36px 32px", 
+                width: "100%", 
+                maxWidth: 440, 
+                border: `2px solid ${C.accent}`, 
+                boxShadow: "0 20px 50px rgba(0,0,0,0.5)",
+                textAlign: "center",
+                color: "#fff"
+              }}
+            >
+              <div style={{ 
+                width: 72, 
+                height: 72, 
+                borderRadius: "50%", 
+                background: "rgba(212, 175, 55, 0.15)", 
+                display: "flex", 
+                alignItems: "center", 
+                justifyContent: "center", 
+                border: `2px solid ${C.accent}`, 
+                margin: "0 auto 20px",
+                boxShadow: "0 0 20px rgba(212, 175, 55, 0.2)"
+              }}>
+                <Award size={36} color={C.accent} />
+              </div>
+
+              <h3 className="pf" style={{ fontSize: 24, fontWeight: 900, color: "#fff", marginBottom: 12 }}>Account Required</h3>
+              
+              <p style={{ fontSize: 13, color: "#ccc", lineHeight: 1.6, marginBottom: 28, maxWidth: 360, margin: "0 auto 28px" }}>
+                You must sign in or create a free club account to place reservations. Creating an account takes less than 30 seconds and unlocks exclusive member benefits.
+              </p>
+
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <button 
+                  onClick={() => {
+                    setShowAuthModal(false);
+                    onLogout(true); // Exit guest mode and prompt registration
+                  }}
+                  style={{ 
+                    background: C.accent, 
+                    color: "#000", 
+                    border: "none", 
+                    padding: "16px", 
+                    borderRadius: 16, 
+                    fontSize: 14, 
+                    fontWeight: 800, 
+                    cursor: "pointer", 
+                    textTransform: "uppercase", 
+                    letterSpacing: "0.5px",
+                    boxShadow: "0 6px 20px rgba(212, 175, 55, 0.3)",
+                    transition: "transform 0.1s"
+                  }}
+                  onMouseDown={e => e.currentTarget.style.transform = "scale(0.98)"}
+                  onMouseUp={e => e.currentTarget.style.transform = "scale(1)"}
+                >
+                  Create Account / Sign In
+                </button>
+                
+                <button 
+                  onClick={() => setShowAuthModal(false)} 
+                  style={{ 
+                    background: "transparent", 
+                    border: "1.5px solid rgba(255, 255, 255, 0.2)", 
+                    padding: "14px", 
+                    borderRadius: 16, 
+                    fontSize: 13, 
+                    fontWeight: 800, 
+                    cursor: "pointer", 
+                    color: "#ccc"
+                  }}
+                >
+                  Continue Browsing
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* ----------------- FLOATING WHATSAPP SUPPORT BUTTON ----------------- */}
       <a
         href="https://wa.me/919724557728?text=Hi!%20I'm%20visiting%20the%20Shiv%20Western%20Club%20online%20store%20and%20have%20an%20inquiry..."
