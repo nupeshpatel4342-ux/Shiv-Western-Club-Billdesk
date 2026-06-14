@@ -1769,9 +1769,11 @@ export const CustomerScreen = ({
                         
                         return Object.entries(subGroups).map(([groupName, items]) => (
                           <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 150 }}>
-                            <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
-                              {groupName}
-                            </span>
+                            {groupName.toLowerCase() !== "topwear" && (
+                              <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
+                                {groupName}
+                              </span>
+                            )}
                             {items.map((cat: any) => (
                               <button
                                 key={cat.id}
@@ -1804,32 +1806,34 @@ export const CustomerScreen = ({
                                 {cat.displayName}
                               </button>
                             ))}
-                            <button
-                              onClick={() => {
-                                setActiveDropdown(null);
-                                const primarySlug = items[0]?.name || "All";
-                                handleCategoryClick({
-                                  name: primarySlug,
-                                  displayName: `All ${groupName}`,
-                                  search: ""
-                                });
-                              }}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                textAlign: "left",
-                                padding: "6px 8px",
-                                borderRadius: 6,
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: C.accent,
-                                cursor: "pointer",
-                                textDecoration: "underline",
-                                marginTop: 4
-                              }}
-                            >
-                              View All
-                            </button>
+                            {groupName.toLowerCase() !== "topwear" && (
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  const primarySlug = items[0]?.name || "All";
+                                  handleCategoryClick({
+                                    name: primarySlug,
+                                    displayName: `All ${groupName}`,
+                                    search: ""
+                                  });
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  textAlign: "left",
+                                  padding: "6px 8px",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: C.accent,
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                  marginTop: 4
+                                }}
+                              >
+                                View All
+                              </button>
+                            )}
                           </div>
                         ));
                       })()}
@@ -1903,9 +1907,11 @@ export const CustomerScreen = ({
                         
                         return Object.entries(subGroups).map(([groupName, items]) => (
                           <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 150 }}>
-                            <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
-                              {groupName}
-                            </span>
+                            {groupName.toLowerCase() !== "bottomwear" && (
+                              <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
+                                {groupName}
+                              </span>
+                            )}
                             {items.map((cat: any) => (
                               <button
                                 key={cat.id}
@@ -1938,32 +1944,34 @@ export const CustomerScreen = ({
                                 {cat.displayName}
                               </button>
                             ))}
-                            <button
-                              onClick={() => {
-                                setActiveDropdown(null);
-                                const primarySlug = items[0]?.name || "All";
-                                handleCategoryClick({
-                                  name: primarySlug,
-                                  displayName: `All ${groupName}`,
-                                  search: ""
-                                });
-                              }}
-                              style={{
-                                background: "none",
-                                border: "none",
-                                textAlign: "left",
-                                padding: "6px 8px",
-                                borderRadius: 6,
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: C.accent,
-                                cursor: "pointer",
-                                textDecoration: "underline",
-                                marginTop: 4
-                              }}
-                            >
-                              View All
-                            </button>
+                            {groupName.toLowerCase() !== "bottomwear" && (
+                              <button
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  const primarySlug = items[0]?.name || "All";
+                                  handleCategoryClick({
+                                    name: primarySlug,
+                                    displayName: `All ${groupName}`,
+                                    search: ""
+                                  });
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  textAlign: "left",
+                                  padding: "6px 8px",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 800,
+                                  color: C.accent,
+                                  cursor: "pointer",
+                                  textDecoration: "underline",
+                                  marginTop: 4
+                                }}
+                              >
+                                View All
+                              </button>
+                            )}
                           </div>
                         ));
                       })()}
@@ -2377,9 +2385,11 @@ export const CustomerScreen = ({
                           
                           return Object.entries(subGroups).map(([groupName, items]) => (
                             <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                {groupName}
-                              </div>
+                              {groupName.toLowerCase() !== "topwear" && (
+                                <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                  {groupName}
+                                </div>
+                              )}
                               {items.map((cat: any) => (
                                 <button
                                   key={cat.id}
@@ -2391,7 +2401,7 @@ export const CustomerScreen = ({
                                     width: "100%",
                                     display: "flex",
                                     alignItems: "center",
-                                    padding: "8px 14px 8px 24px",
+                                    padding: groupName.toLowerCase() === "topwear" ? "8px 14px" : "8px 14px 8px 24px",
                                     borderRadius: 8,
                                     textAlign: "left",
                                     fontSize: 12,
@@ -2406,34 +2416,36 @@ export const CustomerScreen = ({
                                   {cat.displayName}
                                 </button>
                               ))}
-                              <button
-                                onClick={() => {
-                                  setDrawerOpen(false);
-                                  const primarySlug = items[0]?.name || "All";
-                                  handleCategoryClick({
-                                    name: primarySlug,
-                                    displayName: `All ${groupName}`,
-                                    search: ""
-                                  });
-                                }}
-                                style={{
-                                  width: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  padding: "8px 14px 8px 24px",
-                                  borderRadius: 8,
-                                  textAlign: "left",
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  color: C.accent,
-                                  border: "none",
-                                  background: "transparent",
-                                  cursor: "pointer",
-                                  textDecoration: "underline"
-                                }}
-                              >
-                                View All
-                              </button>
+                              {groupName.toLowerCase() !== "topwear" && (
+                                <button
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    const primarySlug = items[0]?.name || "All";
+                                    handleCategoryClick({
+                                      name: primarySlug,
+                                      displayName: `All ${groupName}`,
+                                      search: ""
+                                    });
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "8px 14px 8px 24px",
+                                    borderRadius: 8,
+                                    textAlign: "left",
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color: C.accent,
+                                    border: "none",
+                                    background: "transparent",
+                                    cursor: "pointer",
+                                    textDecoration: "underline"
+                                  }}
+                                >
+                                  View All
+                                </button>
+                              )}
                             </div>
                           ));
                         })()}
@@ -2488,9 +2500,11 @@ export const CustomerScreen = ({
                           
                           return Object.entries(subGroups).map(([groupName, items]) => (
                             <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 12 }}>
-                              <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                                {groupName}
-                              </div>
+                              {groupName.toLowerCase() !== "bottomwear" && (
+                                <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                  {groupName}
+                                </div>
+                              )}
                               {items.map((cat: any) => (
                                 <button
                                   key={cat.id}
@@ -2502,7 +2516,7 @@ export const CustomerScreen = ({
                                     width: "100%",
                                     display: "flex",
                                     alignItems: "center",
-                                    padding: "8px 14px 8px 24px",
+                                    padding: groupName.toLowerCase() === "bottomwear" ? "8px 14px" : "8px 14px 8px 24px",
                                     borderRadius: 8,
                                     textAlign: "left",
                                     fontSize: 12,
@@ -2517,34 +2531,36 @@ export const CustomerScreen = ({
                                   {cat.displayName}
                                 </button>
                               ))}
-                              <button
-                                onClick={() => {
-                                  setDrawerOpen(false);
-                                  const primarySlug = items[0]?.name || "All";
-                                  handleCategoryClick({
-                                    name: primarySlug,
-                                    displayName: `All ${groupName}`,
-                                    search: ""
-                                  });
-                                }}
-                                style={{
-                                  width: "100%",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  padding: "8px 14px 8px 24px",
-                                  borderRadius: 8,
-                                  textAlign: "left",
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  color: C.accent,
-                                  border: "none",
-                                  background: "transparent",
-                                  cursor: "pointer",
-                                  textDecoration: "underline"
-                                }}
-                              >
-                                View All
-                              </button>
+                              {groupName.toLowerCase() !== "bottomwear" && (
+                                <button
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    const primarySlug = items[0]?.name || "All";
+                                    handleCategoryClick({
+                                      name: primarySlug,
+                                      displayName: `All ${groupName}`,
+                                      search: ""
+                                    });
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "8px 14px 8px 24px",
+                                    borderRadius: 8,
+                                    textAlign: "left",
+                                    fontSize: 12,
+                                    fontWeight: 800,
+                                    color: C.accent,
+                                    border: "none",
+                                    background: "transparent",
+                                    cursor: "pointer",
+                                    textDecoration: "underline"
+                                  }}
+                                >
+                                  View All
+                                </button>
+                              )}
                             </div>
                           ));
                         })()}
