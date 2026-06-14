@@ -1748,43 +1748,91 @@ export const CustomerScreen = ({
                         top: "100%",
                         left: 0,
                         background: "#ffffff",
-                        borderRadius: 12,
+                        borderRadius: 16,
                         border: "1px solid rgba(0,0,0,0.08)",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                        padding: "10px",
+                        boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                        padding: "20px",
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                        minWidth: 160,
+                        gap: 28,
+                        minWidth: 360,
                         zIndex: 1000
                       }}
                     >
-                      {syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((cat: any) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => {
-                            setActiveDropdown(null);
-                            handleCategoryClick(cat);
-                          }}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            textAlign: "left",
-                            padding: "8px 12px",
-                            borderRadius: 8,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: selectedCategory === cat.name ? C.accent : "#333333",
-                            cursor: "pointer",
-                            transition: "0.2s",
-                            textTransform: "uppercase"
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f7"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        >
-                          {cat.displayName}
-                        </button>
-                      ))}
+                      {(() => {
+                        const groupCategories = syncedCategories.filter((c: any) => c.navGroup === "Topwear");
+                        const subGroups: Record<string, any[]> = {};
+                        groupCategories.forEach((cat: any) => {
+                          const sg = cat.subGroup || "Other";
+                          if (!subGroups[sg]) subGroups[sg] = [];
+                          subGroups[sg].push(cat);
+                        });
+                        
+                        return Object.entries(subGroups).map(([groupName, items]) => (
+                          <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 150 }}>
+                            <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
+                              {groupName}
+                            </span>
+                            {items.map((cat: any) => (
+                              <button
+                                key={cat.id}
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  handleCategoryClick(cat);
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  textAlign: "left",
+                                  padding: "6px 8px",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: selectedCategory === cat.name ? C.accent : "#555555",
+                                  cursor: "pointer",
+                                  transition: "all 0.15s",
+                                  textTransform: "uppercase"
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = "#f4f4f5";
+                                  e.currentTarget.style.color = "#111111";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.color = selectedCategory === cat.name ? C.accent : "#555555";
+                                }}
+                              >
+                                {cat.displayName}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => {
+                                setActiveDropdown(null);
+                                const primarySlug = items[0]?.name || "All";
+                                handleCategoryClick({
+                                  name: primarySlug,
+                                  displayName: `All ${groupName}`,
+                                  search: ""
+                                });
+                              }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                textAlign: "left",
+                                padding: "6px 8px",
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.accent,
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                                marginTop: 4
+                              }}
+                            >
+                              View All
+                            </button>
+                          </div>
+                        ));
+                      })()}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1834,43 +1882,91 @@ export const CustomerScreen = ({
                         top: "100%",
                         left: 0,
                         background: "#ffffff",
-                        borderRadius: 12,
+                        borderRadius: 16,
                         border: "1px solid rgba(0,0,0,0.08)",
-                        boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-                        padding: "10px",
+                        boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+                        padding: "20px",
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 2,
-                        minWidth: 160,
+                        gap: 28,
+                        minWidth: 360,
                         zIndex: 1000
                       }}
                     >
-                      {syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((cat: any) => (
-                        <button
-                          key={cat.id}
-                          onClick={() => {
-                            setActiveDropdown(null);
-                            handleCategoryClick(cat);
-                          }}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            textAlign: "left",
-                            padding: "8px 12px",
-                            borderRadius: 8,
-                            fontSize: 12,
-                            fontWeight: 700,
-                            color: selectedCategory === cat.name ? C.accent : "#333333",
-                            cursor: "pointer",
-                            transition: "0.2s",
-                            textTransform: "uppercase"
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = "#f5f5f7"}
-                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                        >
-                          {cat.displayName}
-                        </button>
-                      ))}
+                      {(() => {
+                        const groupCategories = syncedCategories.filter((c: any) => c.navGroup === "Bottomwear");
+                        const subGroups: Record<string, any[]> = {};
+                        groupCategories.forEach((cat: any) => {
+                          const sg = cat.subGroup || "Other";
+                          if (!subGroups[sg]) subGroups[sg] = [];
+                          subGroups[sg].push(cat);
+                        });
+                        
+                        return Object.entries(subGroups).map(([groupName, items]) => (
+                          <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 150 }}>
+                            <span style={{ fontSize: 12, fontWeight: 900, color: "#111111", textTransform: "uppercase", paddingBottom: 6, borderBottom: "1.5px solid #eaeaea", marginBottom: 6, letterSpacing: "0.5px" }}>
+                              {groupName}
+                            </span>
+                            {items.map((cat: any) => (
+                              <button
+                                key={cat.id}
+                                onClick={() => {
+                                  setActiveDropdown(null);
+                                  handleCategoryClick(cat);
+                                }}
+                                style={{
+                                  background: "none",
+                                  border: "none",
+                                  textAlign: "left",
+                                  padding: "6px 8px",
+                                  borderRadius: 6,
+                                  fontSize: 11,
+                                  fontWeight: 700,
+                                  color: selectedCategory === cat.name ? C.accent : "#555555",
+                                  cursor: "pointer",
+                                  transition: "all 0.15s",
+                                  textTransform: "uppercase"
+                                }}
+                                onMouseEnter={e => {
+                                  e.currentTarget.style.background = "#f4f4f5";
+                                  e.currentTarget.style.color = "#111111";
+                                }}
+                                onMouseLeave={e => {
+                                  e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.color = selectedCategory === cat.name ? C.accent : "#555555";
+                                }}
+                              >
+                                {cat.displayName}
+                              </button>
+                            ))}
+                            <button
+                              onClick={() => {
+                                setActiveDropdown(null);
+                                const primarySlug = items[0]?.name || "All";
+                                handleCategoryClick({
+                                  name: primarySlug,
+                                  displayName: `All ${groupName}`,
+                                  search: ""
+                                });
+                              }}
+                              style={{
+                                background: "none",
+                                border: "none",
+                                textAlign: "left",
+                                padding: "6px 8px",
+                                borderRadius: 6,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                color: C.accent,
+                                cursor: "pointer",
+                                textDecoration: "underline",
+                                marginTop: 4
+                              }}
+                            >
+                              View All
+                            </button>
+                          </div>
+                        ));
+                      })()}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -2268,34 +2364,79 @@ export const CustomerScreen = ({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        style={{ overflow: "hidden", paddingLeft: 24, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
+                        style={{ overflow: "hidden", paddingLeft: 12, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
                       >
-                        {syncedCategories.filter((c: any) => c.navGroup === "Topwear").map((cat: any) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              setDrawerOpen(false);
-                              handleCategoryClick(cat);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              padding: "10px 14px",
-                              borderRadius: 10,
-                              textAlign: "left",
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: selectedCategory === cat.name ? C.accent : "#555555",
-                              border: "none",
-                              background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
-                              cursor: "pointer",
-                              textTransform: "uppercase"
-                            }}
-                          >
-                            {cat.displayName}
-                          </button>
-                        ))}
+                        {(() => {
+                          const groupCategories = syncedCategories.filter((c: any) => c.navGroup === "Topwear");
+                          const subGroups: Record<string, any[]> = {};
+                          groupCategories.forEach((cat: any) => {
+                            const sg = cat.subGroup || "Other";
+                            if (!subGroups[sg]) subGroups[sg] = [];
+                            subGroups[sg].push(cat);
+                          });
+                          
+                          return Object.entries(subGroups).map(([groupName, items]) => (
+                            <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 12 }}>
+                              <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                {groupName}
+                              </div>
+                              {items.map((cat: any) => (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    handleCategoryClick(cat);
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "8px 14px 8px 24px",
+                                    borderRadius: 8,
+                                    textAlign: "left",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    color: selectedCategory === cat.name ? C.accent : "#555555",
+                                    border: "none",
+                                    background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
+                                    cursor: "pointer",
+                                    textTransform: "uppercase"
+                                  }}
+                                >
+                                  {cat.displayName}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  setDrawerOpen(false);
+                                  const primarySlug = items[0]?.name || "All";
+                                  handleCategoryClick({
+                                    name: primarySlug,
+                                    displayName: `All ${groupName}`,
+                                    search: ""
+                                  });
+                                }}
+                                style={{
+                                  width: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: "8px 14px 8px 24px",
+                                  borderRadius: 8,
+                                  textAlign: "left",
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: C.accent,
+                                  border: "none",
+                                  background: "transparent",
+                                  cursor: "pointer",
+                                  textDecoration: "underline"
+                                }}
+                              >
+                                View All
+                              </button>
+                            </div>
+                          ));
+                        })()}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -2334,34 +2475,79 @@ export const CustomerScreen = ({
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        style={{ overflow: "hidden", paddingLeft: 24, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
+                        style={{ overflow: "hidden", paddingLeft: 12, display: "flex", flexDirection: "column", gap: 2, marginTop: 2 }}
                       >
-                        {syncedCategories.filter((c: any) => c.navGroup === "Bottomwear").map((cat: any) => (
-                          <button
-                            key={cat.id}
-                            onClick={() => {
-                              setDrawerOpen(false);
-                              handleCategoryClick(cat);
-                            }}
-                            style={{
-                              width: "100%",
-                              display: "flex",
-                              alignItems: "center",
-                              padding: "10px 14px",
-                              borderRadius: 10,
-                              textAlign: "left",
-                              fontSize: 13,
-                              fontWeight: 700,
-                              color: selectedCategory === cat.name ? C.accent : "#555555",
-                              border: "none",
-                              background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
-                              cursor: "pointer",
-                              textTransform: "uppercase"
-                            }}
-                          >
-                            {cat.displayName}
-                          </button>
-                        ))}
+                        {(() => {
+                          const groupCategories = syncedCategories.filter((c: any) => c.navGroup === "Bottomwear");
+                          const subGroups: Record<string, any[]> = {};
+                          groupCategories.forEach((cat: any) => {
+                            const sg = cat.subGroup || "Other";
+                            if (!subGroups[sg]) subGroups[sg] = [];
+                            subGroups[sg].push(cat);
+                          });
+                          
+                          return Object.entries(subGroups).map(([groupName, items]) => (
+                            <div key={groupName} style={{ display: "flex", flexDirection: "column", gap: 2, marginBottom: 12 }}>
+                              <div style={{ fontSize: 11, fontWeight: 850, color: "#222222", padding: "6px 14px 2px", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                                {groupName}
+                              </div>
+                              {items.map((cat: any) => (
+                                <button
+                                  key={cat.id}
+                                  onClick={() => {
+                                    setDrawerOpen(false);
+                                    handleCategoryClick(cat);
+                                  }}
+                                  style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    padding: "8px 14px 8px 24px",
+                                    borderRadius: 8,
+                                    textAlign: "left",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                    color: selectedCategory === cat.name ? C.accent : "#555555",
+                                    border: "none",
+                                    background: selectedCategory === cat.name ? "#F3F4F6" : "transparent",
+                                    cursor: "pointer",
+                                    textTransform: "uppercase"
+                                  }}
+                                >
+                                  {cat.displayName}
+                                </button>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  setDrawerOpen(false);
+                                  const primarySlug = items[0]?.name || "All";
+                                  handleCategoryClick({
+                                    name: primarySlug,
+                                    displayName: `All ${groupName}`,
+                                    search: ""
+                                  });
+                                }}
+                                style={{
+                                  width: "100%",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  padding: "8px 14px 8px 24px",
+                                  borderRadius: 8,
+                                  textAlign: "left",
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: C.accent,
+                                  border: "none",
+                                  background: "transparent",
+                                  cursor: "pointer",
+                                  textDecoration: "underline"
+                                }}
+                              >
+                                View All
+                              </button>
+                            </div>
+                          ));
+                        })()}
                       </motion.div>
                     )}
                   </AnimatePresence>

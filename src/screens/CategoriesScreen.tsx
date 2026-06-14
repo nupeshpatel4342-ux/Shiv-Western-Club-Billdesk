@@ -15,6 +15,7 @@ interface Category {
   search: string;
   createdAt: number;
   navGroup?: string;
+  subGroup?: string;
 }
 
 const PRESET_GRADIENTS = [
@@ -46,6 +47,7 @@ export const CategoriesScreen = ({
   const [border, setBorder] = useState(PRESET_GRADIENTS[0].border);
   const [search, setSearch] = useState("");
   const [navGroup, setNavGroup] = useState("None");
+  const [subGroup, setSubGroup] = useState("");
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,7 +66,8 @@ export const CategoriesScreen = ({
         border: border,
         search: search.trim().toLowerCase() || name.trim().toLowerCase(),
         createdAt: Date.now(),
-        navGroup: navGroup
+        navGroup: navGroup,
+        subGroup: navGroup === "None" ? "" : subGroup.trim()
       };
 
       await addDoc(collection(db, "categories"), newCat);
@@ -78,6 +81,7 @@ export const CategoriesScreen = ({
       setBorder(PRESET_GRADIENTS[0].border);
       setSearch("");
       setNavGroup("None");
+      setSubGroup("");
       setShowAdd(false);
       alert("Category added successfully!");
     } catch (err) {
@@ -105,7 +109,8 @@ export const CategoriesScreen = ({
         border: editingCategory.border || "rgba(0,0,0,0.1)",
         search: editingCategory.search.trim().toLowerCase() || editingCategory.name.trim().toLowerCase(),
         createdAt: editingCategory.createdAt || Date.now(),
-        navGroup: editingCategory.navGroup || "None"
+        navGroup: editingCategory.navGroup || "None",
+        subGroup: editingCategory.navGroup === "None" ? "" : (editingCategory.subGroup || "").trim()
       });
 
       setEditingCategory(null);
@@ -291,7 +296,10 @@ export const CategoriesScreen = ({
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Menu Group</label>
                 <select 
                   value={navGroup}
-                  onChange={e => setNavGroup(e.target.value)}
+                  onChange={e => {
+                    setNavGroup(e.target.value);
+                    if (e.target.value === "None") setSubGroup("");
+                  }}
                   style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark, background: C.card, outline: "none" }}
                 >
                   <option value="None">None (Don't show in Header Menu)</option>
@@ -299,6 +307,28 @@ export const CategoriesScreen = ({
                   <option value="Bottomwear">Bottomwear (Dropdown List)</option>
                 </select>
               </div>
+
+              {navGroup !== "None" && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Sub-Group (Column Header)</label>
+                  <input 
+                    type="text" 
+                    value={subGroup}
+                    onChange={e => setSubGroup(e.target.value)}
+                    placeholder="e.g. T-shirts, Shirts, Trousers..." 
+                    list="sub-group-suggestions"
+                    style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                  <datalist id="sub-group-suggestions">
+                    <option value="T-shirts" />
+                    <option value="Shirts" />
+                    <option value="Trousers" />
+                    <option value="Jeans" />
+                    <option value="Shorts" />
+                    <option value="Outerwear" />
+                  </datalist>
+                </div>
+              )}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Gradients & Borders Presets</label>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -464,7 +494,14 @@ export const CategoriesScreen = ({
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Menu Group</label>
                 <select 
                   value={editingCategory.navGroup || "None"}
-                  onChange={e => setEditingCategory({ ...editingCategory, navGroup: e.target.value })}
+                  onChange={e => {
+                    const group = e.target.value;
+                    setEditingCategory({ 
+                      ...editingCategory, 
+                      navGroup: group, 
+                      subGroup: group === "None" ? "" : (editingCategory.subGroup || "") 
+                    });
+                  }}
                   style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark, background: C.card, outline: "none" }}
                 >
                   <option value="None">None (Don't show in Header Menu)</option>
@@ -472,6 +509,20 @@ export const CategoriesScreen = ({
                   <option value="Bottomwear">Bottomwear (Dropdown List)</option>
                 </select>
               </div>
+
+              {(editingCategory.navGroup && editingCategory.navGroup !== "None") && (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Navigation Sub-Group (Column Header)</label>
+                  <input 
+                    type="text" 
+                    value={editingCategory.subGroup || ""}
+                    onChange={e => setEditingCategory({ ...editingCategory, subGroup: e.target.value })}
+                    placeholder="e.g. T-shirts, Shirts, Trousers..." 
+                    list="sub-group-suggestions"
+                    style={{ padding: 12, borderRadius: 10, border: `1.5px solid ${C.border}`, fontSize: 13, color: C.dark }}
+                  />
+                </div>
+              )}
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 <label style={{ fontSize: 11, fontWeight: 800, color: C.muted, textTransform: "uppercase" }}>Gradients Presets</label>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -542,11 +593,18 @@ export const CategoriesScreen = ({
                     {cat.tag}
                   </span>
                 )}
-                {cat.navGroup && cat.navGroup !== "None" && (
-                  <span style={{ position: "absolute", top: 12, left: 12, background: cat.navGroup === "Topwear" ? "#1E3A8A" : "#065F46", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase", zIndex: 5 }}>
-                    {cat.navGroup}
-                  </span>
-                )}
+                 {cat.navGroup && cat.navGroup !== "None" && (
+                   <div style={{ position: "absolute", top: 12, left: 12, display: "flex", flexDirection: "column", gap: 4, zIndex: 5 }}>
+                     <span style={{ background: cat.navGroup === "Topwear" ? "#1E3A8A" : "#065F46", color: "#fff", fontSize: 9, fontWeight: 800, padding: "2px 8px", borderRadius: 100, textTransform: "uppercase", width: "fit-content" }}>
+                       {cat.navGroup}
+                     </span>
+                     {cat.subGroup && (
+                       <span style={{ background: "#4B5563", color: "#fff", fontSize: 8, fontWeight: 800, padding: "2px 6px", borderRadius: 100, textTransform: "uppercase", width: "fit-content" }}>
+                         {cat.subGroup}
+                       </span>
+                     )}
+                   </div>
+                 )}
                 {cat.icon && (cat.icon.startsWith("data:") || cat.icon.startsWith("/") || cat.icon.startsWith("http")) ? (
                   <img 
                     src={cat.icon} 
