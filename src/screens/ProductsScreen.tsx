@@ -520,7 +520,7 @@ export const ProductsScreen = ({
                             reader.onload = () => {
                               setGalleryImages(prev => [...prev, reader.result as string]);
                             };
-                            reader.readAsDataURL(file);
+                            reader.readAsDataURL(file as Blob);
                           });
                         }
                       }}
@@ -858,7 +858,7 @@ export const ProductsScreen = ({
                               const currentImgs = editingProduct.images || [];
                               setEditingProduct({ ...editingProduct, images: [...currentImgs, reader.result as string] });
                             };
-                            reader.readAsDataURL(file);
+                            reader.readAsDataURL(file as Blob);
                           });
                         }
                       }}

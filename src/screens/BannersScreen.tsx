@@ -14,7 +14,10 @@ interface Banner {
   isActive?: boolean;
   ctaLink?: string;
   createdAt: number;
+  headline?: string;
+  tag?: string;
 }
+
 
 export const BannersScreen = ({
   banners,
